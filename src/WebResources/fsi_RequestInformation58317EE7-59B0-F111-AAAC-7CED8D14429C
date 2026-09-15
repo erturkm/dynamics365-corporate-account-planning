@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request Information</title>
+<style>/* FAB Global Team Requests — shared design system */
+*, *::before, *::after { box-sizing: border-box; }
+:root{
+  --ink:#0f172a; --ink2:#334155; --muted:#64748b; --muted2:#94a3b8;
+  --line:#e2e8f0; --line2:#cbd5e1; --bg:#f8fafc; --card:#ffffff;
+  --brand:#1e40af; --brand2:#2563eb; --brand-soft:#eff6ff;
+  --ok:#059669; --ok-soft:#ecfdf5; --warn:#d97706; --warn-soft:#fffbeb;
+  --danger:#dc2626; --danger-soft:#fef2f2; --info:#0891b2; --info-soft:#ecfeff;
+  --purple:#7c3aed; --purple-soft:#f5f3ff;
+  --r:14px; --r-sm:10px; --r-lg:18px;
+  --sh:0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  --sh-lg:0 10px 40px rgba(15,23,42,.14);
+}
+body{ margin:0; font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+      color:var(--ink); background:var(--bg); font-size:13px; line-height:1.5; }
+.wrap{ padding:18px 20px 28px; max-width:1500px; margin:0 auto; }
+h1,h2,h3,h4{ margin:0; font-weight:650; letter-spacing:-.01em; }
+
+/* ---------- surface ---------- */
+.card{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--sh); }
+.card-pad{ padding:18px 20px; }
+.section-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.section-title{ font-size:15px; font-weight:700; display:flex; align-items:center; gap:9px; }
+.section-title .dot{ width:8px; height:8px; border-radius:99px; background:var(--brand2); flex:none; }
+.section-sub{ font-size:12px; color:var(--muted); margin-top:3px; }
+
+/* ---------- KPI ---------- */
+.kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+.kpi{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px;
+      box-shadow:var(--sh); position:relative; overflow:hidden; }
+.kpi::after{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent,var(--brand2)); }
+.kpi .k-lbl{ font-size:11px; font-weight:650; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.kpi .k-val{ font-size:28px; font-weight:700; line-height:1.15; margin-top:6px; letter-spacing:-.02em; }
+.kpi .k-sub{ font-size:11px; color:var(--muted2); margin-top:2px; }
+
+/* ---------- badges ---------- */
+.badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:650;
+        padding:3px 9px; border-radius:99px; border:1px solid transparent; white-space:nowrap; }
+.badge .bdot{ width:6px; height:6px; border-radius:99px; background:currentColor; flex:none; }
+.b-draft{ background:#f1f5f9; color:#475569; border-color:#e2e8f0; }
+.b-sent{ background:var(--brand-soft); color:var(--brand); border-color:#bfdbfe; }
+.b-prog{ background:var(--warn-soft); color:#b45309; border-color:#fde68a; }
+.b-subm{ background:var(--ok-soft); color:#047857; border-color:#a7f3d0; }
+.b-closed{ background:#f1f5f9; color:#64748b; border-color:#e2e8f0; }
+.b-over{ background:var(--danger-soft); color:var(--danger); border-color:#fecaca; }
+.b-soft{ background:var(--info-soft); color:#0e7490; border-color:#a5f3fc; }
+.b-req{ background:var(--danger-soft); color:var(--danger); border-color:#fecaca; }
+
+/* ---------- buttons ---------- */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; font-family:inherit;
+      font-size:12.5px; font-weight:650; padding:8px 15px; border-radius:var(--r-sm); cursor:pointer;
+      border:1px solid var(--line2); background:#fff; color:var(--ink2); transition:.14s; white-space:nowrap; }
+.btn:hover{ background:#f8fafc; border-color:var(--muted2); }
+.btn:active{ transform:translateY(1px); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+.btn-primary{ background:var(--brand); border-color:var(--brand); color:#fff; box-shadow:0 1px 2px rgba(30,64,175,.3); }
+.btn-primary:hover{ background:#1d4ed8; border-color:#1d4ed8; }
+.btn-ok{ background:var(--ok); border-color:var(--ok); color:#fff; }
+.btn-ok:hover{ background:#047857; border-color:#047857; }
+.btn-ghost{ background:transparent; border-color:transparent; color:var(--brand); }
+.btn-ghost:hover{ background:var(--brand-soft); border-color:transparent; }
+.btn-danger{ background:#fff; border-color:#fecaca; color:var(--danger); }
+.btn-danger:hover{ background:var(--danger-soft); }
+.btn-sm{ font-size:11.5px; padding:5px 11px; }
+.btn-lg{ font-size:13.5px; padding:11px 22px; }
+.btn-ai{ background:linear-gradient(135deg,#7c3aed,#2563eb); border-color:transparent; color:#fff;
+         box-shadow:0 2px 10px rgba(124,58,237,.34); }
+.btn-ai:hover{ filter:brightness(1.07); }
+
+/* ---------- table ---------- */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
+.tbl th{ text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+         color:var(--muted); padding:9px 12px; border-bottom:1px solid var(--line); background:#fbfcfe; white-space:nowrap; }
+.tbl td{ padding:11px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+.tbl tbody tr:hover{ background:#f8fbff; }
+.tbl tbody tr{ cursor:pointer; }
+.tbl .t-title{ font-weight:650; color:var(--brand); }
+.tbl .t-title:hover{ text-decoration:underline; }
+
+/* ---------- gallery cards ---------- */
+.gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:14px; }
+.tcard{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px;
+        cursor:pointer; transition:.16s; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:9px; }
+.tcard::before{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--accent,var(--brand2)); }
+.tcard:hover{ transform:translateY(-3px); box-shadow:var(--sh-lg); border-color:var(--line2); }
+.tcard.sel{ border-color:var(--brand2); box-shadow:0 0 0 3px var(--brand-soft); }
+.tcard .ticon{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+               background:var(--accent-soft,#eff6ff); color:var(--accent,var(--brand2)); flex:none; }
+.tcard .tname{ font-size:13.5px; font-weight:700; line-height:1.3; }
+.tcard .tdesc{ font-size:11.5px; color:var(--muted); line-height:1.45; flex:1; }
+.tcard .tmeta{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:10.5px; color:var(--muted2); }
+
+/* choice chips */
+.chips{ display:flex; gap:7px; flex-wrap:wrap; }
+.chip{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:99px; border:1px solid var(--line2);
+       background:#fff; color:var(--ink2); cursor:pointer; transition:.14s; }
+.chip:hover{ border-color:var(--brand2); color:var(--brand); }
+.chip.on{ background:var(--brand); border-color:var(--brand); color:#fff; }
+
+/* ---------- forms ---------- */
+.fgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px 18px; }
+.f-full{ grid-column:1/-1; }
+.fld label.flbl{ display:block; font-size:12px; font-weight:650; color:var(--ink2); margin-bottom:5px; }
+.fld .fhelp{ font-size:11px; color:var(--muted); margin-top:4px; line-height:1.4; }
+.fld .ferr{ font-size:11px; color:var(--danger); margin-top:4px; font-weight:600; display:none; }
+.fld.invalid .ferr{ display:block; }
+.fld.invalid input,.fld.invalid textarea,.fld.invalid select{ border-color:#fca5a5; background:#fffbfb; }
+.req-star{ color:var(--danger); margin-left:3px; }
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%; font-family:inherit; font-size:12.5px; color:var(--ink); background:#fff;
+  border:1px solid var(--line2); border-radius:var(--r-sm); padding:8px 11px; transition:.14s; }
+input:focus,textarea:focus,select:focus{ outline:none; border-color:var(--brand2); box-shadow:0 0 0 3px var(--brand-soft); }
+input:disabled,textarea:disabled,select:disabled{ background:#f8fafc; color:var(--ink2); cursor:default; }
+textarea{ resize:vertical; min-height:74px; line-height:1.55; }
+.inp-affix{ position:relative; }
+.inp-affix .affix{ position:absolute; top:50%; transform:translateY(-50%); font-size:11.5px;
+                   font-weight:650; color:var(--muted); pointer-events:none; }
+.inp-affix.pre .affix{ left:11px; } .inp-affix.pre input{ padding-left:42px; }
+.inp-affix.post .affix{ right:11px; } .inp-affix.post input{ padding-right:30px; }
+
+/* toggle */
+.tgl{ display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none; }
+.tgl input{ display:none; }
+.tgl .track{ width:40px; height:22px; border-radius:99px; background:#cbd5e1; position:relative; transition:.18s; flex:none; }
+.tgl .track::after{ content:""; position:absolute; top:2px; left:2px; width:18px; height:18px;
+                    border-radius:99px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:.18s; }
+.tgl input:checked + .track{ background:var(--ok); }
+.tgl input:checked + .track::after{ transform:translateX(18px); }
+.tgl .tlbl{ font-size:12.5px; font-weight:600; color:var(--ink2); }
+
+/* multiselect */
+.msel{ display:flex; flex-wrap:wrap; gap:7px; }
+.msel .ms{ font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:99px;
+           border:1px solid var(--line2); background:#fff; color:var(--ink2); cursor:pointer; transition:.14s; }
+.msel .ms:hover{ border-color:var(--brand2); }
+.msel .ms.on{ background:var(--brand-soft); border-color:var(--brand2); color:var(--brand); }
+.msel .ms.on::before{ content:"✓ "; font-weight:800; }
+
+/* questionnaire section */
+.qsec{ border:1px solid var(--line); border-radius:var(--r); margin-bottom:14px; background:#fff; overflow:hidden; }
+.qsec > .qhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+                padding:12px 16px; background:linear-gradient(180deg,#fbfcfe,#f6f8fc); border-bottom:1px solid var(--line); }
+.qsec .qnum{ width:22px; height:22px; border-radius:7px; background:var(--brand); color:#fff;
+             font-size:11px; font-weight:700; display:grid; place-items:center; flex:none; }
+.qsec .qtitle{ font-size:13px; font-weight:700; display:flex; align-items:center; gap:9px; }
+.qsec .qbody{ padding:16px; }
+.qsec .qdesc{ font-size:11.5px; color:var(--muted); padding:0 16px 0; margin-top:10px; }
+
+/* ---------- header / hero ---------- */
+.hero{ background:linear-gradient(135deg,#0f2a6b 0%,#1e40af 55%,#2563eb 100%); color:#fff;
+       border-radius:var(--r-lg); padding:20px 24px; margin-bottom:18px; box-shadow:var(--sh); }
+.hero h1{ font-size:19px; font-weight:700; letter-spacing:-.02em; }
+.hero .hsub{ font-size:12.5px; opacity:.85; margin-top:5px; }
+.hero .hmeta{ display:flex; gap:22px; flex-wrap:wrap; margin-top:16px; }
+.hero .hm .hm-l{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; font-weight:650; }
+.hero .hm .hm-v{ font-size:13px; font-weight:650; margin-top:3px; }
+
+/* ---------- misc ---------- */
+.empty{ text-align:center; padding:46px 20px; color:var(--muted); }
+.empty .e-ico{ font-size:34px; opacity:.35; margin-bottom:10px; }
+.empty .e-t{ font-size:13.5px; font-weight:650; color:var(--ink2); }
+.empty .e-s{ font-size:12px; margin-top:5px; }
+.spin{ width:16px; height:16px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
+       border-radius:99px; animation:sp .7s linear infinite; display:inline-block; }
+.spin.dark{ border-color:rgba(37,99,235,.25); border-top-color:var(--brand2); }
+@keyframes sp{ to{ transform:rotate(360deg);} }
+.toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
+        background:var(--ink); color:#fff; font-size:12.5px; font-weight:600; padding:11px 20px;
+        border-radius:99px; box-shadow:var(--sh-lg); z-index:9999; transition:.28s; opacity:0; }
+.toast.on{ transform:translateX(-50%) translateY(0); opacity:1; }
+.toast.err{ background:var(--danger); }
+.toast.ok{ background:var(--ok); }
+.divider{ height:1px; background:var(--line); margin:16px 0; }
+.row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.grow{ flex:1; }
+.muted{ color:var(--muted); }
+.mini{ font-size:11px; }
+.ai-note{ background:linear-gradient(135deg,var(--purple-soft),var(--brand-soft)); border:1px solid #ddd6fe;
+          border-radius:var(--r); padding:14px 16px; }
+.ai-note .ai-h{ font-size:12px; font-weight:700; color:var(--purple); display:flex; align-items:center; gap:7px; }
+.ai-sum{ background:linear-gradient(135deg,#faf5ff,#eff6ff); border:1px solid #e9d5ff; border-radius:var(--r);
+         padding:16px 18px; font-size:13px; line-height:1.65; color:var(--ink2); white-space:pre-wrap; }
+.scroll{ overflow:auto; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+  body{ background:var(--bg); }
+  .wrap{ padding:16px 20px 96px; max-width:1180px; }
+  .steps{ display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .step{ display:flex; align-items:center; gap:7px; font-size:11.5px; font-weight:650; color:var(--muted2); }
+  .step .sn{ width:21px; height:21px; border-radius:99px; background:#e2e8f0; color:#64748b;
+             display:grid; place-items:center; font-size:10.5px; font-weight:700; }
+  .step.on{ color:var(--brand); } .step.on .sn{ background:var(--brand); color:#fff; }
+  .step.done{ color:var(--ok); } .step.done .sn{ background:var(--ok); color:#fff; }
+  .step-sep{ width:20px; height:1px; background:var(--line2); }
+  .modes{ display:grid; grid-template-columns:repeat(auto-fit,minmax(275px,1fr)); gap:16px; }
+  .mode{ background:#fff; border:1px solid var(--line); border-radius:var(--r-lg); padding:22px;
+         cursor:pointer; transition:.18s; display:flex; flex-direction:column; gap:11px; position:relative; overflow:hidden; }
+  .mode::before{ content:""; position:absolute; inset:0 0 auto 0; height:4px; background:var(--accent); }
+  .mode:hover{ transform:translateY(-4px); box-shadow:var(--sh-lg); border-color:var(--line2); }
+  .mode .mi{ width:46px; height:46px; border-radius:13px; display:grid; place-items:center;
+             background:var(--accent-soft); color:var(--accent); }
+  .mode .mt{ font-size:15px; font-weight:700; }
+  .mode .md{ font-size:12px; color:var(--muted); line-height:1.5; flex:1; }
+  .mode .mb{ font-size:11.5px; font-weight:700; color:var(--accent); display:flex; align-items:center; gap:5px; }
+  .bar{ position:fixed; left:0; right:0; bottom:0; background:rgba(255,255,255,.94); backdrop-filter:blur(8px);
+        border-top:1px solid var(--line); padding:12px 22px; display:flex; align-items:center; gap:10px; z-index:50; }
+  .qedit{ border:1px solid var(--line); border-radius:var(--r-sm); padding:12px; margin-bottom:9px; background:#fff; }
+  .qedit .qrow{ display:grid; grid-template-columns:1fr 168px 96px auto; gap:9px; align-items:end; }
+  .qedit .qrow2{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:9px; }
+  .hidden{ display:none !important; }
+  @media(max-width:720px){ .qedit .qrow{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero" style="padding:16px 20px">
+    <div class="row">
+      <div class="grow">
+        <h1 id="heroTitle">Request Information</h1>
+        <div class="hsub" id="heroSub">Ask another team for structured input on this account plan.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="steps" id="steps"></div>
+
+  <!-- STEP 1 : mode -->
+  <div id="s1">
+    <div class="modes">
+      <div class="mode" data-m="template" style="--accent:#2563eb;--accent-soft:#eff6ff">
+        <div class="mi" id="mi1"></div>
+        <div class="mt">Use a template</div>
+        <div class="md">Pick a proven banking questionnaire from the template gallery — wallet assessment, FX hedging, trade finance, credit review and more.</div>
+        <div class="mb" id="mb1"></div>
+      </div>
+      <div class="mode" data-m="describe" style="--accent:#7c3aed;--accent-soft:#f5f3ff">
+        <div class="mi" id="mi2"></div>
+        <div class="mt">Describe what I need</div>
+        <div class="md">Write it in plain English and let Copilot draft the request title, target team and a tailored questionnaire for you.</div>
+        <div class="mb" id="mb2"></div>
+      </div>
+      <div class="mode" data-m="blank" style="--accent:#0891b2;--accent-soft:#ecfeff">
+        <div class="mi" id="mi3"></div>
+        <div class="mt">Start blank</div>
+        <div class="md">Build the questionnaire yourself — add your own sections, questions, field types and choice options.</div>
+        <div class="mb" id="mb3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2a : gallery -->
+  <div id="s2t" class="hidden">
+    <div class="card card-pad" style="margin-bottom:14px">
+      <div class="row">
+        <div class="grow" style="max-width:340px;position:relative">
+          <input type="text" id="tSearch" placeholder="Search templates…" style="padding-left:32px">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted2)" id="tSearchIco"></span>
+        </div>
+        <div class="chips grow" id="tCats"></div>
+      </div>
+    </div>
+    <div class="gallery" id="tGallery"></div>
+  </div>
+
+  <!-- STEP 2b : describe -->
+  <div id="s2d" class="hidden">
+    <div class="card card-pad">
+      <div class="section-title" style="font-size:14px;margin-bottom:4px"><span class="dot" style="background:var(--purple)"></span>Describe what you need</div>
+      <div class="section-sub" style="margin-bottom:14px">Copilot will draft a request title, suggest the right team and build a questionnaire you can review and edit.</div>
+      <textarea id="nlInput" rows="4" placeholder="e.g. Ask Global Markets to assess ADNOC's USD hedging opportunities related to its international expansion."></textarea>
+      <div class="row" style="margin-top:8px">
+        <span class="mini muted">Examples:</span>
+        <span class="chip mini" data-ex="Ask Global Markets to assess ADNOC's USD hedging opportunities related to its international expansion.">FX hedging</span>
+        <span class="chip mini" data-ex="Ask Trade Finance to review the client's import corridors from Asia and propose supply chain finance solutions.">Trade corridors</span>
+        <span class="chip mini" data-ex="Ask Credit and Risk for current exposure, limits, utilisation and available headroom ahead of the annual review.">Credit headroom</span>
+      </div>
+      <div class="divider"></div>
+      <button class="btn btn-ai btn-lg" id="btnGenerate"></button>
+      <span class="mini muted" style="margin-left:10px">Powered by Copilot</span>
+    </div>
+  </div>
+
+  <!-- STEP 3 : review / edit -->
+  <div id="s3" class="hidden">
+    <div class="card card-pad" style="margin-bottom:14px">
+      <div class="fgrid">
+        <div class="fld f-full">
+          <label class="flbl">Questionnaire Title<span class="req-star">*</span></label>
+          <input type="text" id="fTitle" maxlength="200">
+        </div>
+        <div class="fld f-full">
+          <label class="flbl">Questionnaire Description</label>
+          <textarea id="fDesc" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-note" id="aiBox" style="margin-bottom:14px">
+      <div class="ai-h" id="aiHdr"></div>
+      <div class="section-sub" style="margin:6px 0 10px">Tell Copilot how to adapt this questionnaire for this client. The supported question schema is always preserved.</div>
+      <textarea id="aiInput" rows="2" placeholder="e.g. Adapt this assessment for ADNOC's international expansion and acquisition activity."></textarea>
+      <div class="row" style="margin-top:9px">
+        <button class="btn btn-ai" id="btnCustomize"></button>
+        <button class="btn btn-sm hidden" id="btnUndoAi">Undo AI changes</button>
+        <span class="grow"></span>
+        <span class="mini muted" id="aiStat"></span>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div class="section-title" style="font-size:14px"><span class="dot"></span><span id="pvLbl">Questionnaire preview</span>
+        <span class="badge b-soft" id="pvCount"></span></div>
+      <div class="row">
+        <button class="btn btn-sm" id="btnToggleEdit"></button>
+        <button class="btn btn-sm hidden" id="btnAddSec"></button>
+      </div>
+    </div>
+    <div id="pvHost"></div>
+    <div id="edHost" class="hidden"></div>
+  </div>
+
+  <!-- STEP 4 : send -->
+  <div id="s4" class="hidden">
+    <div class="card card-pad">
+      <div class="section-title" style="font-size:14px;margin-bottom:4px"><span class="dot"></span>Send the request</div>
+      <div class="section-sub" style="margin-bottom:16px">Confirm who should complete this questionnaire and by when.</div>
+      <div class="fgrid">
+        <div class="fld f-full">
+          <label class="flbl">Request Title<span class="req-star">*</span></label>
+          <input type="text" id="rTitle" maxlength="200">
+        </div>
+        <div class="fld f-full">
+          <label class="flbl">Request Description</label>
+          <textarea id="rDesc" rows="2" placeholder="Context for the contributing team…"></textarea>
+        </div>
+        <div class="fld">
+          <label class="flbl">Request Type<span class="req-star">*</span></label>
+          <select id="rType"></select>
+        </div>
+        <div class="fld">
+          <label class="flbl">Requested From — Team</label>
+          <select id="rTeam"><option value="">— Select team —</option></select>
+          <div class="fhelp">Any member of the team can complete the request.</div>
+        </div>
+        <div class="fld">
+          <label class="flbl">Requested From — Person</label>
+          <select id="rUser"><option value="">— Optional —</option></select>
+          <div class="fhelp">Optionally nominate a specific contributor.</div>
+        </div>
+        <div class="fld">
+          <label class="flbl">Due Date<span class="req-star">*</span></label>
+          <input type="date" id="rDue">
+        </div>
+        <div class="fld">
+          <label class="flbl">Requesting Team</label>
+          <input type="text" id="rFrom" placeholder="e.g. Global Account Coverage">
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="row mini muted">
+        <span id="s4Ctx"></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bar">
+  <button class="btn" id="btnBack"></button>
+  <span class="grow"></span>
+  <span class="mini muted" id="barHint"></span>
+  <button class="btn" id="btnDraft">Save as Draft</button>
+  <button class="btn btn-primary btn-lg" id="btnNext">Continue</button>
+</div>
+
+<script>/* FAB Global Team Requests — shared runtime (Dataverse access + questionnaire renderer) */
+(function (G) {
+  "use strict";
+
+  /* ============================ Xrm / Dataverse ============================ */
+  function xrm() {
+    try { if (window.Xrm && window.Xrm.Utility) return window.Xrm; } catch (e) {}
+    try { if (parent && parent.Xrm && parent.Xrm.Utility) return parent.Xrm; } catch (e) {}
+    try { if (parent && parent.parent && parent.parent.Xrm) return parent.parent.Xrm; } catch (e) {}
+    return null;
+  }
+  function clientUrl() {
+    var X = xrm();
+    try { return X.Utility.getGlobalContext().getClientUrl(); } catch (e) {}
+    return window.location.origin;
+  }
+  var API = function () { return clientUrl() + "/api/data/v9.2/"; };
+
+  function dvFetch(path, opts) {
+    opts = opts || {};
+    var url = /^https?:/i.test(path) ? path : API() + path;
+    var h = {
+      "Accept": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+    var method = opts.method || "GET";
+    if (opts.prefer) h["Prefer"] = opts.prefer;
+    else if (method === "GET") h["Prefer"] = 'odata.include-annotations="*"';
+    if (opts.headers) for (var k in opts.headers) h[k] = opts.headers[k];
+    return fetch(url, {
+      method: method,
+      headers: h,
+      credentials: "same-origin",
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          var msg = t;
+          try { msg = (JSON.parse(t).error || {}).message || t; } catch (e) {}
+          var err = new Error(msg || ("HTTP " + r.status));
+          err.status = r.status;
+          throw err;
+        });
+      }
+      var id = r.headers.get("OData-EntityId") || "";
+      if (r.status === 204) return { _entityId: idFrom(id) };
+      return r.text().then(function (t) {
+        var j = t ? JSON.parse(t) : {};
+        if (id) j._entityId = idFrom(id);
+        return j;
+      });
+    });
+  }
+  function idFrom(h) { var m = /\(([0-9a-f-]{36})\)/i.exec(h || ""); return m ? m[1] : null; }
+
+  var DV = {
+    fetch: dvFetch,
+    retrieveMultiple: function (set, query) {
+      return dvFetch(set + (query || "")).then(function (r) { return r.value || []; });
+    },
+    retrieve: function (set, id, query) { return dvFetch(set + "(" + id + ")" + (query || "")); },
+    create: function (set, data) {
+      return dvFetch(set, { method: "POST", body: data }).then(function (r) { return r._entityId; });
+    },
+    update: function (set, id, data) {
+      return dvFetch(set + "(" + id + ")", { method: "PATCH", body: data });
+    },
+    whoAmI: function () { return dvFetch("WhoAmI"); },
+    esc: function (s) { return String(s == null ? "" : s).replace(/'/g, "''"); }
+  };
+
+  /* ============================ utils ============================ */
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function el(html) { var d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; }
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  function fmtDate(v) {
+    if (!v) return "—";
+    var d = new Date(v); if (isNaN(d)) return "—";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  function fmtDateTime(v) {
+    if (!v) return "—";
+    var d = new Date(v); if (isNaN(d)) return "—";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+      " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
+  function toISODate(v) {
+    if (!v) return null;
+    var d = new Date(v); if (isNaN(d)) return null;
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function fmtMoney(n) {
+    if (n === null || n === undefined || n === "" || isNaN(n)) return "—";
+    var v = Number(n);
+    if (Math.abs(v) >= 1e9) return (v / 1e9).toFixed(2).replace(/\.00$/, "") + "bn";
+    if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(2).replace(/\.00$/, "") + "m";
+    if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+    return String(v);
+  }
+  function daysUntil(v) {
+    if (!v) return null;
+    var d = new Date(v); if (isNaN(d)) return null;
+    var t = new Date(); t.setHours(0, 0, 0, 0); d.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
+  }
+  function uid(p) { return (p || "f") + "_" + Math.random().toString(36).slice(2, 9); }
+
+  function toast(msg, kind, ms) {
+    var t = $("#gtiToast");
+    if (!t) { t = el('<div id="gtiToast" class="toast"></div>'); document.body.appendChild(t); }
+    t.className = "toast " + (kind || "");
+    t.textContent = msg;
+    requestAnimationFrame(function () { t.classList.add("on"); });
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove("on"); }, ms || 3200);
+  }
+
+  /* ============================ choice maps ============================ */
+  var CATEGORY = {
+    10000: "Country Coverage", 10001: "Sector Coverage", 10002: "Global Markets",
+    10003: "Transaction Banking", 10004: "Lending", 10005: "Credit / Risk",
+    10006: "Trade Finance", 10007: "DCM / ECM", 10008: "Relationship Management", 10009: "Other"
+  };
+  var TEAMTYPE = {};
+  Object.keys(CATEGORY).forEach(function (k) { TEAMTYPE[Number(k) + 100] = CATEGORY[k]; });
+
+  var STATUS = { 10200: "Draft", 10201: "Sent", 10202: "In Progress", 10203: "Submitted", 10204: "Closed" };
+  var STATUS_V = { Draft: 10200, Sent: 10201, "In Progress": 10202, Submitted: 10203, Closed: 10204 };
+  var STATUS_CLS = { 10200: "b-draft", 10201: "b-sent", 10202: "b-prog", 10203: "b-subm", 10204: "b-closed" };
+
+  /* team name -> Dataverse team record name (created in this environment) */
+  var TEAM_FOR_TYPE = {
+    "Country Coverage": "Country Coverage",
+    "Sector Coverage": "Sector Coverage",
+    "Global Markets": "Global Markets",
+    "Transaction Banking": "Transaction Banking",
+    "Lending": "Country Coverage",
+    "Credit / Risk": "Credit & Risk",
+    "Trade Finance": "Trade Finance",
+    "DCM / ECM": "DCM / ECM",
+    "Relationship Management": "Sector Coverage",
+    "Other": "Sector Coverage"
+  };
+
+  function statusBadge(v) {
+    var lbl = STATUS[v] || "Draft";
+    return '<span class="badge ' + (STATUS_CLS[v] || "b-draft") + '"><span class="bdot"></span>' + esc(lbl) + "</span>";
+  }
+
+  /* ============================ icons ============================ */
+  var ICONS = {
+    globe: '<path d="M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c3 3.5 3 16.5 0 20M12 2c-3 3.5-3 16.5 0 20"/>',
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
+    banknote: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    trending: '<path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/>',
+    wallet: '<path d="M3 7a2 2 0 012-2h13a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M16 12h3"/>',
+    ship: '<path d="M3 17l2-6h14l2 6"/><path d="M12 11V4M5 11V8h14v3"/><path d="M2 20c2 0 2 1.5 4 1.5S10 20 12 20s2 1.5 4 1.5S20 20 22 20"/>',
+    shield: '<path d="M12 2l8 3.5v6c0 5-3.5 9-8 10.5C7.5 20.5 4 16.5 4 11.5v-6z"/>',
+    chart: '<path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="7"/><rect x="10.5" y="6" width="3.5" height="12"/><rect x="16" y="13" width="3.5" height="5"/>',
+    sitemap: '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v5M5 16v-2h14v2"/>',
+    users: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><path d="M16 5.5a3.2 3.2 0 010 6"/><path d="M18 14.8c2 .7 3.5 2.4 3.5 5.2"/>',
+    swords: '<path d="M4 4l9 9M20 4l-9 9"/><path d="M13 13l4 4-2 2-4-4M11 13l-4 4 2 2 4-4"/>',
+    funnel: '<path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+    sparkle: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+    blank: '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>',
+    inbox: '<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M4.5 5.5h15l1.5 7.5v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/>',
+    check: '<path d="M20 6L9 17l-5-5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+    alert: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5h.01"/>',
+    back: '<path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',
+    save: '<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    grip: '<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/>'
+  };
+  function icon(name, size, sw) {
+    var p = ICONS[name] || ICONS.blank;
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" ' +
+      'stroke="currentColor" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round">' + p + "</svg>";
+  }
+
+  /* ============================ questionnaire schema ============================ */
+  var FIELD_TYPES = [
+    { v: "text", l: "Single line text" },
+    { v: "multiline", l: "Multi-line text" },
+    { v: "number", l: "Number" },
+    { v: "currency", l: "Currency" },
+    { v: "percentage", l: "Percentage" },
+    { v: "date", l: "Date" },
+    { v: "boolean", l: "Yes / No" },
+    { v: "choice", l: "Choice (single)" },
+    { v: "multiselect", l: "Multi-select" }
+  ];
+  var TYPE_ALIAS = {
+    string: "text", singleline: "text", textarea: "multiline", memo: "multiline", longtext: "multiline",
+    money: "currency", decimal: "number", int: "number", integer: "number", float: "number",
+    percent: "percentage", "yes/no": "boolean", yesno: "boolean", bool: "boolean", toggle: "boolean",
+    datetime: "date", select: "choice", dropdown: "choice", option: "choice", optionset: "choice",
+    picklist: "choice", multichoice: "multiselect", multiselectchoice: "multiselect", checkboxes: "multiselect"
+  };
+
+  /** Normalise/repair an arbitrary form-JSON object into the supported schema. */
+  function normalizeForm(raw, fallbackTitle) {
+    var f = raw;
+    if (typeof f === "string") { try { f = JSON.parse(f); } catch (e) { f = null; } }
+    if (!f || typeof f !== "object") f = {};
+    var out = {
+      title: String(f.title || fallbackTitle || "Information Request").slice(0, 200),
+      description: String(f.description || ""),
+      schemaVersion: "1.0",
+      sections: []
+    };
+    var secs = Array.isArray(f.sections) ? f.sections : [];
+    if (!secs.length && Array.isArray(f.fields)) secs = [{ title: "Details", fields: f.fields }];
+    var seen = {};
+    secs.forEach(function (s, si) {
+      if (!s || typeof s !== "object") return;
+      var sec = { title: String(s.title || ("Section " + (si + 1))), fields: [] };
+      if (s.description) sec.description = String(s.description);
+      (Array.isArray(s.fields) ? s.fields : []).forEach(function (fl, fi) {
+        if (!fl || typeof fl !== "object") return;
+        var t = String(fl.type || "text").toLowerCase().trim();
+        t = TYPE_ALIAS[t] || t;
+        if (!FIELD_TYPES.some(function (x) { return x.v === t; })) t = "text";
+        var id = String(fl.id || fl.name || "").replace(/[^A-Za-z0-9_]/g, "");
+        if (!id) id = "f" + si + "_" + fi;
+        while (seen[id]) id = id + "_";
+        seen[id] = 1;
+        var nf = {
+          id: id,
+          label: String(fl.label || fl.title || id),
+          type: t,
+          required: !!fl.required
+        };
+        if (fl.help || fl.helpText || fl.description) nf.help = String(fl.help || fl.helpText || fl.description);
+        if (t === "choice" || t === "multiselect") {
+          var o = fl.options || fl.choices || [];
+          if (!Array.isArray(o)) o = [];
+          nf.options = o.map(function (x) {
+            return typeof x === "object" && x ? String(x.label || x.value || x.text || "") : String(x);
+          }).filter(function (x) { return x !== ""; });
+          if (!nf.options.length) nf.options = ["Option 1", "Option 2"];
+        }
+        sec.fields.push(nf);
+      });
+      if (sec.fields.length) out.sections.push(sec);
+    });
+    if (!out.sections.length) out.sections = [{ title: "Details", fields: [{ id: "notes", label: "Notes", type: "multiline", required: false }] }];
+    return out;
+  }
+
+  function countFields(form) {
+    return (form.sections || []).reduce(function (a, s) { return a + (s.fields || []).length; }, 0);
+  }
+
+  /* ============================ renderer ============================ */
+  /**
+   * Renders a questionnaire from Form JSON into a container.
+   * opts: { form, values, readOnly, container, compact }
+   */
+  function Renderer(opts) {
+    this.form = normalizeForm(opts.form);
+    this.values = opts.values || {};
+    this.readOnly = !!opts.readOnly;
+    this.host = opts.container;
+    this.compact = !!opts.compact;
+    this._fields = {};
+    this.render();
+  }
+
+  Renderer.prototype.render = function () {
+    var self = this, h = "";
+    this.form.sections.forEach(function (s, si) {
+      h += '<div class="qsec"><div class="qhead"><div class="qtitle">' +
+        '<span class="qnum">' + (si + 1) + "</span>" + esc(s.title) + "</div>" +
+        '<span class="mini muted">' + s.fields.length + " question" + (s.fields.length === 1 ? "" : "s") + "</span></div>";
+      if (s.description) h += '<div class="qdesc">' + esc(s.description) + "</div>";
+      h += '<div class="qbody"><div class="fgrid">';
+      s.fields.forEach(function (f) { h += self.fieldHtml(f); });
+      h += "</div></div></div>";
+    });
+    this.host.innerHTML = h;
+    this.bind();
+  };
+
+  Renderer.prototype.fieldHtml = function (f) {
+    var id = "q_" + f.id, v = this.values[f.id];
+    var wide = (f.type === "multiline" || f.type === "multiselect");
+    var ro = this.readOnly ? " disabled" : "";
+    var body = "";
+
+    if (f.type === "multiline") {
+      body = '<textarea id="' + id + '" rows="3"' + ro + '>' + esc(v == null ? "" : v) + "</textarea>";
+    } else if (f.type === "number") {
+      body = '<input type="number" step="any" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + ">";
+    } else if (f.type === "currency") {
+      body = '<div class="inp-affix pre"><span class="affix">AED</span>' +
+        '<input type="number" step="any" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + "></div>";
+    } else if (f.type === "percentage") {
+      body = '<div class="inp-affix post"><span class="affix">%</span>' +
+        '<input type="number" step="any" min="0" max="100" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + "></div>";
+    } else if (f.type === "date") {
+      body = '<input type="date" id="' + id + '" value="' + esc(toISODate(v) || "") + '"' + ro + ">";
+    } else if (f.type === "boolean") {
+      body = '<label class="tgl"><input type="checkbox" id="' + id + '"' + (v === true || v === "true" ? " checked" : "") + ro +
+        '><span class="track"></span><span class="tlbl">' + (v === true || v === "true" ? "Yes" : "No") + "</span></label>";
+    } else if (f.type === "choice") {
+      body = '<select id="' + id + '"' + ro + '><option value="">— Select —</option>' +
+        (f.options || []).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (String(v) === String(o) ? " selected" : "") + ">" + esc(o) + "</option>";
+        }).join("") + "</select>";
+    } else if (f.type === "multiselect") {
+      var arr = Array.isArray(v) ? v.map(String) : (v ? String(v).split(/\s*[;,]\s*/) : []);
+      body = '<div class="msel" id="' + id + '" data-ro="' + (this.readOnly ? 1 : 0) + '">' +
+        (f.options || []).map(function (o) {
+          return '<span class="ms' + (arr.indexOf(String(o)) >= 0 ? " on" : "") + '" data-v="' + esc(o) + '">' + esc(o) + "</span>";
+        }).join("") + "</div>";
+    } else {
+      body = '<input type="text" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + ">";
+    }
+
+    return '<div class="fld' + (wide ? " f-full" : "") + '" data-fid="' + esc(f.id) + '" data-ftype="' + f.type + '">' +
+      '<label class="flbl" for="' + id + '">' + esc(f.label) +
+      (f.required ? '<span class="req-star">*</span>' : "") + "</label>" + body +
+      (f.help ? '<div class="fhelp">' + esc(f.help) + "</div>" : "") +
+      '<div class="ferr">This field is required.</div></div>';
+  };
+
+  Renderer.prototype.bind = function () {
+    var self = this;
+    if (this.readOnly) {
+      $$(".msel", this.host).forEach(function (m) { m.style.pointerEvents = "none"; m.style.opacity = ".85"; });
+      return;
+    }
+    $$(".msel .ms", this.host).forEach(function (s) {
+      s.addEventListener("click", function () { s.classList.toggle("on"); self.clearErr(s); });
+    });
+    $$(".tgl input", this.host).forEach(function (c) {
+      c.addEventListener("change", function () {
+        var l = c.parentElement.querySelector(".tlbl"); if (l) l.textContent = c.checked ? "Yes" : "No";
+      });
+    });
+    $$("input,textarea,select", this.host).forEach(function (i) {
+      i.addEventListener("input", function () { self.clearErr(i); });
+      i.addEventListener("change", function () { self.clearErr(i); });
+    });
+  };
+  Renderer.prototype.clearErr = function (node) {
+    var f = node.closest(".fld"); if (f) f.classList.remove("invalid");
+  };
+
+  Renderer.prototype.getValues = function () {
+    var out = {}, self = this;
+    this.form.sections.forEach(function (s) {
+      s.fields.forEach(function (f) {
+        var id = "q_" + f.id, n = document.getElementById(id);
+        if (!n) return;
+        if (f.type === "multiselect") {
+          out[f.id] = $$(".ms.on", n).map(function (x) { return x.getAttribute("data-v"); });
+        } else if (f.type === "boolean") {
+          out[f.id] = !!n.checked;
+        } else if (f.type === "number" || f.type === "currency" || f.type === "percentage") {
+          out[f.id] = n.value === "" ? null : Number(n.value);
+        } else {
+          out[f.id] = n.value === "" ? null : n.value;
+        }
+      });
+    });
+    return out;
+  };
+
+  Renderer.prototype.validate = function () {
+    var vals = this.getValues(), bad = [], self = this;
+    $$(".fld", this.host).forEach(function (n) { n.classList.remove("invalid"); });
+    this.form.sections.forEach(function (s) {
+      s.fields.forEach(function (f) {
+        if (!f.required) return;
+        var v = vals[f.id];
+        var empty = (v === null || v === undefined || v === "" ||
+          (Array.isArray(v) && !v.length) || (f.type === "boolean" && false));
+        if (f.type === "boolean") empty = false;
+        if (empty) {
+          bad.push(f.label);
+          var n = self.host.querySelector('.fld[data-fid="' + f.id + '"]');
+          if (n) n.classList.add("invalid");
+        }
+      });
+    });
+    if (bad.length) {
+      var first = self.host.querySelector(".fld.invalid");
+      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return { ok: !bad.length, missing: bad, values: vals };
+  };
+
+  /** Human-readable rendering of a completed response (used for AI + read-only summary) */
+  function responseToText(form, values) {
+    var out = [];
+    normalizeForm(form).sections.forEach(function (s) {
+      var lines = [];
+      s.fields.forEach(function (f) {
+        var v = values ? values[f.id] : null;
+        if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) return;
+        if (Array.isArray(v)) v = v.join(", ");
+        if (f.type === "boolean") v = v ? "Yes" : "No";
+        if (f.type === "currency") v = "AED " + v;
+        if (f.type === "percentage") v = v + "%";
+        if (f.type === "date") v = fmtDate(v);
+        lines.push("- " + f.label + ": " + v);
+      });
+      if (lines.length) out.push("## " + s.title + "\n" + lines.join("\n"));
+    });
+    return out.join("\n\n");
+  }
+
+  /* ============================ navigation ============================ */
+  function openRequest(id) {
+    var X = xrm();
+    if (!X) { return; }
+    X.Navigation.openForm({ entityName: "fsi_informationrequest", entityId: id });
+  }
+  function openWebResourceDialog(name, data, opts) {
+    var X = xrm();
+    opts = opts || {};
+    return X.Navigation.navigateTo(
+      { pageType: "webresource", webresourceName: name, data: typeof data === "string" ? data : JSON.stringify(data || {}) },
+      { target: 2, position: 1, width: opts.width || { value: 1080, unit: "px" }, height: opts.height || { value: 820, unit: "px" }, title: opts.title || "Request Information" }
+    );
+  }
+  /** Read the "data" parameter passed into a web resource dialog / form. */
+  function pageData() {
+    var q = new URLSearchParams(window.location.search);
+    var d = q.get("data") || q.get("Data") || "";
+    if (!d) return {};
+    try { return JSON.parse(decodeURIComponent(d)); } catch (e) {}
+    try { return JSON.parse(d); } catch (e) {}
+    return {};
+  }
+
+  /* ============================ AI service ============================ */
+  /**
+   * AI calls go through an HTTP-triggered Power Automate flow whose URL is stored
+   * in a Dataverse configuration record (never hardcoded in the web resource).
+   * Config record: fsi_informationrequesttemplate where fsi_name = '__CONFIG__'
+   * and fsi_formjson = { "aiEndpoint": "https://prod-xx.../invoke?..." }
+   */
+  var _cfg = null;
+  function getConfig() {
+    if (_cfg) return Promise.resolve(_cfg);
+    return DV.retrieveMultiple("fsi_informationrequesttemplates",
+      "?$select=fsi_formjson&$filter=fsi_name eq '__CONFIG__'&$top=1")
+      .then(function (r) {
+        var c = {};
+        if (r.length && r[0].fsi_formjson) { try { c = JSON.parse(r[0].fsi_formjson); } catch (e) {} }
+        _cfg = c; return c;
+      }).catch(function () { _cfg = {}; return _cfg; });
+  }
+
+  function aiCall(action, payload) {
+    return getConfig().then(function (c) {
+      if (!c.aiEndpoint) {
+        var e = new Error("AI service is not configured for this environment.");
+        e.code = "NO_AI"; throw e;
+      }
+      return fetch(c.aiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+      }).then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error("AI service error: " + r.status + " " + t.slice(0, 300)); });
+        return r.json();
+      });
+    });
+  }
+  function parseAiJson(res) {
+    var raw = res;
+    if (res && typeof res === "object") raw = res.result || res.output || res.content || res.text || res;
+    if (typeof raw === "object") return raw;
+    var s = String(raw || "").trim();
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+    var a = s.indexOf("{"), b = s.lastIndexOf("}");
+    if (a >= 0 && b > a) s = s.slice(a, b + 1);
+    return JSON.parse(s);
+  }
+
+  /* ============================ export ============================ */
+  G.GTI = {
+    xrm: xrm, clientUrl: clientUrl, DV: DV,
+    esc: esc, el: el, $: $, $$: $$, uid: uid, toast: toast, icon: icon, ICONS: ICONS,
+    fmtDate: fmtDate, fmtDateTime: fmtDateTime, fmtMoney: fmtMoney, toISODate: toISODate, daysUntil: daysUntil,
+    CATEGORY: CATEGORY, TEAMTYPE: TEAMTYPE, STATUS: STATUS, STATUS_V: STATUS_V, STATUS_CLS: STATUS_CLS,
+    TEAM_FOR_TYPE: TEAM_FOR_TYPE, statusBadge: statusBadge,
+    FIELD_TYPES: FIELD_TYPES, normalizeForm: normalizeForm, countFields: countFields,
+    Renderer: Renderer, responseToText: responseToText,
+    openRequest: openRequest, openWebResourceDialog: openWebResourceDialog, pageData: pageData,
+    getConfig: getConfig, aiCall: aiCall, parseAiJson: parseAiJson
+  };
+})(window);
+</script>
+<script>
+(function(){
+  "use strict";
+  var G = window.GTI, $ = G.$, $$ = G.$$, esc = G.esc;
+
+  var ctx = G.pageData();               /* planId, planTitle, accountId, accountName, ownerId */
+  var step = 1, mode = null;
+  var templates = [], selTpl = null, cat = "all", search = "";
+  var form = null, formBeforeAi = null, editing = false;
+  var teams = [], users = [], me = null;
+
+  /* ---------------- shell ---------------- */
+  function setSteps(){
+    var labels = [ "Choose approach",
+                   mode === "template" ? "Select template" : mode === "describe" ? "Describe need" : "Build questions",
+                   "Review questionnaire", "Send" ];
+    $("#steps").innerHTML = labels.map(function(l,i){
+      var n = i + 1, cls = n === step ? "on" : (n < step ? "done" : "");
+      return (i ? '<span class="step-sep"></span>' : "") +
+        '<span class="step ' + cls + '"><span class="sn">' + (n < step ? "✓" : n) + '</span>' + esc(l) + '</span>';
+    }).join("");
+  }
+
+  function show(){
+    ["s1","s2t","s2d","s3","s4"].forEach(function(id){ $("#"+id).classList.add("hidden"); });
+    if (step === 1) $("#s1").classList.remove("hidden");
+    else if (step === 2) {
+      if (mode === "template") $("#s2t").classList.remove("hidden");
+      else if (mode === "describe") $("#s2d").classList.remove("hidden");
+      else { step = 3; return show(); }
+    }
+    else if (step === 3) $("#s3").classList.remove("hidden");
+    else $("#s4").classList.remove("hidden");
+
+    $("#btnBack").classList.toggle("hidden", step === 1);
+    $("#btnNext").classList.toggle("hidden", step === 1 || (step === 2 && mode !== "template"));
+    $("#btnDraft").classList.toggle("hidden", step < 3);
+    $("#btnNext").innerHTML = step === 4 ? (G.icon("send",15) + " Send Request") : "Continue";
+    $("#btnNext").className = "btn btn-lg " + (step === 4 ? "btn-ok" : "btn-primary");
+    $("#barHint").textContent = step === 2 && mode === "template" ? "Select a template to continue"
+                              : step === 3 ? "Review and adjust before sending" : "";
+    setSteps();
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  /* ---------------- step 1 ---------------- */
+  $("#mi1").innerHTML = G.icon("copy",23,1.6);  $("#mb1").innerHTML = "Browse gallery " + G.icon("back",13).replace('d="M19 12H5"','d="M5 12h14"').replace('d="M12 19l-7-7 7-7"','d="M12 5l7 7-7 7"');
+  $("#mi2").innerHTML = G.icon("sparkle",23,1.6); $("#mb2").innerHTML = "Ask Copilot";
+  $("#mi3").innerHTML = G.icon("blank",23,1.6);   $("#mb3").innerHTML = "Build my own";
+  $("#tSearchIco").innerHTML = G.icon("search",14);
+  $("#btnGenerate").innerHTML = G.icon("sparkle",15) + " Generate with Copilot";
+  $("#btnCustomize").innerHTML = G.icon("sparkle",14) + " Customize with Copilot";
+  $("#aiHdr").innerHTML = G.icon("sparkle",14) + " Ask Copilot to customize this questionnaire";
+  $("#btnAddSec").innerHTML = G.icon("plus",13) + " Add section";
+  $("#btnBack").innerHTML = G.icon("back",14) + " Back";
+
+  $$(".mode").forEach(function(m){
+    m.addEventListener("click", function(){
+      mode = m.getAttribute("data-m");
+      if (mode === "blank") {
+        form = { title:"", description:"", schemaVersion:"1.0",
+                 sections:[{ title:"Section 1", fields:[{ id:"q1", label:"Question 1", type:"text", required:false }] }] };
+        selTpl = null; editing = true; step = 3; paintReview(); show(); return;
+      }
+      step = 2;
+      if (mode === "template") paintGallery();
+      show();
+    });
+  });
+
+  /* ---------------- step 2a : gallery ---------------- */
+  function loadTemplates(){
+    return G.DV.retrieveMultiple("fsi_informationrequesttemplates",
+      "?$select=fsi_name,fsi_description,fsi_category,fsi_targetteamtype,fsi_formjson,fsi_icon,fsi_accentcolor,fsi_version"
+      + "&$filter=fsi_active eq true&$orderby=fsi_name asc")
+      .then(function(r){ templates = r.filter(function(t){ return t.fsi_name !== "__CONFIG__"; }); });
+  }
+
+  function paintGallery(){
+    var cats = {};
+    templates.forEach(function(t){ var c = G.CATEGORY[t.fsi_category] || "Other"; cats[c] = (cats[c]||0)+1; });
+    $("#tCats").innerHTML = '<span class="chip' + (cat==="all"?" on":"") + '" data-c="all">All <b style="opacity:.7">' + templates.length + '</b></span>'
+      + Object.keys(cats).sort().map(function(c){
+          return '<span class="chip' + (cat===c?" on":"") + '" data-c="' + esc(c) + '">' + esc(c) + ' <b style="opacity:.7">' + cats[c] + '</b></span>';
+        }).join("");
+    $$("#tCats .chip").forEach(function(c){
+      c.addEventListener("click", function(){ cat = c.getAttribute("data-c"); paintGallery(); });
+    });
+
+    var list = templates.filter(function(t){
+      var c = G.CATEGORY[t.fsi_category] || "Other";
+      if (cat !== "all" && c !== cat) return false;
+      if (search && (t.fsi_name + " " + (t.fsi_description||"")).toLowerCase().indexOf(search) < 0) return false;
+      return true;
+    });
+
+    if (!list.length){
+      $("#tGallery").innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="e-ico">' + G.icon("search",38,1.4) +
+        '</div><div class="e-t">No templates found</div><div class="e-s">Try another category or search term.</div></div>';
+      return;
+    }
+    $("#tGallery").innerHTML = list.map(function(t){
+      var f = G.normalizeForm(t.fsi_formjson, t.fsi_name);
+      var n = G.countFields(f), col = t.fsi_accentcolor || "#2563eb";
+      return '<div class="tcard' + (selTpl && selTpl.id === t.fsi_informationrequesttemplateid ? " sel" : "") + '" ' +
+        'data-id="' + t.fsi_informationrequesttemplateid + '" style="--accent:' + esc(col) + ';--accent-soft:' + esc(col) + '14">' +
+        '<div class="ticon">' + G.icon(t.fsi_icon || "blank", 19, 1.7) + '</div>' +
+        '<div class="tname">' + esc(t.fsi_name) + '</div>' +
+        '<div class="tdesc">' + esc(t.fsi_description || "") + '</div>' +
+        '<div class="tmeta"><span class="badge b-draft">' + esc(G.TEAMTYPE[t.fsi_targetteamtype] || "—") + '</span>' +
+        '<span>' + f.sections.length + ' sections · ' + n + ' questions</span></div></div>';
+    }).join("");
+
+    $$("#tGallery .tcard").forEach(function(c){
+      c.addEventListener("click", function(){
+        var id = c.getAttribute("data-id");
+        var t = templates.filter(function(x){ return x.fsi_informationrequesttemplateid === id; })[0];
+        selTpl = { id:id, rec:t };
+        form = G.normalizeForm(t.fsi_formjson, t.fsi_name);
+        formBeforeAi = null; editing = false;
+        step = 3; paintReview(); show();
+      });
+    });
+  }
+  $("#tSearch").addEventListener("input", function(){ search = this.value.trim().toLowerCase(); paintGallery(); });
+  $$("#s2d .chip[data-ex]").forEach(function(c){
+    c.addEventListener("click", function(){ $("#nlInput").value = c.getAttribute("data-ex"); });
+  });
+
+  /* ---------------- step 2b : AI generate ---------------- */
+  var aiSuggest = null;
+  $("#btnGenerate").addEventListener("click", function(){
+    var txt = $("#nlInput").value.trim();
+    if (!txt) { G.toast("Describe what you need first.", "err"); return; }
+    var b = this, old = b.innerHTML;
+    b.disabled = true; b.innerHTML = '<span class="spin"></span> Copilot is drafting…';
+    G.aiCall("generate", { instruction: txt, account: ctx.accountName || "", accountPlan: ctx.planTitle || "" })
+      .then(function(res){
+        var j = G.parseAiJson(res);
+        aiSuggest = j;
+        form = G.normalizeForm(j.form || j.questionnaire || j, j.title || "Information Request");
+        selTpl = null; formBeforeAi = null; editing = false;
+        step = 3; paintReview(); show();
+        G.toast("Copilot drafted your questionnaire", "ok");
+      })
+      .catch(function(e){
+        if (e.code === "NO_AI") { fallbackGenerate(txt); return; }
+        G.toast(e.message || "Copilot could not generate the questionnaire.", "err", 5000);
+      })
+      .then(function(){ b.disabled = false; b.innerHTML = old; });
+  });
+
+  /* Graceful degradation when the AI endpoint is not yet configured. */
+  function fallbackGenerate(txt){
+    var guess = "Other";
+    [["hedg","Global Markets"],["fx","Global Markets"],["currenc","Global Markets"],
+     ["cash","Transaction Banking"],["liquid","Transaction Banking"],["payment","Transaction Banking"],
+     ["trade","Trade Finance"],["letter of credit","Trade Finance"],["supply chain","Trade Finance"],
+     ["credit","Credit / Risk"],["risk","Credit / Risk"],["limit","Credit / Risk"],
+     ["bond","DCM / ECM"],["sukuk","DCM / ECM"],["ipo","DCM / ECM"],["capital market","DCM / ECM"],
+     ["loan","Lending"],["financ","Lending"],["wallet","Country Coverage"],["stakeholder","Relationship Management"]]
+      .forEach(function(p){ if (txt.toLowerCase().indexOf(p[0]) >= 0 && guess === "Other") guess = p[1]; });
+    aiSuggest = { title: txt.slice(0,110), targetTeamType: guess, requestDescription: txt };
+    form = G.normalizeForm({
+      title: txt.slice(0,110),
+      description: txt,
+      sections: [
+        { title:"Context", fields:[
+          { id:"background", label:"Background & Current Position", type:"multiline", required:true },
+          { id:"scope", label:"Scope / Entities Covered", type:"text", required:false }]},
+        { title:"Assessment", fields:[
+          { id:"assessment", label:"Assessment", type:"multiline", required:true },
+          { id:"estimatedValue", label:"Estimated Value", type:"currency", required:false },
+          { id:"timing", label:"Expected Timing", type:"date", required:false }]},
+        { title:"Opportunity", fields:[
+          { id:"opportunity", label:"Potential FAB Opportunity", type:"multiline", required:true },
+          { id:"revenue", label:"Estimated Revenue Opportunity", type:"currency", required:false },
+          { id:"nextAction", label:"Recommended Next Action", type:"multiline", required:true }]}
+      ]});
+    selTpl = null; formBeforeAi = null; editing = true;
+    step = 3; paintReview(); show();
+    G.toast("AI service not configured — a starter questionnaire was created for you to edit.", "", 6000);
+  }
+
+  /* ---------------- step 3 : review / edit ---------------- */
+  function paintReview(){
+    $("#fTitle").value = form.title || "";
+    $("#fDesc").value = form.description || "";
+    $("#pvCount").textContent = form.sections.length + " sections · " + G.countFields(form) + " questions";
+    $("#btnToggleEdit").innerHTML = editing ? (G.icon("check",13) + " Done editing") : (G.icon("edit",13) + " Edit questions");
+    $("#pvLbl").textContent = editing ? "Edit questionnaire" : "Questionnaire preview";
+    $("#btnAddSec").classList.toggle("hidden", !editing);
+    $("#pvHost").classList.toggle("hidden", editing);
+    $("#edHost").classList.toggle("hidden", !editing);
+    $("#btnUndoAi").classList.toggle("hidden", !formBeforeAi);
+    if (editing) paintEditor(); else new G.Renderer({ form: form, container: $("#pvHost"), readOnly: true });
+  }
+  $("#fTitle").addEventListener("input", function(){ form.title = this.value; });
+  $("#fDesc").addEventListener("input", function(){ form.description = this.value; });
+  $("#btnToggleEdit").addEventListener("click", function(){
+    if (editing) syncEditor();
+    editing = !editing; paintReview();
+  });
+  $("#btnAddSec").addEventListener("click", function(){
+    syncEditor();
+    form.sections.push({ title:"New section", fields:[{ id:G.uid("q"), label:"New question", type:"text", required:false }] });
+    paintReview();
+  });
+  $("#btnUndoAi").addEventListener("click", function(){
+    if (!formBeforeAi) return;
+    form = formBeforeAi; formBeforeAi = null; $("#aiStat").textContent = ""; paintReview();
+    G.toast("Reverted to the original questionnaire", "ok");
+  });
+
+  function paintEditor(){
+    var h = "";
+    form.sections.forEach(function(s, si){
+      h += '<div class="qsec" data-si="' + si + '"><div class="qhead">' +
+        '<div class="qtitle" style="flex:1"><span class="qnum">' + (si+1) + '</span>' +
+        '<input type="text" class="secTitle" value="' + esc(s.title) + '" style="max-width:380px;font-weight:700"></div>' +
+        '<div class="row"><button class="btn btn-sm addQ">' + G.icon("plus",12) + ' Question</button>' +
+        '<button class="btn btn-sm btn-danger delSec" title="Delete section">' + G.icon("trash",12) + '</button></div></div>' +
+        '<div class="qbody">';
+      s.fields.forEach(function(f, fi){
+        h += '<div class="qedit" data-fi="' + fi + '"><div class="qrow">' +
+          '<div class="fld"><label class="flbl">Question label</label><input type="text" class="qLbl" value="' + esc(f.label) + '"></div>' +
+          '<div class="fld"><label class="flbl">Field type</label><select class="qType">' +
+            G.FIELD_TYPES.map(function(t){ return '<option value="' + t.v + '"' + (f.type===t.v?" selected":"") + '>' + esc(t.l) + '</option>'; }).join("") +
+          '</select></div>' +
+          '<div class="fld"><label class="flbl">Required</label><label class="tgl"><input type="checkbox" class="qReq"' + (f.required?" checked":"") +
+            '><span class="track"></span><span class="tlbl">' + (f.required?"Yes":"No") + '</span></label></div>' +
+          '<div><button class="btn btn-sm btn-danger delQ" title="Delete question">' + G.icon("trash",12) + '</button></div>' +
+        '</div><div class="qrow2">' +
+          '<div class="fld"><label class="flbl">Help text</label><input type="text" class="qHelp" value="' + esc(f.help||"") + '" placeholder="Optional guidance for the contributor"></div>' +
+          '<div class="fld optWrap' + (f.type==="choice"||f.type==="multiselect" ? "" : " hidden") + '"><label class="flbl">Choice options <span class="mini muted">(comma separated)</span></label>' +
+            '<input type="text" class="qOpts" value="' + esc((f.options||[]).join(", ")) + '"></div>' +
+        '</div></div>';
+      });
+      h += '</div></div>';
+    });
+    $("#edHost").innerHTML = h;
+
+    $$("#edHost .qType").forEach(function(s){
+      s.addEventListener("change", function(){
+        var w = s.closest(".qedit").querySelector(".optWrap");
+        w.classList.toggle("hidden", !(s.value === "choice" || s.value === "multiselect"));
+        var oi = w.querySelector(".qOpts");
+        if (!w.classList.contains("hidden") && !oi.value.trim()) oi.value = "Option 1, Option 2, Option 3";
+      });
+    });
+    $$("#edHost .qReq").forEach(function(c){
+      c.addEventListener("change", function(){ c.parentElement.querySelector(".tlbl").textContent = c.checked ? "Yes" : "No"; });
+    });
+    $$("#edHost .addQ").forEach(function(b){
+      b.addEventListener("click", function(){
+        syncEditor();
+        var si = +b.closest(".qsec").getAttribute("data-si");
+        form.sections[si].fields.push({ id:G.uid("q"), label:"New question", type:"text", required:false });
+        paintReview();
+      });
+    });
+    $$("#edHost .delQ").forEach(function(b){
+      b.addEventListener("click", function(){
+        syncEditor();
+        var si = +b.closest(".qsec").getAttribute("data-si"), fi = +b.closest(".qedit").getAttribute("data-fi");
+        form.sections[si].fields.splice(fi,1);
+        if (!form.sections[si].fields.length) form.sections.splice(si,1);
+        if (!form.sections.length) form.sections = [{ title:"Section 1", fields:[{ id:G.uid("q"), label:"Question 1", type:"text", required:false }] }];
+        paintReview();
+      });
+    });
+    $$("#edHost .delSec").forEach(function(b){
+      b.addEventListener("click", function(){
+        syncEditor();
+        var si = +b.closest(".qsec").getAttribute("data-si");
+        form.sections.splice(si,1);
+        if (!form.sections.length) form.sections = [{ title:"Section 1", fields:[{ id:G.uid("q"), label:"Question 1", type:"text", required:false }] }];
+        paintReview();
+      });
+    });
+  }
+
+  function syncEditor(){
+    if ($("#edHost").classList.contains("hidden") && !editing) return;
+    var secs = [];
+    $$("#edHost .qsec").forEach(function(sn){
+      var sec = { title: sn.querySelector(".secTitle").value || "Section", fields: [] };
+      $$(".qedit", sn).forEach(function(qn, i){
+        var t = qn.querySelector(".qType").value;
+        var f = { id: G.uid("q"), label: qn.querySelector(".qLbl").value || ("Question " + (i+1)),
+                  type: t, required: qn.querySelector(".qReq").checked };
+        var hp = qn.querySelector(".qHelp").value.trim(); if (hp) f.help = hp;
+        if (t === "choice" || t === "multiselect") {
+          f.options = qn.querySelector(".qOpts").value.split(",").map(function(x){ return x.trim(); }).filter(Boolean);
+          if (!f.options.length) f.options = ["Option 1","Option 2"];
+        }
+        sec.fields.push(f);
+      });
+      if (sec.fields.length) secs.push(sec);
+    });
+    if (secs.length) form.sections = secs;
+    form.title = $("#fTitle").value; form.description = $("#fDesc").value;
+    form = G.normalizeForm(form);
+  }
+
+  /* ---------------- AI customize ---------------- */
+  $("#btnCustomize").addEventListener("click", function(){
+    var ins = $("#aiInput").value.trim();
+    if (!ins) { G.toast("Tell Copilot how to adapt the questionnaire.", "err"); return; }
+    if (editing) { syncEditor(); editing = false; }
+    var b = this, old = b.innerHTML;
+    b.disabled = true; b.innerHTML = '<span class="spin"></span> Copilot is adapting…';
+    var before = JSON.parse(JSON.stringify(form));
+    G.aiCall("customize", {
+      instruction: ins, form: form,
+      account: ctx.accountName || "", accountPlan: ctx.planTitle || ""
+    }).then(function(res){
+      var j = G.parseAiJson(res);
+      formBeforeAi = before;
+      form = G.normalizeForm(j.form || j.questionnaire || j, before.title);
+      $("#aiStat").textContent = "Adapted by Copilot · " + G.countFields(form) + " questions";
+      paintReview();
+      G.toast("Copilot adapted the questionnaire", "ok");
+    }).catch(function(e){
+      G.toast(e.code === "NO_AI" ? "AI service is not configured in this environment yet."
+                                 : (e.message || "Copilot could not adapt the questionnaire."), "err", 5000);
+    }).then(function(){ b.disabled = false; b.innerHTML = old; });
+  });
+
+  /* ---------------- step 4 : send ---------------- */
+  function paintSend(){
+    $("#rType").innerHTML = Object.keys(G.CATEGORY).map(function(k){
+      return '<option value="' + k + '">' + esc(G.CATEGORY[k]) + '</option>'; }).join("");
+    var wantType = null;
+    if (selTpl) wantType = String((selTpl.rec.fsi_targetteamtype || 10109) - 100);
+    else if (aiSuggest && aiSuggest.targetTeamType) {
+      Object.keys(G.CATEGORY).forEach(function(k){
+        if (G.CATEGORY[k].toLowerCase() === String(aiSuggest.targetTeamType).toLowerCase()) wantType = k; });
+    }
+    if (wantType) $("#rType").value = wantType;
+
+    $("#rTitle").value = $("#rTitle").value || (selTpl ? selTpl.rec.fsi_name : (aiSuggest && aiSuggest.title) || form.title || "");
+    $("#rDesc").value  = $("#rDesc").value  || (aiSuggest && aiSuggest.requestDescription) || form.description || "";
+    if (!$("#rDue").value){
+      var d = new Date(); d.setDate(d.getDate() + 14);
+      $("#rDue").value = G.toISODate(d);
+    }
+    if (!$("#rTeam").value) matchTeam();
+    $("#s4Ctx").innerHTML = "Linked to <b>" + esc(ctx.accountName || "—") + "</b> · " + esc(ctx.planTitle || "");
+  }
+  function matchTeam(){
+    var typeLbl = G.CATEGORY[$("#rType").value];
+    var want = G.TEAM_FOR_TYPE[typeLbl];
+    var t = teams.filter(function(x){ return x.name === want; })[0];
+    if (t) $("#rTeam").value = t.teamid;
+  }
+  $("#rType").addEventListener("change", matchTeam);
+
+  function loadPeople(){
+    return Promise.all([
+      G.DV.retrieveMultiple("teams","?$select=name,teamid&$filter=teamtype eq 0&$orderby=name asc&$top=1000"),
+      G.DV.retrieveMultiple("systemusers","?$select=fullname,internalemailaddress&$filter=isdisabled eq false and accessmode eq 0&$orderby=fullname asc&$top=200"),
+      G.DV.whoAmI()
+    ]).then(function(r){
+      var named = ["Country Coverage","Sector Coverage","Global Markets","Transaction Banking",
+                   "Trade Finance","Credit & Risk","DCM / ECM"];
+      teams = r[0].filter(function(t){ return named.indexOf(t.name) >= 0; });
+      if (!teams.length) teams = r[0].filter(function(t){ return !/^[0-9a-f]{32}_\d$/.test(t.name); }).slice(0,60);
+      users = r[1]; me = r[2];
+      $("#rTeam").innerHTML = '<option value="">— Select team —</option>' +
+        teams.map(function(t){ return '<option value="' + t.teamid + '">' + esc(t.name) + '</option>'; }).join("");
+      $("#rUser").innerHTML = '<option value="">— Optional —</option>' +
+        users.map(function(u){ return '<option value="' + u.systemuserid + '">' + esc(u.fullname || u.internalemailaddress || "") + '</option>'; }).join("");
+    });
+  }
+
+  /* ---------------- persist ---------------- */
+  function buildRecord(statusLabel){
+    var rec = {
+      "fsi_name": $("#rTitle").value.trim(),
+      "fsi_requestdescription": $("#rDesc").value.trim() || null,
+      "fsi_requesttype": Number($("#rType").value),
+      "fsi_status": G.STATUS_V[statusLabel],
+      "fsi_duedate": $("#rDue").value || null,
+      "fsi_requestingteam": $("#rFrom").value.trim() || null,
+      "fsi_generatedformjson": JSON.stringify(form),
+      "fsi_aicustomizationinstruction": ($("#aiInput").value || $("#nlInput").value || "").trim() || null
+    };
+    if (ctx.planId)    rec["fsi_AccountPlan@odata.bind"] = "/fsi_accountplannings(" + ctx.planId + ")";
+    if (ctx.accountId) rec["fsi_Account@odata.bind"]     = "/accounts(" + ctx.accountId + ")";
+    if (selTpl)        rec["fsi_SourceTemplate@odata.bind"] = "/fsi_informationrequesttemplates(" + selTpl.id + ")";
+    if ($("#rTeam").value) rec["fsi_RequestedFromTeam@odata.bind"] = "/teams(" + $("#rTeam").value + ")";
+    if ($("#rUser").value) rec["fsi_RequestedFromUser@odata.bind"] = "/systemusers(" + $("#rUser").value + ")";
+    return rec;
+  }
+
+  function validateSend(){
+    if (!$("#rTitle").value.trim()) { G.toast("Enter a request title.", "err"); $("#rTitle").focus(); return false; }
+    if (!$("#rDue").value) { G.toast("Select a due date.", "err"); $("#rDue").focus(); return false; }
+    if (!$("#rTeam").value && !$("#rUser").value) { G.toast("Select a team or a person to request from.", "err"); return false; }
+    return true;
+  }
+
+  function save(statusLabel, btn){
+    if (editing) { syncEditor(); editing = false; paintReview(); }
+    if (statusLabel === "Sent" && !validateSend()) return;
+    if (statusLabel === "Draft" && !$("#rTitle").value.trim())
+      $("#rTitle").value = form.title || "Information Request";
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+    G.DV.create("fsi_informationrequests", buildRecord(statusLabel))
+      .then(function(id){
+        if (statusLabel !== "Sent") return id;
+        return notify(id).then(function(){ return id; });
+      })
+      .then(function(id){
+        G.toast(statusLabel === "Sent" ? "Request sent" : "Saved as draft", "ok");
+        setTimeout(function(){
+          try { G.xrm().Navigation.navigateTo({ pageType:"entityrecord", entityName:"fsi_informationrequest", entityId:id }); } catch(e){}
+          closeDialog();
+        }, 650);
+      })
+      .catch(function(e){ G.toast(e.message || "Could not save the request.", "err", 6000); })
+      .then(function(){ btn.disabled = false; btn.innerHTML = old; });
+  }
+
+  /* in-product notification to the nominated contributor(s) */
+  function notify(reqId){
+    var recips = [];
+    if ($("#rUser").value) recips.push($("#rUser").value);
+    var teamId = $("#rTeam").value;
+    var p = teamId && !recips.length
+      ? G.DV.retrieveMultiple("teammemberships", "?$select=systemuserid&$filter=teamid eq " + teamId + "&$top=25")
+          .then(function(m){ return m.map(function(x){ return x.systemuserid; }); })
+      : Promise.resolve(recips);
+    return p.then(function(ids){
+      if (!ids.length) return;
+      var url = G.clientUrl() + "/main.aspx?etn=fsi_informationrequest&id=" + reqId + "&pagetype=entityrecord";
+      var body = "You have been asked to provide information for " + (ctx.accountName || "an account") + ".\n\n"
+        + "Request: " + $("#rTitle").value.trim() + "\n"
+        + "Account: " + (ctx.accountName || "—") + "\n"
+        + "Account Plan: " + (ctx.planTitle || "—") + "\n"
+        + "Due: " + ($("#rDue").value ? G.fmtDate($("#rDue").value) : "—") + "\n\n"
+        + "Open the request: " + url;
+      return Promise.all(ids.slice(0,25).map(function(uid){
+        return G.DV.create("appnotifications", {
+          "title": "Information requested: " + $("#rTitle").value.trim(),
+          "body": body,
+          "ttlinseconds": 60 * 60 * 24 * 30,
+          "icontype": 100000000,
+          "ownerid@odata.bind": "/systemusers(" + uid + ")",
+          "data": JSON.stringify({ actions:[{ title:"Open request", data:{ url:url, navigationTarget:"newWindow" } }] })
+        }).catch(function(){});
+      }));
+    }).catch(function(){});
+  }
+
+  function closeDialog(){
+    try { G.xrm().Navigation.navigateTo; } catch(e){}
+    try { if (window.close) window.close(); } catch(e){}
+    try { parent.postMessage({ gti:"close" }, "*"); } catch(e){}
+  }
+
+  /* ---------------- bar ---------------- */
+  $("#btnNext").addEventListener("click", function(){
+    if (step === 2 && mode === "template") { G.toast("Select a template card to continue.", "err"); return; }
+    if (step === 3) {
+      if (editing) { syncEditor(); editing = false; paintReview(); }
+      if (!form.title || !form.title.trim()) { G.toast("Give the questionnaire a title.", "err"); $("#fTitle").focus(); return; }
+      step = 4; paintSend(); show(); return;
+    }
+    if (step === 4) { save("Sent", this); return; }
+  });
+  $("#btnDraft").addEventListener("click", function(){
+    if (step === 3) { if (editing) { syncEditor(); editing = false; paintReview(); } step = 4; paintSend(); show(); }
+    save("Draft", this);
+  });
+  $("#btnBack").addEventListener("click", function(){
+    if (step === 4) { step = 3; paintReview(); }
+    else if (step === 3) { step = mode === "blank" ? 1 : 2; if (mode === "template") paintGallery(); }
+    else step = 1;
+    show();
+  });
+
+  /* ---------------- boot ---------------- */
+  $("#heroSub").textContent = (ctx.accountName ? ctx.accountName + " · " : "") + (ctx.planTitle || "Account plan");
+  Promise.all([loadTemplates(), loadPeople()]).then(show).catch(function(e){
+    G.toast(e.message || "Could not load reference data.", "err", 6000); show();
+  });
+})();
+</script>
+</body>
+</html>

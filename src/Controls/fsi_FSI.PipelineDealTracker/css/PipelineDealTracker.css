@@ -1,0 +1,131 @@
+.pdt-root {
+    position: relative;
+    width: 100%;
+    font-family: "Segoe UI", "Segoe UI Web (West European)", system-ui, sans-serif;
+    color: #242424;
+    background: #fff;
+}
+
+.pdt-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 28px;
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid #EDEBE9;
+}
+
+.pdt-kpi {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.pdt-kpi-l {
+    font-size: 12px;
+    color: #616161;
+}
+
+.pdt-kpi-v {
+    font-size: 14px;
+    font-weight: 600;
+    color: #201F1E;
+}
+
+.pdt-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.pdt-svg {
+    display: block;
+}
+
+.pdt-grid {
+    stroke: #EDEBE9;
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.pdt-axis {
+    font-size: 11px;
+    fill: #616161;
+}
+
+.pdt-axis-title {
+    font-size: 11px;
+    fill: #616161;
+}
+
+.pdt-today {
+    stroke: #323130;
+    stroke-width: 1.5;
+    shape-rendering: crispEdges;
+}
+
+.pdt-today-label {
+    font-size: 11px;
+    font-weight: 600;
+    fill: #323130;
+}
+
+.pdt-bubble {
+    fill-opacity: 0.55;
+    stroke: #fff;
+    stroke-width: 1;
+    cursor: pointer;
+    transition: fill-opacity 120ms ease;
+}
+
+.pdt-bubble:hover {
+    fill-opacity: 0.85;
+    stroke: #323130;
+    stroke-width: 1.5;
+}
+
+.pdt-tip {
+    position: absolute;
+    z-index: 30;
+    min-width: 190px;
+    max-width: 240px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #E1DFDD;
+    border-radius: 4px;
+    box-shadow: 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108);
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.pdt-tip-t {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #201F1E;
+    white-space: normal;
+}
+
+.pdt-tip-r {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    line-height: 18px;
+}
+
+.pdt-tip-r span {
+    color: #616161;
+}
+
+.pdt-caption {
+    padding: 4px 12px 8px;
+    font-size: 11px;
+    color: #616161;
+}
+
+.pdt-empty {
+    padding: 28px 12px;
+    font-size: 13px;
+    color: #616161;
+    text-align: center;
+}

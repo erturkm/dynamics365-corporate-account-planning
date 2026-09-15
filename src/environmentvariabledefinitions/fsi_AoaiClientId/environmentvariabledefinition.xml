@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="fsi_AoaiClientId">
+  <description default="Entra application (client) id with Cognitive Services access.">
+    <label description="Entra application (client) id with Cognitive Services access." languagecode="1033" />
+  </description>
+  <displayname default="fsi_AoaiClientId">
+    <label description="fsi_AoaiClientId" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

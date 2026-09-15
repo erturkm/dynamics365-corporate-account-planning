@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Limit Utilization</title>
+<script>
+/* amCharts loader: prefer libraries hosted in this org so a demo never depends
+   on internet reachability; fall back to the public CDN if they are missing. */
+(function(){
+  var LOCAL = [ "fsi_am5_index.js", "fsi_am5_xy.js", "fsi_am5_percent.js",
+                "fsi_am5_radar.js", "fsi_am5_themes_animated.js" ];
+  var CDN   = [ "https://cdn.amcharts.com/lib/5/index.js",
+                "https://cdn.amcharts.com/lib/5/xy.js",
+                "https://cdn.amcharts.com/lib/5/percent.js",
+                "https://cdn.amcharts.com/lib/5/radar.js",
+                "https://cdn.amcharts.com/lib/5/themes/Animated.js" ];
+
+  // /WebResources/fsi_LimitUtilizationLive -> /WebResources/
+  var base = location.pathname.replace(/[^/]*$/, "");
+  if (!/\/WebResources\/$/i.test(base)) base = "/WebResources/";
+
+  function one(src){
+    return new Promise(function(res, rej){
+      var s = document.createElement("script");
+      s.src = src; s.async = false;          // async=false preserves execution order
+      s.onload = function(){ res(src); };
+      s.onerror = function(){ rej(new Error(src)); };
+      document.head.appendChild(s);
+    });
+  }
+  // Load strictly in order: index.js must evaluate before xy/percent/radar.
+  function chain(list){
+    return list.reduce(function(p, src){ return p.then(function(){ return one(src); }); },
+                       Promise.resolve());
+  }
+
+  window.__am5Ready = chain(LOCAL.map(function(n){ return base + n; }))
+    .catch(function(e){
+      console.warn("amCharts: org-hosted libraries unavailable (" + e.message +
+                   "), falling back to CDN.");
+      // Anything that did load is harmless to re-load; order is still enforced.
+      return chain(CDN);
+    })
+    .then(function(){
+      if (typeof am5 === "undefined") throw new Error("amCharts failed to load");
+    });
+})();
+</script>
+<style>
+  :root{
+    --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --soft:#f8fafc;
+    --blue:#2563eb; --blue-d:#1d4ed8; --green:#059669;
+    --shadow:0 10px 24px rgba(17,24,39,.07);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);}
+
+  .wrap{height:600px;display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:#fff;}
+
+  /* ---------- header ---------- */
+  .hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .dot{width:9px;height:9px;border-radius:99px;background:var(--blue)}
+  .title{font-size:13px;font-weight:800;letter-spacing:.2px}
+  .sub{font-size:11px;color:var(--muted)}
+  .spacer{flex:1}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .seg button{border:0;background:#fff;font:inherit;font-size:11px;font-weight:700;color:var(--muted);
+    padding:5px 10px;cursor:pointer;border-right:1px solid var(--line)}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:#eff6ff;color:var(--blue-d)}
+  .seg button:disabled{opacity:.4;cursor:default}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:5px 10px;
+    font-size:11px;font-weight:700;cursor:pointer;color:var(--ink)}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;
+    padding:4px 8px;border-radius:99px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;cursor:help}
+
+  /* ---------- main grid ---------- */
+  .grid{flex:1;display:grid;grid-template-columns:216px minmax(0,1fr) 268px;gap:8px;min-height:0}
+  .card{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .card h4{margin:0;padding:8px 10px 6px;font-size:11px;font-weight:800;color:#334155;
+    display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .card h4 span.h{font-size:10px;font-weight:600;color:var(--muted)}
+  .chart{flex:1;min-height:0}
+  .chip{display:inline-block;width:10px;height:3px;border-radius:2px;
+        vertical-align:middle;margin-right:3px}
+
+  /* left rail */
+  .rail{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .gaugeCard{flex:0 0 168px;position:relative}
+  .gaugeCard .chart{padding-bottom:16px}
+  .gaugeVal{position:absolute;left:0;right:0;top:58%;text-align:center;
+    font-size:24px;font-weight:900;line-height:1;pointer-events:none}
+  .gaugeCap{position:absolute;left:0;right:0;bottom:6px;text-align:center;
+    font-size:9px;font-weight:700;color:var(--muted);pointer-events:none}
+  .kpis{flex:1;display:grid;grid-template-rows:repeat(3,1fr);gap:8px;min-height:0}
+  .kpi{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow);
+    padding:7px 10px;display:flex;flex-direction:column;justify-content:center}
+  .kpi .l{font-size:10px;color:var(--muted);font-weight:600}
+  .kpi .v{font-size:16px;font-weight:900;line-height:1.2;margin-top:1px}
+  .kpi .d{font-size:10px;font-weight:700;margin-top:1px}
+
+  /* right rail */
+  .rrail{display:flex;flex-direction:column;gap:8px;min-height:0}
+  .donutCard{flex:0 0 186px}
+  .dlegend{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:0 8px 7px}
+  .dlegend span{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:#475569}
+  .dlegend i{width:8px;height:8px;border-radius:3px;display:inline-block}
+  .concCard{flex:1;min-height:0;position:relative}
+  .concCard::after{content:"";position:absolute;left:1px;right:1px;bottom:1px;height:16px;
+    border-radius:0 0 11px 11px;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,0),#fff)}
+  .conc{overflow:auto;padding:2px 10px 12px}
+  .crow{display:grid;grid-template-columns:1fr 46px;gap:6px;align-items:center;padding:4px 0;
+    border-bottom:1px dashed #eef2f7;cursor:pointer}
+  .crow:last-child{border-bottom:0}
+  .crow:hover{background:var(--soft)}
+  .cname{font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cmeta{font-size:9.5px;color:var(--muted)}
+  .cbar{height:4px;border-radius:99px;background:#eef2f7;margin-top:3px;overflow:hidden}
+  .cbar i{display:block;height:100%;border-radius:99px}
+  .cpct{font-size:11px;font-weight:900;text-align:right}
+
+  /* footer table */
+  .foot{flex:0 0 150px;border:1px solid var(--line);border-radius:12px;background:#fff;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+  .foot .th,.foot .tr{display:grid;
+    grid-template-columns:1.6fr .8fr .8fr .8fr 1.5fr .9fr .8fr;gap:8px;padding:5px 10px;align-items:center}
+  .foot .th{background:#fafafa;border-bottom:1px solid var(--line);font-size:10px;font-weight:800;color:#334155}
+  .foot .tb{overflow:auto}
+  .foot .tr{border-bottom:1px dashed #f1f5f9;font-size:10.5px}
+  .foot .tr:hover{background:var(--soft)}
+  .num{font-variant-numeric:tabular-nums;text-align:right}
+  .chip{display:inline-block;font-size:9px;font-weight:800;padding:1.5px 6px;border-radius:99px}
+  .c-f{background:#eff6ff;color:#1d4ed8}
+  .c-nf{background:#f0fdf4;color:#15803d}
+  .c-o{background:#faf5ff;color:#6d28d9}
+  .mbar{height:5px;border-radius:99px;background:#eef2f7;overflow:hidden}
+  .mbar i{display:block;height:100%;border-radius:99px}
+  .note{font-size:10px;color:var(--muted);padding:4px 10px;border-top:1px solid var(--line);background:#fafafa}
+
+  /* ---------- states ---------- */
+  .state{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:10px;background:#fff;z-index:20;text-align:center;padding:20px}
+  .state.on{display:flex}
+  .state h3{margin:0;font-size:14px;font-weight:800}
+  .state p{margin:0;font-size:12px;color:var(--muted);max-width:440px;line-height:1.5}
+  .spin{width:26px;height:26px;border-radius:99px;border:3px solid #e5e7eb;
+    border-top-color:var(--blue);animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .skel{width:100%;height:100%;display:grid;
+    grid-template-columns:216px minmax(0,1fr) 268px;gap:8px;padding:34px 10px 10px;opacity:.5}
+  .skel div{background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);background-size:200% 100%;
+    border-radius:12px;animation:sh 1.3s ease-in-out infinite}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .errbox{border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:10px;
+    padding:8px 12px;font-size:11px;max-width:520px;text-align:left;word-break:break-word;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .host{position:relative;height:600px}
+</style>
+</head>
+<body>
+
+<div class="host">
+
+  <!-- ============ LOADING ============ -->
+  <div class="state on" id="stLoading">
+    <div class="skel"><div></div><div></div><div></div></div>
+    <div style="position:absolute;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div class="spin"></div>
+      <p id="loadMsg">Loading limits from Dataverse…</p>
+    </div>
+  </div>
+
+  <!-- ============ ERROR ============ -->
+  <div class="state" id="stError">
+    <h3>Limit data could not be loaded</h3>
+    <p id="errWhy">—</p>
+    <div class="errbox" id="errDetail"></div>
+    <button class="btn" id="btnRetry">Retry</button>
+  </div>
+
+  <!-- ============ EMPTY ============ -->
+  <div class="state" id="stEmpty">
+    <h3 id="emptyTitle">No limits recorded</h3>
+    <p id="emptyWhy">—</p>
+    <button class="btn" id="btnRetry2">Reload</button>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div class="wrap" id="dash" style="display:none">
+
+    <div class="hdr">
+      <div class="dot"></div>
+      <div>
+        <div class="title" id="hTitle">Limit Utilization</div>
+        <div class="sub" id="hSub">—</div>
+      </div>
+      <div class="spacer"></div>
+      <span class="badge" id="reconBadge" title="" style="display:none"></span>
+      <div class="seg" id="segScope">
+        <button data-v="all" class="on">All</button>
+        <button data-v="funded">Funded</button>
+        <button data-v="nonfunded">Non-funded</button>
+      </div>
+      <div class="seg" id="segUnit">
+        <button data-v="B" class="on">bn</button>
+        <button data-v="M">mn</button>
+      </div>
+      <button class="btn" id="btnReset">Clear filter</button>
+      <button class="btn" id="btnReload" title="Re-read from Dataverse">↻</button>
+    </div>
+
+    <div class="grid">
+      <div class="rail">
+        <div class="card gaugeCard">
+          <h4>Overall utilisation <span class="h" id="gaugeHint">all limits</span></h4>
+          <div class="chart" id="gauge"></div>
+          <div class="gaugeVal" id="gVal">—</div>
+          <div class="gaugeCap">utilised of approved limits</div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Approved limits</div><div class="v" id="kLimit">—</div>
+            <div class="d cmeta" id="kLimitSub">—</div></div>
+          <div class="kpi"><div class="l">Utilised</div><div class="v" id="kUtil" style="color:var(--blue-d)">—</div>
+            <div class="d cmeta" id="kUtilSub">—</div></div>
+          <div class="kpi"><div class="l">Headroom</div><div class="v" id="kHead" style="color:var(--green)">—</div>
+            <div class="d cmeta" id="kHeadSub">—</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>Utilised vs headroom by limit category
+          <span class="h">click a bar to filter
+            · <i class="chip" style="background:#dc2626"></i>approved limit
+            · <i class="chip" style="background:#334155;opacity:.55"></i>85% early-warning</span></h4>
+        <div class="chart" id="bars"></div>
+      </div>
+
+      <div class="rrail">
+        <div class="card donutCard">
+          <h4>Funded / non-funded <span class="h">drawn</span></h4>
+          <div class="chart" id="donut"></div>
+          <div class="dlegend" id="dLegend"></div>
+        </div>
+        <div class="card concCard">
+          <h4>Concentration <span class="h">top exposures</span></h4>
+          <div class="conc" id="conc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="th">
+        <div>Facility</div><div class="num">Limit</div><div class="num">Drawn</div>
+        <div class="num">Headroom</div><div>Utilisation</div><div>Tenor / pricing</div><div>Maturity</div>
+      </div>
+      <div class="tb" id="facRows"></div>
+      <div class="note" id="footNote">—</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   Limit Utilization — reads live Dataverse data. READ ONLY: no writes anywhere.
+
+   Data path:
+     parent Xrm -> current fsi_accountplanning id
+       -> fsi_accountplannings({planId})?$select=_fsi_customer_value   [account]
+       -> fsi_limitsandutilizations ?$filter=_fsi_company_value eq {accountId}
+       -> fsi_facilities            ?$filter=_fsi_account_value eq {accountId}
+
+   Currency is taken from the row data (transactioncurrency), never hardcoded.
+   ========================================================================= */
+
+var API = "/api/data/v9.2/";
+
+/* ---------------- option set values (fsi_facility) ---------------- */
+var FUNDED_FUNDED = 100000000;
+var FUNDED_NON    = 100000001;
+
+/* ---------------- state ---------------- */
+var DATA = null;        // {accountId, accountName, currency, limits[], facilities[]}
+var unit = "B";
+var scope = "all";
+var catFilter = null;
+var charts = null;      // built lazily once amCharts + data are both ready
+
+/* ---------------- tiny helpers ---------------- */
+function $(id){ return document.getElementById(id); }
+function num(v){ return typeof v === "number" && isFinite(v) ? v : 0; }
+function show(which){
+  ["stLoading","stError","stEmpty"].forEach(function(k){ $(k).classList.toggle("on", k === which); });
+  $("dash").style.display = which === null ? "flex" : "none";
+}
+
+/* =========================================================================
+   Xrm / context discovery
+   ========================================================================= */
+function getXrm(){
+  // web resource on a form: window.parent.Xrm. Standalone preview: window.Xrm.
+  try { if (window.parent && window.parent !== window && window.parent.Xrm) return window.parent.Xrm; } catch(e){}
+  if (window.Xrm) return window.Xrm;
+  return null;
+}
+
+function getClientUrl(xrm){
+  try {
+    var u = xrm.Utility.getGlobalContext().getClientUrl();
+    return String(u).replace(/\/+$/, "");
+  } catch(e){ return ""; }
+}
+
+function getPlanId(xrm){
+  // preferred: formContext via the page
+  var id = null;
+  try {
+    var page = xrm.Page;
+    if (page && page.data && page.data.entity) id = page.data.entity.getId();
+  } catch(e){}
+  if (!id) {
+    // fall back to the id in the querystring (?id=...&typename=...)
+    var m = /[?&]id=([^&]+)/i.exec(window.location.search);
+    if (m) id = decodeURIComponent(m[1]);
+  }
+  return id ? String(id).replace(/[{}]/g, "").toLowerCase() : null;
+}
+
+/* =========================================================================
+   fetch
+   ========================================================================= */
+function odata(clientUrl, path){
+  return fetch(clientUrl + API + path, {
+    method: "GET",
+    credentials: "same-origin",
+    headers: {
+      "Accept": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+      "Prefer": 'odata.include-annotations="*"'
+    }
+  }).then(function(res){
+    if (!res.ok) {
+      return res.text().then(function(t){
+        var msg = t;
+        try { msg = JSON.parse(t).error.message; } catch(e){}
+        throw new Error("HTTP " + res.status + " — " + msg);
+      });
+    }
+    return res.json();
+  });
+}
+
+var FV = "@OData.Community.Display.V1.FormattedValue";
+
+function loadAll(){
+  show("stLoading");
+  $("loadMsg").textContent = "Connecting to Dataverse…";
+
+  var xrm = getXrm();
+  if (!xrm) {
+    return fail("No Dynamics context available.",
+      "window.parent.Xrm was not found. This page must be hosted as a web resource on the " +
+      "Account Planning form — opening the file directly will always land here.");
+  }
+  var clientUrl = getClientUrl(xrm);
+  var planId = getPlanId(xrm);
+  if (!planId) {
+    return fail("No account plan record in context.",
+      "Could not resolve the fsi_accountplanning id from the form. Save the record first if it is new.");
+  }
+
+  $("loadMsg").textContent = "Reading account plan…";
+
+  odata(clientUrl, "fsi_accountplannings(" + planId + ")?$select=_fsi_customer_value")
+  .then(function(plan){
+    var acct = plan._fsi_customer_value;
+    var ln = plan["_fsi_customer_value@Microsoft.Dynamics.CRM.lookuplogicalname"];
+    if (!acct) {
+      throw { soft:true, title:"This plan has no customer",
+        why:"The account plan has no Customer set, so there are no limits to show. Set the Customer field and reload." };
+    }
+    if (ln && ln !== "account") {
+      throw { soft:true, title:"Plan customer is not an account",
+        why:"Customer resolves to a '" + ln + "' record. Limits and facilities are only tracked against accounts." };
+    }
+    var name = plan["_fsi_customer_value" + FV] || "";
+    $("loadMsg").textContent = "Loading limits and facilities…";
+
+    var q1 = "fsi_limitsandutilizations?$select=fsi_limitsandutilizationid,fsi_limitcategory,fsi_sublimit,"
+           + "fsi_totallimit,fsi_totalutilization,fsi_availableamount,fsi_productlimit,fsi_revenue,"
+           + "_transactioncurrencyid_value"
+           + "&$filter=_fsi_company_value eq " + acct;
+
+    var q2 = "fsi_facilities?$select=fsi_facilityid,fsi_name,fsi_subline,fsi_facility_type,fsi_funded_status,"
+           + "fsi_limit_amount,fsi_drawn_amount,fsi_utilisation_pct,fsi_tenor,fsi_pricing,"
+           + "fsi_maturity_date,fsi_covenant_status,_transactioncurrencyid_value"
+           + "&$filter=_fsi_account_value eq " + acct;
+
+    return Promise.all([
+      odata(clientUrl, encodeURI(q1)),
+      odata(clientUrl, encodeURI(q2))
+    ]).then(function(r){
+      return shape(acct, name, r[0].value || [], r[1].value || []);
+    });
+  })
+  .then(function(shaped){
+    if (!shaped.limits.length && !shaped.facilities.length) {
+      $("emptyTitle").textContent = "No limits recorded for " + (shaped.accountName || "this account");
+      $("emptyWhy").textContent =
+        "Neither the Limits & Utilization table nor the Facility table has any rows linked to this account.";
+      return show("stEmpty");
+    }
+    DATA = shaped;
+    show(null);
+    ensureCharts();
+    render();
+  })
+  .catch(function(err){
+    if (err && err.soft) {
+      $("emptyTitle").textContent = err.title;
+      $("emptyWhy").textContent = err.why;
+      return show("stEmpty");
+    }
+    fail("Dataverse request failed.", (err && err.message) ? err.message : String(err));
+  });
+}
+
+function fail(why, detail){
+  $("errWhy").textContent = why;
+  $("errDetail").textContent = detail || "";
+  show("stError");
+}
+
+/* =========================================================================
+   shaping — normalise rows and derive currency
+   ========================================================================= */
+function shape(accountId, accountName, luRows, facRows){
+  // currency: take the ISO code off any money field's formatted value, else the lookup label
+  var cur = { code:"", symbol:"" };
+  var all = luRows.concat(facRows);
+  for (var i = 0; i < all.length; i++) {
+    var lbl = all[i]["_transactioncurrencyid_value" + FV];
+    if (lbl && !cur.code) cur.code = lbl;
+    var f = all[i]["fsi_totallimit" + FV] || all[i]["fsi_limit_amount" + FV];
+    if (f && !cur.symbol) {
+      var m = /^[^\d\-]+/.exec(String(f).trim());
+      if (m) cur.symbol = m[0].trim();
+    }
+    if (cur.code && cur.symbol) break;
+  }
+
+  var limits = luRows.map(function(r){
+    var limit = num(r.fsi_totallimit) || num(r.fsi_productlimit);
+    var util  = num(r.fsi_totalutilization);
+    // prefer the stored available amount; fall back to the arithmetic
+    var avail = (typeof r.fsi_availableamount === "number") ? r.fsi_availableamount : (limit - util);
+    return {
+      id: r.fsi_limitsandutilizationid,
+      cat: r.fsi_sublimit || r.fsi_limitcategory || "Uncategorised",
+      limit: limit, util: util, avail: avail
+    };
+  }).filter(function(r){ return r.limit > 0 || r.util > 0; });
+
+  var facilities = facRows.map(function(r){
+    return {
+      id: r.fsi_facilityid,
+      name: r.fsi_name || "(unnamed facility)",
+      subline: r.fsi_subline || "",
+      typeLabel: r["fsi_facility_type" + FV] || "",
+      funded: (typeof r.fsi_funded_status === "number") ? r.fsi_funded_status : null,
+      fundedLabel: r["fsi_funded_status" + FV] || "Other",
+      limit: num(r.fsi_limit_amount),
+      drawn: num(r.fsi_drawn_amount),
+      storedPct: (typeof r.fsi_utilisation_pct === "number") ? r.fsi_utilisation_pct : null,
+      tenor: r.fsi_tenor || "",
+      pricing: r.fsi_pricing || "",
+      maturity: r.fsi_maturity_date || null,
+      covenant: r.fsi_covenant_status || ""
+    };
+  });
+
+  mapFacilitiesToCategories(limits, facilities);
+
+  return { accountId:accountId, accountName:accountName, currency:cur,
+           limits:limits, facilities:facilities };
+}
+
+/* There is NO lookup between fsi_facility and fsi_limitsandutilization, so the
+   link is inferred from text. Anything we cannot place stays unmapped and is
+   reported in the footer rather than being silently folded into a category. */
+function mapFacilitiesToCategories(limits, facilities){
+  var cats = limits.map(function(l){ return l.cat; });
+  var norm = function(s){ return String(s || "").toLowerCase(); };
+
+  var RULES = [
+    { re:/project|term loan/,                 hint:/project/ },
+    { re:/letter of credit|letters of credit|guarantee|trade|\blc\b|bond/, hint:/trade|guarantee/ },
+    { re:/revolv|working capital|\brcf\b|overdraft/, hint:/working capital/ },
+    { re:/treasury|hedg|\bfx\b|swap|sweep|cash management/, hint:/treasury/ }
+  ];
+
+  facilities.forEach(function(f){
+    var hay = norm(f.name + " " + f.subline + " " + f.typeLabel);
+    var found = null;
+    for (var i = 0; i < RULES.length && !found; i++) {
+      if (RULES[i].re.test(hay)) {
+        for (var j = 0; j < cats.length; j++) {
+          if (RULES[i].hint.test(norm(cats[j]))) { found = cats[j]; break; }
+        }
+      }
+    }
+    f.cat = found;            // null when we could not place it
+    f.catInferred = !!found;
+  });
+}
+
+/* =========================================================================
+   derived views
+   ========================================================================= */
+function U(){ return unit === "B" ? { d:1e9, s:"bn" } : { d:1e6, s:"mn" }; }
+
+function fmt(v){
+  var u = U();
+  var sym = (DATA && DATA.currency && DATA.currency.symbol) ? DATA.currency.symbol : "";
+  return sym + (v / u.d).toLocaleString(undefined, {
+    minimumFractionDigits: unit === "B" ? 2 : 0,
+    maximumFractionDigits: unit === "B" ? 2 : 0
+  }) + " " + u.s;
+}
+function pct(a, b){ return b ? (a / b * 100) : 0; }
+function ragColor(p){ return p >= 95 ? "#dc2626" : p >= 85 ? "#d97706" : p >= 60 ? "#2563eb" : "#059669"; }
+
+function scopedFacilities(){
+  return DATA.facilities.filter(function(f){
+    var inScope = scope === "all"
+      || (scope === "funded"    && f.funded === FUNDED_FUNDED)
+      || (scope === "nonfunded" && f.funded === FUNDED_NON);
+    return inScope && (!catFilter || f.cat === catFilter);
+  });
+}
+
+function scopedLimits(){
+  if (scope === "all") {
+    return catFilter ? DATA.limits.filter(function(l){ return l.cat === catFilter; }) : DATA.limits;
+  }
+  // funded/non-funded is a facility-level attribute, so roll the categories up
+  // from the facilities in scope — that keeps the gauge honest.
+  var m = {};
+  scopedFacilities().forEach(function(f){
+    var key = f.cat || "Unmapped facilities";
+    if (!m[key]) m[key] = { cat:key, limit:0, util:0, avail:0 };
+    m[key].limit += f.limit; m[key].util += f.drawn; m[key].avail += (f.limit - f.drawn);
+  });
+  return Object.keys(m).map(function(k){ return m[k]; });
+}
+
+/* =========================================================================
+   charts
+   ========================================================================= */
+function ensureCharts(){
+  if (charts || typeof am5 === "undefined") return;
+  charts = {};
+
+  /* ---- gauge ---- */
+  (function(){
+    var root = am5.Root.new("gauge"); root.setThemes([am5themes_Animated.new(root)]);
+    if (root._logo) root._logo.dispose();
+    var chart = root.container.children.push(am5radar.RadarChart.new(root,{
+      panX:false,panY:false,startAngle:180,endAngle:360,radius:am5.percent(98),innerRadius:-22,
+      paddingTop:2,paddingBottom:0
+    }));
+    var axis = chart.xAxes.push(am5xy.ValueAxis.new(root,{
+      maxDeviation:0,min:0,max:100,strictMinMax:true,
+      renderer:am5radar.AxisRendererCircular.new(root,{innerRadius:-22,strokeOpacity:0})
+    }));
+    axis.get("renderer").labels.template.set("forceHidden",true);
+    axis.get("renderer").ticks.template.set("forceHidden",true);
+    [[0,60,"#059669"],[60,85,"#2563eb"],[85,95,"#d97706"],[95,100,"#dc2626"]].forEach(function(b){
+      var r = axis.createAxisRange(axis.makeDataItem({ value:b[0], endValue:b[1] }));
+      r.get("axisFill").setAll({ visible:true, fill:am5.color(b[2]), fillOpacity:.92 });
+    });
+    var hand = am5radar.ClockHand.new(root,{
+      pinRadius:0, radius:am5.percent(100), bottomWidth:7, topWidth:7, innerRadius:am5.percent(68)
+    });
+    var bullet = axis.createAxisRange(axis.makeDataItem({ value:0 }));
+    bullet.set("bullet", am5xy.AxisBullet.new(root,{ sprite:hand }));
+    hand.pin.setAll({ forceHidden:true });
+    hand.hand.setAll({ fill:am5.color("#111827"), stroke:am5.color("#fff"), strokeWidth:1.5 });
+    charts.gBullet = bullet; charts.gHand = hand;
+  })();
+
+  /* ---- stacked bars ---- */
+  (function(){
+    var root = am5.Root.new("bars"); root.setThemes([am5themes_Animated.new(root)]);
+    if (root._logo) root._logo.dispose();
+    var chart = root.container.children.push(am5xy.XYChart.new(root,{
+      panX:false,panY:false,wheelX:"none",wheelY:"none",
+      paddingLeft:2,paddingRight:8,paddingTop:4,paddingBottom:0,layout:root.verticalLayout
+    }));
+    chart.set("cursor", am5xy.XYCursor.new(root,{ behavior:"none" }));
+    chart.get("cursor").lineX.set("forceHidden",true);
+    chart.get("cursor").lineY.set("forceHidden",true);
+
+    var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root,{
+      categoryField:"cat",
+      renderer:am5xy.AxisRendererX.new(root,{ minGridDistance:24, cellStartLocation:.18, cellEndLocation:.82 })
+    }));
+    xAxis.get("renderer").labels.template.setAll({
+      fontSize:10, fill:am5.color("#475569"), oversizedBehavior:"wrap", maxWidth:130, textAlign:"center" });
+    xAxis.get("renderer").grid.template.setAll({ visible:false });
+
+    var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root,{
+      min:0, extraMax:0.03, renderer:am5xy.AxisRendererY.new(root,{ strokeOpacity:0 })
+    }));
+    yAxis.get("renderer").labels.template.setAll({ fontSize:9, fill:am5.color("#94a3b8") });
+    yAxis.get("renderer").labels.template.adapters.add("text", function(t){
+      return t == null ? t : t + " " + U().s;
+    });
+    yAxis.get("renderer").grid.template.setAll({ stroke:am5.color("#eef2f7") });
+
+    function mk(name, field, colorField, swatch, tip, roundTop){
+      var s = chart.series.push(am5xy.ColumnSeries.new(root,{
+        name:name, xAxis:xAxis, yAxis:yAxis, valueYField:field, categoryXField:"cat", stacked:true,
+        fill:am5.color(swatch), stroke:am5.color(swatch)   // drives the legend swatch
+      }));
+      s.columns.template.setAll({
+        width:am5.percent(72), maxWidth:150,
+        fillOpacity:.95, strokeOpacity:0, cursorOverStyle:"pointer", tooltipText:tip
+      });
+      // Round only the true top of the stack: headroom normally, utilised when
+      // headroom is zero (fully drawn), otherwise the cap looks notched.
+      ["cornerRadiusTL","cornerRadiusTR"].forEach(function(k){
+        s.columns.template.adapters.add(k, function(v,t){
+          var d = t.dataItem && t.dataItem.dataContext;
+          if (!d) return v;
+          return roundTop ? (d.availD > 0 ? 5 : 0) : (d.availD > 0 ? 0 : 5);
+        });
+      });
+      s.columns.template.adapters.add("fill", function(f,t){
+        return t.dataItem ? am5.color(t.dataItem.dataContext[colorField]) : f; });
+      s.columns.template.events.on("click", function(ev){
+        var c = ev.target.dataItem.dataContext.cat;
+        catFilter = (catFilter === c) ? null : c;
+        render();
+      });
+      return s;
+    }
+    // Stack order = push order: utilised sits at the base, headroom on top.
+    var util  = mk("Utilised","utilD","cUtil","#2563eb","[bold]{cat}[/]\n{name}: {valueY.formatNumber('#,###.00')} {su}  ({pctTxt})", false);
+    var avail = mk("Headroom","availD","cAvail","#cbd5e1","{name}: {valueY.formatNumber('#,###.00')} {su}", true);
+
+    /* Per-category markers only — never a connected stroke, which would read as
+       a trend across unrelated categories. */
+    function marker(name, field, wRatio, h, color, opacity, tip, outline){
+      var s = chart.series.push(am5xy.LineSeries.new(root,{
+        name:name, xAxis:xAxis, yAxis:yAxis, valueYField:field, categoryXField:"cat",
+        stroke:am5.color(color)
+      }));
+      s.strokes.template.set("strokeOpacity", 0);
+      s.bullets.push(function(rt, series, dataItem){
+        var r = am5.Rectangle.new(rt,{
+          width:60, height:h, centerX:am5.p50, centerY:am5.p50,
+          fill:am5.color(color), fillOpacity:opacity, tooltipText:tip
+        });
+        if (outline) {
+          // keeps the limit line legible when the bar underneath goes red on a breach
+          r.setAll({ stroke:am5.color("#ffffff"), strokeWidth:1, strokeOpacity:.9 });
+        }
+        // Track the rendered column width instead of a fixed pixel size, so the
+        // marker spans the bar at any category count / container width.
+        r.adapters.add("width", function(w){
+          var i = series.dataItems.indexOf(dataItem);
+          var g = i >= 0 && util.dataItems[i] && util.dataItems[i].get("graphics");
+          var cw = g ? g.width() : 0;
+          return cw ? Math.round(cw * wRatio) : w;
+        });
+        return am5.Bullet.new(rt,{ sprite:r });
+      });
+      return s;
+    }
+    var maxLine = marker("Approved limit","limitD",1.0,3,"#dc2626",1,
+      "[bold]{cat}[/]\nApproved limit: {valueY.formatNumber('#,###.00')} {su}", true);
+    var warn = marker("85% early warning","warnD",0.62,2,"#334155",.5,
+      "85% early-warning: {valueY.formatNumber('#,###.00')} {su}");
+
+    var legend = chart.children.push(am5.Legend.new(root,{ centerX:am5.p50, x:am5.p50, marginTop:-4 }));
+    legend.labels.template.setAll({ fontSize:10, fill:am5.color("#475569") });
+    legend.markers.template.setAll({ width:9, height:9 });
+    legend.valueLabels.template.set("forceHidden", true);
+    // Only the two stacked bands go in the legend — the line-series swatches are
+    // wide enough to collide with the labels at this size. The card caption
+    // carries colour chips for the approved-limit and 85% markers instead.
+    legend.data.setAll([util, avail]);
+
+    /* Column widths are only known after layout, so force the marker bullets to
+       re-evaluate their width adapter once the columns have been drawn. */
+    charts.bSyncMarkers = function(){
+      [maxLine, warn].forEach(function(s){
+        s.dataItems.forEach(function(d){
+          (d.bullets || []).forEach(function(b){
+            var sp = b.get("sprite");
+            if (sp) { sp.markDirty(); sp._markDirtyKey && sp._markDirtyKey("width"); }
+          });
+        });
+      });
+    };
+
+    charts.bRoot = root;
+    charts.bXAxis = xAxis; charts.bUtil = util; charts.bAvail = avail;
+    charts.bLine = warn; charts.bMax = maxLine;
+  })();
+
+  /* ---- donut ---- */
+  (function(){
+    var root = am5.Root.new("donut"); root.setThemes([am5themes_Animated.new(root)]);
+    if (root._logo) root._logo.dispose();
+    var chart = root.container.children.push(am5percent.PieChart.new(root,{
+      innerRadius:am5.percent(64), radius:am5.percent(92), paddingTop:0, paddingBottom:0
+    }));
+    var series = chart.series.push(am5percent.PieSeries.new(root,{
+      valueField:"value", categoryField:"label", alignLabels:false
+    }));
+    series.slices.template.setAll({
+      strokeWidth:2, stroke:am5.color("#fff"), cursorOverStyle:"pointer",
+      tooltipText:"{label}: {value.formatNumber('#,###.00')} — {valuePercentTotal.formatNumber('0.0')}%" });
+    series.slices.template.adapters.add("fill", function(f,t){
+      return t.dataItem ? am5.color(t.dataItem.dataContext.color) : f; });
+    series.labels.template.set("forceHidden", true);
+    series.ticks.template.set("forceHidden", true);
+    var center = chart.seriesContainer.children.push(am5.Label.new(root,{
+      centerX:am5.p50, centerY:am5.p50, textAlign:"center", fontSize:12, fontWeight:"900",
+      fill:am5.color("#111827"), text:""
+    }));
+    charts.dSeries = series; charts.dCenter = center;
+  })();
+}
+
+/* =========================================================================
+   render
+   ========================================================================= */
+function render(){
+  if (!DATA) return;
+  ensureCharts();
+
+  var u = U();
+  var rows = scopedLimits();
+  var facs = scopedFacilities();
+
+  var tLimit = rows.reduce(function(a,r){ return a + r.limit; }, 0);
+  var tUtil  = rows.reduce(function(a,r){ return a + r.util;  }, 0);
+  var tHead  = tLimit - tUtil;
+  var tPct   = pct(tUtil, tLimit);
+
+  /* KPIs */
+  $("kLimit").textContent = fmt(tLimit);
+  $("kLimitSub").textContent = rows.length + (rows.length === 1 ? " category" : " categories")
+    + (catFilter ? " · filtered" : "");
+  $("kUtil").textContent = fmt(tUtil);
+  $("kUtilSub").textContent = tPct.toFixed(1) + "% of approved";
+  $("kHead").textContent = fmt(tHead);
+  $("kHeadSub").textContent = (100 - tPct).toFixed(1) + "% available to draw";
+
+  var cc = DATA.currency.code ? " · " + DATA.currency.code : "";
+  $("hTitle").textContent = "Limit Utilization — " + (DATA.accountName || "account")
+    + (catFilter ? " · " + catFilter : "");
+  $("hSub").textContent =
+    rows.length + (rows.length === 1 ? " limit category" : " limit categories")
+    + " · " + facs.length + (facs.length === 1 ? " facility" : " facilities") + cc;
+  $("gaugeHint").textContent = catFilter ? catFilter
+    : (scope === "all" ? "all limits" : scope === "funded" ? "funded only" : "non-funded only");
+
+  /* gauge */
+  charts.gBullet.set("value", tPct);
+  charts.gHand.hand.set("fill", am5.color(ragColor(tPct)));
+  $("gVal").textContent = tPct.toFixed(1) + "%";
+  $("gVal").style.color = ragColor(tPct);
+
+  /* bars */
+  var barSource = (scope === "all" && catFilter)
+    ? DATA.limits.filter(function(l){ return l.cat === catFilter; })
+    : rows;
+  var barData = barSource.slice().sort(function(a,b){ return b.limit - a.limit; }).map(function(r){
+    var p = pct(r.util, r.limit);
+    var over = r.util > r.limit;
+    return {
+      cat:r.cat, utilD:r.util / u.d, availD:Math.max(r.limit - r.util, 0) / u.d,
+      limitD:r.limit / u.d, warnD:r.limit * 0.85 / u.d, su:u.s,
+      pctTxt:p.toFixed(1) + "% used" + (over ? " — OVER LIMIT" : ""),
+      cUtil:ragColor(p), cAvail:"#e2e8f0"
+    };
+  });
+  charts.bXAxis.data.setAll(barData);
+  charts.bUtil.data.setAll(barData);
+  charts.bAvail.data.setAll(barData);
+  charts.bMax.data.setAll(barData);
+  charts.bLine.data.setAll(barData);
+  if (charts.bSyncMarkers) charts.bRoot.events.once("frameended", charts.bSyncMarkers);
+
+  /* donut */
+  var buckets = {};
+  facs.forEach(function(f){
+    var k = f.funded === FUNDED_FUNDED ? "Funded"
+          : f.funded === FUNDED_NON    ? "Non-funded"
+          : (f.fundedLabel && f.fundedLabel !== "Other" ? f.fundedLabel : "Other");
+    buckets[k] = (buckets[k] || 0) + f.drawn;
+  });
+  var palette = { "Funded":"#1d4ed8", "Non-funded":"#0d9488", "Other":"#7c3aed" };
+  var dData = Object.keys(buckets).map(function(label){
+    return { label:label, value:buckets[label] / u.d, color:palette[label] || "#94a3b8" };
+  });
+  charts.dSeries.data.setAll(dData);
+  var drawnTotal = facs.reduce(function(a,f){ return a + f.drawn; }, 0);
+  charts.dCenter.set("text", fmt(drawnTotal) + "\ndrawn");
+  $("dLegend").innerHTML = dData.map(function(d){
+    var share = drawnTotal ? d.value * u.d / drawnTotal * 100 : 0;
+    return '<span><i style="background:' + d.color + '"></i>' + esc(d.label) + " " + share.toFixed(0) + "%</span>";
+  }).join("");
+
+  /* concentration */
+  var conc = $("conc");
+  conc.innerHTML = facs.slice().sort(function(a,b){ return b.drawn - a.drawn; }).map(function(f){
+    var p = f.limit ? f.drawn / f.limit * 100 : num(f.storedPct);
+    var share = drawnTotal ? f.drawn / drawnTotal * 100 : 0;
+    return '<div class="crow" data-cat="' + esc(f.cat || "") + '">'
+      + '<div><div class="cname">' + esc(f.name) + "</div>"
+      + '<div class="cmeta">' + fmt(f.drawn) + " drawn · " + share.toFixed(0) + "% of book"
+      + (f.typeLabel ? " · " + esc(f.typeLabel) : "") + "</div>"
+      + '<div class="cbar"><i style="width:' + Math.min(p,100) + "%;background:" + ragColor(p) + '"></i></div></div>'
+      + '<div class="cpct" style="color:' + ragColor(p) + '">' + p.toFixed(0) + "%</div></div>";
+  }).join("") || '<div class="cmeta" style="padding:10px 0">No facilities in this scope.</div>';
+  Array.prototype.forEach.call(conc.querySelectorAll(".crow"), function(el){
+    el.onclick = function(){
+      var c = el.getAttribute("data-cat");
+      if (!c) return;                       // unmapped facility — nothing to filter by
+      catFilter = (catFilter === c) ? null : c;
+      render();
+    };
+  });
+
+  /* facility table */
+  $("facRows").innerHTML = facs.slice().sort(function(a,b){ return b.limit - a.limit; }).map(function(f){
+    var p = f.limit ? f.drawn / f.limit * 100 : num(f.storedPct);
+    var cls = f.funded === FUNDED_FUNDED ? "c-f" : f.funded === FUNDED_NON ? "c-nf" : "c-o";
+    var tp = [f.tenor, f.pricing].filter(Boolean).join(" · ");
+    return '<div class="tr">'
+      + "<div><b>" + esc(f.name) + '</b> <span class="chip ' + cls + '">' + esc(f.fundedLabel) + "</span>"
+      + '<div class="cmeta">' + esc(f.cat || "unmapped to a limit category") + "</div></div>"
+      + '<div class="num">' + fmt(f.limit) + "</div>"
+      + '<div class="num">' + fmt(f.drawn) + "</div>"
+      + '<div class="num">' + fmt(f.limit - f.drawn) + "</div>"
+      + '<div><div class="mbar"><i style="width:' + Math.min(p,100) + "%;background:" + ragColor(p) + '"></i></div>'
+      + '<div class="cmeta" style="color:' + ragColor(p) + ';font-weight:800">' + p.toFixed(1) + "%</div></div>"
+      + '<div class="cmeta">' + (tp ? esc(tp) : "—") + "</div>"
+      + '<div class="cmeta">' + (f.maturity ? fmtDate(f.maturity) : "—") + "</div>"
+      + "</div>";
+  }).join("") || '<div class="tr"><div class="cmeta">No facilities in this scope.</div></div>';
+
+  var facLimit = facs.reduce(function(a,f){ return a + f.limit; }, 0);
+  var unmapped = DATA.facilities.filter(function(f){ return !f.cat; }).length;
+  $("footNote").innerHTML =
+    "Facility book: <b>" + fmt(facLimit) + "</b> limits · <b>" + fmt(drawnTotal) + "</b> drawn"
+    + (catFilter ? " · filtered to <b>" + esc(catFilter) + "</b> — click the bar again to clear" : "")
+    + (unmapped ? " · " + unmapped + " facilit" + (unmapped === 1 ? "y" : "ies")
+        + " not mapped to a limit category" : "");
+
+  /* reconciliation badge — totals are always whole-book, never scoped */
+  var allLimit = DATA.limits.reduce(function(a,r){ return a + r.limit; }, 0);
+  var allFac   = DATA.facilities.reduce(function(a,f){ return a + f.limit; }, 0);
+  var gap = allFac - allLimit;
+  var badge = $("reconBadge");
+  if (allLimit > 0 && Math.abs(gap) > allLimit * 0.02) {
+    badge.style.display = "inline-flex";
+    badge.textContent = "⚠ " + (gap > 0 ? "Facility book exceeds limits by " : "Limits exceed facility book by ")
+      + fmt(Math.abs(gap));
+    badge.title = "Facility limits total " + fmt(allFac)
+      + " but the Limits & Utilization table totals " + fmt(allLimit)
+      + ". Lines such as treasury notionals may not be carried as approved limits.";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+function fmtDate(v){
+  var d = new Date(v);
+  return isNaN(d) ? "—" : d.toLocaleDateString("en-GB", { month:"short", year:"numeric" });
+}
+
+/* =========================================================================
+   controls
+   ========================================================================= */
+$("segScope").onclick = function(e){
+  var b = e.target.closest("button"); if (!b) return;
+  Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle("on", x === b); });
+  scope = b.getAttribute("data-v"); render();
+};
+$("segUnit").onclick = function(e){
+  var b = e.target.closest("button"); if (!b) return;
+  Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle("on", x === b); });
+  unit = b.getAttribute("data-v"); render();
+};
+$("btnReset").onclick  = function(){ catFilter = null; render(); };
+$("btnReload").onclick = function(){ catFilter = null; loadAll(); };
+$("btnRetry").onclick  = loadAll;
+$("btnRetry2").onclick = loadAll;
+
+/* boot — wait for amCharts (org-hosted, else CDN), then read Dataverse */
+if (window.__am5Ready) {
+  window.__am5Ready.then(function(){ am5.ready(loadAll); })
+                   .catch(function(e){
+                     fail("Charting library could not be loaded.",
+                          (e && e.message ? e.message : String(e)) +
+                          "\nThe amCharts web resources may not be published, and the CDN is unreachable.");
+                   });
+} else if (typeof am5 !== "undefined") { am5.ready(loadAll); }
+else { window.addEventListener("load", loadAll); }
+
+/* test hook: lets the harness inject fixtures without a Dynamics host */
+window.__limitUtil = {
+  shape: shape,
+  charts: function(){ return charts; },
+  inject: function(d){ DATA = d; show(null); ensureCharts(); render(); },
+  state: function(){ return { data:DATA, unit:unit, scope:scope, catFilter:catFilter }; },
+  setUnit: function(v){ unit = v; render(); },
+  setScope: function(v){ scope = v; render(); },
+  setCat: function(v){ catFilter = v; render(); }
+};
+</script>
+</body>
+</html>

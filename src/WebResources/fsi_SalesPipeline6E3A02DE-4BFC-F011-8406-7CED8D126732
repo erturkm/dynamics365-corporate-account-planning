@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Account Planning â Sales Pipeline</title>
+
+  <!-- amCharts 5 (CDN) -->
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --muted:#6b7280;
+      --text:#0f172a;
+      --border:#e5e7eb;
+      --card:#ffffff;
+      --shadow: 0 10px 26px rgba(15,23,42,.08);
+      --shadow2: 0 6px 16px rgba(15,23,42,.08);
+      --radius: 16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    }
+
+    .wrap{ width:100%; max-width: none; margin: 0; padding: 12px 12px 16px; }
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom: 12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; min-width: 280px;
+    }
+    .brand-badge{
+      width:40px; height:40px; border-radius:12px;
+      border:1px solid var(--border);
+      box-shadow: var(--shadow2);
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(180deg, #fff, #f8fafc);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .brand h1{
+      font-size: 16px; margin:0; line-height:1.1;
+    }
+    .brand p{
+      margin:2px 0 0; font-size:12px; color:var(--muted);
+    }
+
+    .actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 9px 12px;
+      cursor:pointer;
+      font-size: 12px;
+      box-shadow: var(--shadow2);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .pill{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      box-shadow: var(--shadow2);
+      display:flex; align-items:center; gap:8px;
+      max-width: 520px;
+    }
+    .pill input{
+      border:none; outline:none; width: 280px; font-size:12px; color:var(--text);
+      background:transparent;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 12px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card-h .title{
+      display:flex; flex-direction:column; gap:2px; min-width:0;
+    }
+    .card-h .title b{ font-size: 13px; }
+    .card-h .title span{ font-size: 12px; color: var(--muted); }
+    .card-b{ padding: 12px 14px; }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .kpi{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow2);
+      padding: 12px 12px;
+      min-height: 82px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .kpi .label{ font-size: 12px; color: var(--muted); }
+    .kpi .value{ font-size: 18px; font-weight: 800; letter-spacing:.2px; }
+    .kpi .sub{ font-size: 12px; color: var(--muted); }
+
+    .chart{ width:100%; height: 300px; }
+    .chart-sm{ height: 260px; }
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background:#fff;
+    }
+    thead th{
+      text-align:left;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+      padding: 10px 10px;
+      border-bottom:1px solid var(--border);
+      background: #fafafa;
+    }
+    tbody td{
+      padding: 10px 10px;
+      border-bottom:1px solid var(--border);
+      font-size: 12px;
+      vertical-align: middle;
+    }
+    tbody tr:last-child td{ border-bottom:none; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .right{ text-align:right; }
+    .muted{ color: var(--muted); }
+
+    .openbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-size:12px;
+      box-shadow: var(--shadow2);
+      white-space:nowrap;
+    }
+    .statusdot{
+      display:inline-block;
+      width:8px; height:8px; border-radius:999px;
+      margin-right:8px;
+      vertical-align:middle;
+      background:#9ca3af;
+    }
+    .statusdot.open{ background:#22c55e; }
+    .statusdot.won{ background:#3b82f6; }
+    .statusdot.lost{ background:#ef4444; }
+
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr; }
+      .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .pill input{ width: 200px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- Top bar -->
+    <div class="topbar" style="display:none;">
+      <div class="brand">
+        <div class="brand-badge">AP</div>
+        <div>
+          <h1>Account Planning â Sales Pipeline</h1>
+          <p>Corporate Banking â Relationship Overview</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="pill" title="Search opportunities by name">
+          ð <input id="searchBox" placeholder="Search opportunities (name)..." />
+          <span class="muted">âµ</span>
+        </div>
+        <button class="btn" id="btnRefresh" title="Reload opportunities from Dataverse">
+          â³ Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis" style="display:none;">
+      <div class="kpi">
+        <div class="label">Open Opportunities</div>
+        <div class="value" id="kpiOpenCount">â</div>
+        <div class="sub" id="kpiOpenUpdated">Last refresh: â</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Open Pipeline Value</div>
+        <div class="value" id="kpiOpenValue">â</div>
+        <div class="sub">Sum of Estimated Revenue</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Total Pipeline</div>
+        <div class="value" id="kpiDemoTotal">â</div>
+        <div class="sub">Across key solutions</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Top Opportunity Area</div>
+        <div class="value" id="kpiDemoTop">â</div>
+        <div class="sub" id="kpiDemoTopSub">â</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: charts -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b>Pipeline by Line of Business</b>
+            <span data-scope>Loading…</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <div id="chartLob" class="chart"></div>
+        </div>
+      </div>
+
+      <!-- Right: opportunities list -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b>Opportunities</b>
+            <span data-scope>Loading…</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span class="btn" style="padding:6px 10px; border-radius:999px;" data-filter="open" data-active="true">â Open</span>
+            <span class="btn" style="padding:6px 10px; border-radius:999px; opacity:.85;" data-filter="won" data-active="false">â Won</span>
+            <span class="btn" style="padding:6px 10px; border-radius:999px; opacity:.85;" data-filter="lost" data-active="false">â Lost</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:42%;">Opportunity</th>
+                  <th class="right" style="width:18%;">Est. Revenue</th>
+                  <th style="width:20%;">Est. Close</th>
+                  <th style="width:20%;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="oppTbody">
+                <tr><td colspan="4" class="muted">Loadingâ¦</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: more charts -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b>Pipeline by Sales Stage</b>
+            <span data-scope>Loading…</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <div id="chartStage" class="chart chart-sm"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b>Quarterly Pipeline Trend</b>
+            <span data-scope>Loading…</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <div id="chartQuarter" class="chart chart-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * CONFIG
+     ***********************/
+    // No silent fallback: if the plan has no account we say so rather than showing
+    // an unrelated account's pipeline.
+    const PLAN_ENTITY = "fsi_accountplanning";
+    const PLAN_ACCOUNT_FIELD = "fsi_customer";
+    const OPP_ACCOUNT_FIELD = "_customerid_value";
+    const OPP_LIST_LIMIT = 5; // Top N by estimatedvalue
+
+    /***********************
+     * LIVE DATA STATE
+     ***********************/
+    let accountId = null;
+    let accountName = "";
+    let allOpps = [];          // every opportunity for the account, any state
+    let currencySymbol = "AED";
+    const chartRoots = [];     // amCharts roots, disposed before each rebuild
+
+    // Line of business is not captured in a single populated column in this org,
+    // so classify from the product line (when set) or the opportunity name.
+    const LOB_RULES = [
+      [/trade\s*financ|letter of credit|guarantee|supplier financ|supply[- ]?chain financ|receivab|factoring/i, "Trade Finance"],
+      [/hedg|derivativ|\bfx\b|foreign exchange|commodit|interest rate|\bctrm\b/i,        "FX & Hedging"],
+      [/treasury|liquidit|cash\s*(management|concentration|pool)|payment|bank connectiv/i, "Treasury & Cash Management"],
+      [/project financ|capex|capital expenditure|expansion financ|infrastructur|syndicat/i, "Project & Structured Finance"],
+      [/capital[- ]?market|bond|sukuk|equity|\bipo\b|mandate|debt capital/i,             "Capital Markets"],
+      [/loan|lending|credit facilit|revolv|term facilit|working capital|financing/i,     "Lending"],
+      [/advisor|consult|implementation|integration|services|platform|system/i,           "Advisory & Services"]
+    ];
+
+    function classifyLob(text) {
+      const s = String(text || "");
+      for (const [re, label] of LOB_RULES) { if (re.test(s)) return label; }
+      return "Other";
+    }
+
+    /***********************
+     * HELPERS
+     ***********************/
+    function getXrm() {
+      return (window.parent && window.parent.Xrm) ? window.parent.Xrm : (window.Xrm || null);
+    }
+
+    function money(n) {
+      if (n === null || n === undefined || isNaN(Number(n))) return "â";
+      const val = Number(n);
+      return currencySymbol + " " + val.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    function dateFmt(d) {
+      if (!d) return "â";
+      try {
+        const dt = new Date(d);
+        return dt.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+      } catch { return "â"; }
+    }
+
+    function setText(id, text){ const el = document.getElementById(id); if (el) el.textContent = text; }
+
+    function nowStamp(){
+      const dt = new Date();
+      return dt.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /***********************
+     * ACCOUNT RESOLUTION (from the hosting account plan form)
+     ***********************/
+    function planIdFromUrl() {
+      try {
+        const q = new URLSearchParams(window.location.search);
+        for (const k of ["id", "recordId"]) {
+          const v = q.get(k);
+          if (v) return v.replace(/[{}]/g, "");
+        }
+        const d = q.get("data");
+        if (d) {
+          const inner = new URLSearchParams(d);
+          const v = inner.get("id") || inner.get("recordId");
+          if (v) return v.replace(/[{}]/g, "");
+        }
+      } catch (e) { /* not available */ }
+      return null;
+    }
+
+    async function resolveAccount() {
+      const Xrm = getXrm();
+
+      // 1) Read the lookup straight off the open form - cheapest and most reliable.
+      try {
+        const attr = Xrm && Xrm.Page && Xrm.Page.getAttribute
+          ? Xrm.Page.getAttribute(PLAN_ACCOUNT_FIELD) : null;
+        const val = attr && attr.getValue ? attr.getValue() : null;
+        if (val && val.length) {
+          accountId = String(val[0].id).replace(/[{}]/g, "");
+          accountName = val[0].name || "";
+          return;
+        }
+      } catch (e) { /* fall through */ }
+
+      // 2) Otherwise retrieve the plan record by id and read the lookup from there.
+      const planId = planIdFromUrl();
+      if (planId && Xrm && Xrm.WebApi) {
+        try {
+          const rec = await Xrm.WebApi.retrieveRecord(
+            PLAN_ENTITY, planId, `?$select=_${PLAN_ACCOUNT_FIELD}_value`);
+          const id = rec[`_${PLAN_ACCOUNT_FIELD}_value`];
+          if (id) {
+            accountId = String(id).replace(/[{}]/g, "");
+            accountName = rec[`_${PLAN_ACCOUNT_FIELD}_value@OData.Community.Display.V1.FormattedValue`] || "";
+            return;
+          }
+        } catch (e) { /* fall through */ }
+      }
+
+      accountId = null;
+    }
+
+    /***********************
+     * LIVE DATA LOAD
+     ***********************/
+    async function loadPipeline() {
+      const Xrm = getXrm();
+      if (!Xrm || !Xrm.WebApi) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">Xrm.WebApi is not available in this context.</td></tr>`;
+        return;
+      }
+
+      if (!accountId) await resolveAccount();
+
+      if (!accountId) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">No account is set on this plan, so there is nothing to filter opportunities by.</td></tr>`;
+        stampAccount("No account on this plan");
+        allOpps = [];
+        updateKpis();
+        buildCharts();
+        return;
+      }
+
+      const select = [
+        "opportunityid", "name", "estimatedvalue", "actualvalue",
+        "estimatedclosedate", "statecode", "salesstagecode", "_fsi_product_value"
+      ].join(",");
+
+      const query =
+        `?$select=${select}` +
+        `&$filter=${OPP_ACCOUNT_FIELD} eq ${accountId}` +
+        `&$orderby=estimatedvalue desc,name asc` +
+        `&$top=500`;
+
+      try {
+        const result = await Xrm.WebApi.retrieveMultipleRecords("opportunity", query);
+        allOpps = (result && result.entities) ? result.entities : [];
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : String(e);
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">Error loading pipeline: <span class="mono">${escapeHtml(msg)}</span></td></tr>`;
+        return;
+      }
+
+      sniffCurrency(allOpps);
+      stampAccount(accountName
+        ? `${accountName} \u00b7 ${allOpps.length} opportunities`
+        : `${allOpps.length} opportunities`);
+      updateKpis();
+      buildCharts();
+      renderOppTable();
+    }
+
+    /** Show which account these charts are scoped to, on every card subtitle. */
+    function stampAccount(text) {
+      document.querySelectorAll("[data-scope]").forEach(el => { el.textContent = text; });
+    }
+
+    // Use whatever symbol Dataverse formatted the money with, so the chart never
+    // mislabels the org currency.
+    function sniffCurrency(opps) {
+      for (const o of opps) {
+        const f = o["estimatedvalue@OData.Community.Display.V1.FormattedValue"];
+        const m = f && String(f).match(/^[^\d\-\s.,]+/);
+        if (m) { currencySymbol = m[0].trim(); return; }
+      }
+    }
+
+    function dealValue(o) {
+      const state = Number(o.statecode);
+      const actual = Number(o.actualvalue);
+      if (state === 1 && actual > 0) return actual;
+      return Number(o.estimatedvalue) || 0;
+    }
+
+    function lobOf(o) {
+      const product = o["_fsi_product_value@OData.Community.Display.V1.FormattedValue"];
+      return classifyLob(product || o.name);
+    }
+
+    function stageOf(o) {
+      return o["salesstagecode@OData.Community.Display.V1.FormattedValue"] || "Unspecified";
+    }
+
+    function quarterOf(o) {
+      if (!o.estimatedclosedate) return null;
+      const d = new Date(o.estimatedclosedate);
+      if (isNaN(d.getTime())) return null;
+      return `${d.getFullYear()} Q${Math.floor(d.getMonth() / 3) + 1}`;
+    }
+
+    function sumBy(opps, keyFn) {
+      const map = new Map();
+      for (const o of opps) {
+        const k = keyFn(o);
+        if (k === null || k === undefined) continue;
+        map.set(k, (map.get(k) || 0) + dealValue(o));
+      }
+      return map;
+    }
+
+    /***********************
+     * KPIs from live data
+     ***********************/
+    function updateKpis() {
+      const open = allOpps.filter(o => Number(o.statecode) === 0);
+      setText("kpiOpenCount", String(open.length));
+      setText("kpiOpenUpdated", "Last refresh: " + nowStamp());
+      setText("kpiOpenValue", money(open.reduce((a, o) => a + dealValue(o), 0)));
+
+      const total = allOpps.reduce((a, o) => a + dealValue(o), 0);
+      setText("kpiDemoTotal", money(total));
+
+      const byLob = [...sumBy(open, lobOf).entries()].sort((a, b) => b[1] - a[1]);
+      setText("kpiDemoTop", byLob.length ? byLob[0][0] : "â");
+      setText("kpiDemoTopSub", byLob.length ? money(byLob[0][1]) : "â");
+    }
+
+    /***********************
+     * amCharts - build charts
+     ***********************/
+    function buildCharts() {
+      const open = allOpps.filter(o => Number(o.statecode) === 0);
+
+      const byLob = [...sumBy(open, lobOf).entries()]
+        .map(([lob, value]) => ({ lob, value }))
+        .sort((a, b) => b.value - a.value);
+
+      const byStage = [...sumBy(open, stageOf).entries()]
+        .map(([stage, value]) => ({ stage, value }))
+        .sort((a, b) => a.stage.localeCompare(b.stage));
+
+      const byQuarter = [...sumBy(open, quarterOf).entries()]
+        .map(([q, value]) => ({ q, value }))
+        .sort((a, b) => a.q.localeCompare(b.q));
+
+      am5.ready(function() {
+        // Charts are rebuilt on every load, so tear down the previous roots first.
+        while (chartRoots.length) {
+          const r = chartRoots.pop();
+          try { r.dispose(); } catch (e) { /* already disposed */ }
+        }
+
+        // LOB (Pie)
+        const root1 = am5.Root.new("chartLob");
+        chartRoots.push(root1);
+        root1.setThemes([am5themes_Animated.new(root1)]);
+
+        const chart = root1.container.children.push(
+          am5percent.PieChart.new(root1, { layout: root1.verticalLayout })
+        );
+
+        const series = chart.series.push(
+          am5percent.PieSeries.new(root1, {
+            name: "LOB",
+            categoryField: "lob",
+            valueField: "value",
+            alignLabels: true
+          })
+        );
+
+        series.data.setAll(byLob);
+
+        series.labels.template.setAll({
+          text: "{category}",
+          fontSize: 12,
+          oversizedBehavior: "truncate",
+          maxWidth: 190
+        });
+
+        series.slices.template.setAll({
+          cornerRadius: 8,
+          strokeWidth: 1
+        });
+
+        series.slices.template.set("tooltipText", "{category}: [bold]{value.formatNumber('#,###')}[/]");
+
+        const legend = chart.children.push(am5.Legend.new(root1, {
+          centerX: am5.percent(50),
+          x: am5.percent(50),
+          marginTop: 8
+        }));
+        legend.labels.template.setAll({ fontSize: 12, width: 220, oversizedBehavior: "truncate" });
+        legend.valueLabels.template.setAll({ fontSize: 12 });
+        legend.data.setAll(series.dataItems);
+
+        // Stage (Horizontal bar)
+        const root2 = am5.Root.new("chartStage");
+        chartRoots.push(root2);
+        root2.setThemes([am5themes_Animated.new(root2)]);
+
+        const chart2 = root2.container.children.push(am5xy.XYChart.new(root2, {
+          panX: false,
+          panY: false,
+          wheelX: "none",
+          wheelY: "none",
+          layout: root2.verticalLayout
+        }));
+
+        const yAxis = chart2.yAxes.push(am5xy.CategoryAxis.new(root2, {
+          categoryField: "stage",
+          renderer: am5xy.AxisRendererY.new(root2, { inversed: true })
+        }));
+        yAxis.data.setAll(byStage);
+
+        const xAxis = chart2.xAxes.push(am5xy.ValueAxis.new(root2, {
+          renderer: am5xy.AxisRendererX.new(root2, {})
+        }));
+
+        const series2 = chart2.series.push(am5xy.ColumnSeries.new(root2, {
+          name: "Pipeline",
+          xAxis: xAxis,
+          yAxis: yAxis,
+          valueXField: "value",
+          categoryYField: "stage",
+          tooltip: am5.Tooltip.new(root2, { labelText: "{categoryY}: [bold]{valueX.formatNumber('#,###')}[/]" })
+        }));
+
+        series2.columns.template.setAll({
+          cornerRadiusTR: 10,
+          cornerRadiusBR: 10,
+          height: am5.percent(70)
+        });
+
+        series2.data.setAll(byStage);
+
+        // Quarter trend (Column)
+        const root3 = am5.Root.new("chartQuarter");
+        chartRoots.push(root3);
+        root3.setThemes([am5themes_Animated.new(root3)]);
+
+        const chart3 = root3.container.children.push(am5xy.XYChart.new(root3, {
+          panX: true,
+          panY: false,
+          wheelX: "panX",
+          wheelY: "none"
+        }));
+
+        const xAxis3 = chart3.xAxes.push(am5xy.CategoryAxis.new(root3, {
+          categoryField: "q",
+          renderer: am5xy.AxisRendererX.new(root3, { minGridDistance: 30 })
+        }));
+        xAxis3.data.setAll(byQuarter);
+
+        const yAxis3 = chart3.yAxes.push(am5xy.ValueAxis.new(root3, {
+          renderer: am5xy.AxisRendererY.new(root3, {})
+        }));
+
+        const series3 = chart3.series.push(am5xy.ColumnSeries.new(root3, {
+          name: "Quarter",
+          xAxis: xAxis3,
+          yAxis: yAxis3,
+          valueYField: "value",
+          categoryXField: "q",
+          tooltip: am5.Tooltip.new(root3, { labelText: "{categoryX}: [bold]{valueY.formatNumber('#,###')}[/]" })
+        }));
+
+        series3.columns.template.setAll({ cornerRadiusTL: 10, cornerRadiusTR: 10 });
+        series3.data.setAll(byQuarter);
+
+        chart3.set("cursor", am5xy.XYCursor.new(root3, { behavior: "none" }));
+      });
+    }
+
+    /***********************
+     * REAL DATA: Opportunities
+     ***********************/
+    const tbody = document.getElementById("oppTbody");
+    const searchBox = document.getElementById("searchBox");
+    let activeStateFilter = "open"; // open | won | lost
+
+    // Filter buttons - these now re-slice the already-loaded set rather than refetching.
+    const filterBtns = Array.from(document.querySelectorAll("[data-filter]"));
+    filterBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        filterBtns.forEach(b => { b.dataset.active = "false"; b.style.opacity = ".85"; });
+        btn.dataset.active = "true";
+        btn.style.opacity = "1";
+        activeStateFilter = btn.dataset.filter;
+        renderOppTable();
+      });
+    });
+
+    if (searchBox) searchBox.addEventListener("input", () => renderOppTable());
+    const refreshBtn = document.getElementById("btnRefresh");
+    if (refreshBtn) refreshBtn.addEventListener("click", () => loadPipeline());
+
+    function statecodeForFilter(f) {
+      if (f === "open") return 0;
+      if (f === "won") return 1;
+      if (f === "lost") return 2;
+      return 0;
+    }
+
+    function renderOppTable() {
+      const state = statecodeForFilter(activeStateFilter);
+      const q = (searchBox && searchBox.value ? searchBox.value : "").trim().toLowerCase();
+
+      const rows = allOpps
+        .filter(o => Number(o.statecode) === state)
+        .filter(o => !q || String(o.name || "").toLowerCase().includes(q))
+        .sort((a, b) => dealValue(b) - dealValue(a))
+        .slice(0, OPP_LIST_LIMIT);
+
+      renderOpps(rows);
+    }
+
+    function renderOpps(opps) {
+      if (!opps || !opps.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">No opportunities found.</td></tr>`;
+        return;
+      }
+
+      // NOTE: GUID is never rendered.
+      tbody.innerHTML = opps.map(o => {
+        const id = o.opportunityid;
+        const name = escapeHtml(o.name || "(no name)");
+        const val = money(dealValue(o));
+        const dt  = dateFmt(o.estimatedclosedate);
+
+        const state = Number(o.statecode);
+        const dotClass = state === 0 ? "open" : (state === 1 ? "won" : "lost");
+
+        return `
+          <tr>
+            <td>
+              <span class="statusdot ${dotClass}"></span>
+              <span title="${name}">${name}</span>
+            </td>
+            <td class="right">${escapeHtml(val)}</td>
+            <td>${escapeHtml(dt)}</td>
+            <td>
+              <button class="openbtn" onclick="openOpportunity('${id}')">Open</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function openOpportunity(opportunityId) {
+      const Xrm = getXrm();
+      if (!Xrm || !Xrm.Navigation) return;
+      try {
+        await Xrm.Navigation.openForm({ entityName: "opportunity", entityId: opportunityId });
+      } catch (e) {
+        try { Xrm.Navigation.openAlertDialog({ text: "Could not open opportunity: " + (e.message || e) }); } catch {}
+      }
+    }
+
+    // initial load
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">Loadingâ¦</td></tr>`;
+    loadPipeline();
+  </script>
+</body>
+</html>

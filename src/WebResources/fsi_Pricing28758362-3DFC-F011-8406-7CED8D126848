@@ -1,0 +1,542 @@
+<!-- Pricing — Modern Account Planning View (ONE horizontal scrollbar for Facilities; sessionStorage save; NO Dataverse) -->
+<div style="font-family:Segoe UI, Arial, sans-serif; background:#ffffff; color:#111827; padding:0; margin:0;">
+  <div style="width:95%; margin:0 auto; padding:18px 18px 26px;">
+
+    <!-- Header / Controls -->
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+      <div style="min-width:240px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:10px; height:10px; border-radius:999px; background:#7c3aed;"></div>
+          <div style="font-size:14px; font-weight:900;">Pricing</div>
+        </div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">
+          Track existing pricing + proposed changes. Save edits in-session for the current planning session.
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+        <div style="border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; background:#ffffff; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+          <span style="font-size:12px; color:#6b7280;">Session</span>
+          <span id="sessionIdLabel" style="font-size:12px; font-weight:900; margin-left:6px;">—</span>
+        </div>
+
+        <button id="btnResetPricing" type="button"
+          style="border:1px solid #e5e7eb; background:#ffffff; color:#111827; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+          Reset
+        </button>
+
+        <button id="btnSavePricing" type="button"
+          style="border:1px solid #ede9fe; background:#f5f3ff; color:#5b21b6; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; margin-bottom:14px;">
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Total Limit</div>
+        <div id="kpiTotalLimit" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Across facilities</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Utilized</div>
+        <div id="kpiUtilized" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div id="kpiUtilPct" style="font-size:12px; font-weight:900; color:#64748b; margin-top:4px;">—</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Committed Revenue</div>
+        <div id="kpiCommitted" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Annualized</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Proposed Pricing</div>
+        <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+          <div id="kpiProposedAvg" style="font-size:18px; font-weight:900;">—</div>
+          <div id="kpiSpreadAvg" style="font-size:12px; font-weight:900; color:#64748b;">—</div>
+        </div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Avg proposed rate & spread</div>
+      </div>
+    </div>
+
+    <!-- FACILITIES / PRICING GRID -->
+    <div style="border:1px solid #e5e7eb; border-radius:16px; background:#ffffff; box-shadow:0 14px 30px rgba(17,24,39,.08); overflow:hidden;">
+      <div style="padding:12px 14px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:10px; height:10px; border-radius:999px; background:#7c3aed;"></div>
+          <div style="font-size:13px; font-weight:900;">Facilities Pricing</div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <select id="groupBy"
+            style="border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; background:#fff; font-size:12px; font-weight:800; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+            <option value="none">(no grouping)</option>
+            <option value="limittype">Limit Type</option>
+            <option value="limitcategory">Limit Category</option>
+          </select>
+
+          <button id="btnAddRow" type="button"
+            style="border:1px solid #e5e7eb; background:#ffffff; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+            + New Facility
+          </button>
+
+          <button id="btnRefreshMock" type="button"
+            style="border:1px solid #e5e7eb; background:#ffffff; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+            Refresh
+          </button>
+
+          <div id="pricingStatus" style="font-size:12px; color:#6b7280;">Loading sample data…</div>
+        </div>
+      </div>
+
+      <!-- ONE horizontal scroller (header + rows together) -->
+      <div id="facilitiesScroll" style="overflow-x:auto; overflow-y:hidden; border-top:1px solid #eef2f7;">
+        <!-- Header (no overflow here) -->
+        <div style="display:grid;
+                    grid-template-columns: 110px 150px 150px 150px 120px 130px 130px 140px 110px 110px 90px 120px 120px 140px;
+                    gap:0;
+                    padding:10px 14px;
+                    background:#fafafa;
+                    border-bottom:1px solid #eef2f7;
+                    min-width:1760px;">
+          <div style="font-size:12px; font-weight:800; color:#334155;">Limit Type</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Limit Category</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Sub Limit</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Product</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Total Limit</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Utilized</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Current Price</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Current Fallback</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Committed Rev.</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Current Rev.</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Rate Type</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Index Type</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Spread</div>
+          <div style="font-size:12px; font-weight:800; color:#334155;">Proposed Price</div>
+        </div>
+
+        <!-- Rows (no overflow here) -->
+        <div id="pricingRows" style="padding:6px 0; min-width:1760px;"></div>
+      </div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <!-- PRICING REQUESTS -->
+    <div style="border:1px solid #e5e7eb; border-radius:16px; background:#ffffff; box-shadow:0 14px 30px rgba(17,24,39,.08); overflow:hidden;">
+      <div style="padding:12px 14px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:10px; height:10px; border-radius:999px; background:#0ea5e9;"></div>
+          <div style="font-size:13px; font-weight:900;">Pricing Requests</div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <button id="btnNewRequest" type="button"
+            style="border:1px solid #e5e7eb; background:#ffffff; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+            + New Pricing Request
+          </button>
+
+          <button id="btnRunReport" type="button"
+            style="border:1px solid #e5e7eb; background:#ffffff; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+            Run Report
+          </button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 320px 140px 140px 220px 140px; gap:0; padding:10px 14px; background:#fafafa; border-bottom:1px solid #eef2f7;">
+        <div style="font-size:12px; font-weight:800; color:#334155;">Title</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Effective From</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Effective To</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Created By</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Status</div>
+      </div>
+
+      <div id="requestRows" style="padding:6px 0;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  const KEY = "ap_pricing_session_v1"; // sessionStorage key
+
+  // Sample data
+  const DEFAULT = {
+    facilities: [
+      {
+        id: "FAC-1",
+        limittype: "Existing",
+        limitcategory: "Trade Finance",
+        sublimit: "Letter of Credit",
+        product: "Bank Guarantee",
+        totallimit: 9000000,
+        utilized: 8000000,
+        currentprice: 2.30,
+        currentfallback: 2.20,
+        committedrev: 90000,
+        currentrev: 184000,
+        ratetype: "Absolute",
+        indextype: "---",
+        spread: null,
+        proposedprice: 1.50
+      },
+      {
+        id: "FAC-2",
+        limittype: "Existing",
+        limitcategory: "Commercial Loans",
+        sublimit: "Cash Loans",
+        product: "---",
+        totallimit: 13000000,
+        utilized: 11000000,
+        currentprice: 2.45,
+        currentfallback: 3.19,
+        committedrev: 1250,
+        currentrev: 269500,
+        ratetype: "Absolute",
+        indextype: "---",
+        spread: null,
+        proposedprice: 3.00
+      }
+    ],
+    requests: [
+      {
+        id: "REQ-1",
+        title: "Pricing Request for Large Corp",
+        effectivefrom: "2021-01-01",
+        effectiveto: "2021-12-31",
+        createdby: "Martin Baros (Offline)",
+        status: "Draft"
+      }
+    ]
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  const money = (n) => {
+    const num = Math.round((Number(n||0)) * 100) / 100;
+    return "$ " + num.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 0 });
+  };
+  const pct = (n) => (Math.round(Number(n||0)*100)/100).toFixed(2);
+  const toNum = (v) => {
+    if (v == null) return 0;
+    const s = String(v).replace(/[^0-9.\-]/g,'');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const escapeHtml = (s) => String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+  const setPricingStatus = (msg, ok) => {
+    const el = $("pricingStatus");
+    if (!el) return;
+    el.textContent = msg;
+    el.style.color = ok === true ? "#166534" : ok === false ? "#b91c1c" : "#6b7280";
+  };
+
+  const getSessionId = () => {
+    const k = "ap_session_id_v1";
+    let id = sessionStorage.getItem(k);
+    if (!id) {
+      id = "AP-" + Math.random().toString(16).slice(2, 8).toUpperCase();
+      sessionStorage.setItem(k, id);
+    }
+    return id;
+  };
+
+  const loadState = () => {
+    try {
+      const raw = sessionStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){ return null; }
+  };
+
+  const saveState = (state) => sessionStorage.setItem(KEY, JSON.stringify(state));
+
+  const renderKpis = (state) => {
+    const fac = state.facilities || [];
+    const sum = (field) => fac.reduce((a,r)=> a + toNum(r[field]), 0);
+
+    const totalLimit = sum("totallimit");
+    const utilized = sum("utilized");
+    const committed = sum("committedrev");
+
+    const avg = (field) => {
+      const vals = fac.map(r => toNum(r[field])).filter(v => !isNaN(v) && v !== 0);
+      return vals.length ? (vals.reduce((a,b)=>a+b,0) / vals.length) : 0;
+    };
+
+    const proposedAvg = avg("proposedprice");
+    const spreadAvg = avg("spread");
+
+    $("kpiTotalLimit").textContent = money(totalLimit);
+    $("kpiUtilized").textContent = money(utilized);
+    $("kpiUtilPct").textContent = totalLimit > 0 ? `${((utilized/totalLimit)*100).toFixed(1)}% utilized` : "—";
+    $("kpiCommitted").textContent = money(committed);
+    $("kpiProposedAvg").textContent = proposedAvg ? `${pct(proposedAvg)}%` : "—";
+    $("kpiSpreadAvg").textContent = spreadAvg ? `Spread avg ${pct(spreadAvg)}%` : "Spread —";
+
+    $("sessionIdLabel").textContent = getSessionId();
+  };
+
+  const renderFacilities = (state) => {
+    const container = $("pricingRows");
+    container.innerHTML = "";
+
+    const groupBy = $("groupBy").value;
+    const rows = state.facilities || [];
+
+    const groups = {};
+    if (groupBy === "none") groups[""] = rows;
+    else {
+      rows.forEach(r => {
+        const key = groupBy === "limittype" ? (r.limittype || "—") : (r.limitcategory || "—");
+        (groups[key] ||= []).push(r);
+      });
+    }
+
+    const inputStyle = "width:100%; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:10px; padding:7px 8px; font-size:12px; font-weight:800; outline:none; box-shadow:0 8px 18px rgba(17,24,39,.06); background:#fff;";
+    const gridCols = "110px 150px 150px 150px 120px 130px 130px 140px 110px 110px 90px 120px 120px 140px";
+
+    Object.keys(groups).forEach((gk) => {
+      if (gk) {
+        const gHdr = document.createElement("div");
+        gHdr.style.padding = "10px 14px";
+        gHdr.style.fontSize = "12px";
+        gHdr.style.fontWeight = "900";
+        gHdr.style.color = "#0f172a";
+        gHdr.style.background = "#ffffff";
+        gHdr.style.borderTop = "1px solid #eef2f7";
+        gHdr.style.display = "grid";
+        gHdr.style.gridTemplateColumns = gridCols;
+        gHdr.innerHTML = `
+          <div style="grid-column:1 / -1;">
+            <span style="display:inline-block; padding:4px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fafafa;">
+              Group: ${escapeHtml(gk)}
+            </span>
+          </div>`;
+        container.appendChild(gHdr);
+      }
+
+      groups[gk].forEach((r, idx) => {
+        const row = document.createElement("div");
+        row.className = "pricing-row";
+        row.setAttribute("data-id", r.id);
+
+        row.style.display = "grid";
+        row.style.gridTemplateColumns = gridCols;
+        row.style.padding = "12px 14px";
+        row.style.alignItems = "center";
+        row.style.borderTop = "1px solid #f1f5f9";
+        row.style.background = (idx % 2 === 1) ? "#fcfcfd" : "#ffffff";
+
+        row.innerHTML = `
+          <div><input class="limittype" style="${inputStyle}" value="${escapeHtml(r.limittype)}"/></div>
+          <div><input class="limitcategory" style="${inputStyle}" value="${escapeHtml(r.limitcategory)}"/></div>
+          <div><input class="sublimit" style="${inputStyle}" value="${escapeHtml(r.sublimit)}"/></div>
+          <div><input class="product" style="${inputStyle}" value="${escapeHtml(r.product)}"/></div>
+
+          <div><input class="totallimit" style="${inputStyle}" value="${money(r.totallimit)}"/></div>
+          <div><input class="utilized" style="${inputStyle}" value="${money(r.utilized)}"/></div>
+
+          <div><input class="currentprice" style="${inputStyle}" value="${pct(r.currentprice)}"/></div>
+          <div><input class="currentfallback" style="${inputStyle}" value="${pct(r.currentfallback)}"/></div>
+
+          <div><input class="committedrev" style="${inputStyle}" value="${money(r.committedrev)}"/></div>
+          <div><input class="currentrev" style="${inputStyle}" value="${money(r.currentrev)}"/></div>
+
+          <div><input class="ratetype" style="${inputStyle}" value="${escapeHtml(r.ratetype)}"/></div>
+          <div><input class="indextype" style="${inputStyle}" value="${escapeHtml(r.indextype)}"/></div>
+
+          <div><input class="spread" style="${inputStyle}" value="${r.spread == null ? '---' : pct(r.spread)}"/></div>
+
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input class="proposedprice" style="${inputStyle}" value="${pct(r.proposedprice)}"/>
+            <button class="btnDel" title="Remove"
+              style="width:32px; height:32px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:900; color:#991b1b; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+              ×
+            </button>
+          </div>
+        `;
+
+        row.querySelectorAll("input").forEach(inp => {
+          inp.addEventListener("input", () => setPricingStatus("Unsaved changes…", null));
+          inp.addEventListener("blur", () => {
+            const cls = inp.className;
+            if (["totallimit","utilized","committedrev","currentrev"].includes(cls)) inp.value = money(toNum(inp.value));
+            if (["currentprice","currentfallback","proposedprice"].includes(cls)) inp.value = pct(toNum(inp.value));
+            if (cls === "spread") {
+              const v = inp.value.trim();
+              inp.value = (v === "---" || v === "") ? "---" : pct(toNum(v));
+            }
+          });
+        });
+
+        row.querySelector(".btnDel").addEventListener("click", () => {
+          state.facilities = state.facilities.filter(x => x.id !== r.id);
+          renderFacilities(state);
+          renderKpis(state);
+          setPricingStatus("Row removed (save to persist).", null);
+        });
+
+        container.appendChild(row);
+      });
+    });
+  };
+
+  const renderRequests = (state) => {
+    const container = $("requestRows");
+    container.innerHTML = "";
+
+    (state.requests || []).forEach((r, idx) => {
+      const row = document.createElement("div");
+      row.style.display = "grid";
+      row.style.gridTemplateColumns = "320px 140px 140px 220px 140px";
+      row.style.padding = "12px 14px";
+      row.style.alignItems = "center";
+      row.style.borderTop = "1px solid #f1f5f9";
+      row.style.background = (idx % 2 === 1) ? "#fcfcfd" : "#ffffff";
+
+      row.innerHTML = `
+        <div style="font-size:12px; font-weight:900; color:#2563eb; text-decoration:underline;">
+          ${escapeHtml(r.title)}
+        </div>
+        <div style="font-size:12px; color:#111827; font-variant-numeric:tabular-nums;">${escapeHtml(r.effectivefrom)}</div>
+        <div style="font-size:12px; color:#111827; font-variant-numeric:tabular-nums;">${escapeHtml(r.effectiveto)}</div>
+        <div style="font-size:12px; color:#111827;">
+          <span style="display:inline-flex; align-items:center; gap:8px;">
+            <span style="width:22px; height:22px; border-radius:999px; background:#e5e7eb; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; color:#334155;">
+              ${escapeHtml((r.createdby||"U").trim().slice(0,1).toUpperCase())}
+            </span>
+            ${escapeHtml(r.createdby)}
+          </span>
+        </div>
+        <div>
+          <span style="display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fafafa; font-size:12px; font-weight:900; color:#0f172a;">
+            ${escapeHtml(r.status)}
+          </span>
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  };
+
+  const collectFacilitiesFromUI = (state) => {
+    const rows = Array.from(document.querySelectorAll(".pricing-row"));
+    state.facilities = rows.map(row => {
+      const id = row.getAttribute("data-id");
+      const get = (cls) => row.querySelector("." + cls).value;
+
+      const spreadRaw = get("spread").trim();
+      return {
+        id,
+        limittype: get("limittype"),
+        limitcategory: get("limitcategory"),
+        sublimit: get("sublimit"),
+        product: get("product"),
+        totallimit: toNum(get("totallimit")),
+        utilized: toNum(get("utilized")),
+        currentprice: toNum(get("currentprice")),
+        currentfallback: toNum(get("currentfallback")),
+        committedrev: toNum(get("committedrev")),
+        currentrev: toNum(get("currentrev")),
+        ratetype: get("ratetype"),
+        indextype: get("indextype"),
+        spread: (spreadRaw === "---" || spreadRaw === "") ? null : toNum(spreadRaw),
+        proposedprice: toNum(get("proposedprice"))
+      };
+    });
+  };
+
+  const addFacility = (state) => {
+    const id = "FAC-" + Math.random().toString(16).slice(2, 6).toUpperCase();
+    state.facilities.push({
+      id,
+      limittype: "Existing",
+      limitcategory: "—",
+      sublimit: "—",
+      product: "—",
+      totallimit: 0,
+      utilized: 0,
+      currentprice: 0,
+      currentfallback: 0,
+      committedrev: 0,
+      currentrev: 0,
+      ratetype: "Absolute",
+      indextype: "---",
+      spread: null,
+      proposedprice: 0
+    });
+    renderFacilities(state);
+    setPricingStatus("New facility added (save to persist).", null);
+  };
+
+  const newRequest = (state) => {
+    const id = "REQ-" + Math.random().toString(16).slice(2, 6).toUpperCase();
+    state.requests.unshift({
+      id,
+      title: "New Pricing Request",
+      effectivefrom: "2026-01-01",
+      effectiveto: "2026-12-31",
+      createdby: "You",
+      status: "Draft"
+    });
+    renderRequests(state);
+    setPricingStatus("Draft request created (session only).", null);
+  };
+
+  const init = () => {
+    $("sessionIdLabel").textContent = getSessionId();
+
+    let state = loadState();
+    if (!state) {
+      state = JSON.parse(JSON.stringify(DEFAULT));
+      saveState(state);
+    }
+
+    renderFacilities(state);
+    renderRequests(state);
+    renderKpis(state);
+
+    $("groupBy").addEventListener("change", () => {
+      collectFacilitiesFromUI(state);
+      renderFacilities(state);
+      setPricingStatus("Grouping changed (save to persist).", null);
+    });
+
+    $("btnAddRow").addEventListener("click", () => addFacility(state));
+    $("btnNewRequest").addEventListener("click", () => newRequest(state));
+
+    $("btnSavePricing").addEventListener("click", () => {
+      collectFacilitiesFromUI(state);
+      saveState(state);
+      renderKpis(state);
+      setPricingStatus("Saved ✔ (session)", true);
+    });
+
+    $("btnResetPricing").addEventListener("click", () => {
+      sessionStorage.removeItem(KEY);
+      const fresh = JSON.parse(JSON.stringify(DEFAULT));
+      saveState(fresh);
+      renderFacilities(fresh);
+      renderRequests(fresh);
+      renderKpis(fresh);
+      setPricingStatus("Reset to default sample data.", true);
+    });
+
+    $("btnRefreshMock").addEventListener("click", () => {
+      collectFacilitiesFromUI(state);
+      renderFacilities(state);
+      renderKpis(state);
+      setPricingStatus("Refreshed (no server).", true);
+    });
+
+    $("btnRunReport").addEventListener("click", () => setPricingStatus("Report run (demo).", true));
+
+    setPricingStatus("Loaded ✔ (sample data visible)", true);
+  };
+
+  init();
+})();
+</script>

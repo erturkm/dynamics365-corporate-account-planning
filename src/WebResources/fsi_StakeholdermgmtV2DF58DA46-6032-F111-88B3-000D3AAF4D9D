@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAB Stakeholder Coverage Map</title>
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --line:#e5e7eb;
+      --muted:#64748b;
+      --text:#0f172a;
+      --blue:#2563eb;
+      --blue-soft:#eff6ff;
+      --green:#16a34a;
+      --green-soft:#f0fdf4;
+      --amber:#d97706;
+      --amber-soft:#fffbeb;
+      --red:#dc2626;
+      --red-soft:#fef2f2;
+      --shadow:0 14px 34px rgba(15,23,42,.08);
+      --shadow-soft:0 8px 18px rgba(15,23,42,.06);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:"Segoe UI", Arial, sans-serif;
+      background:linear-gradient(180deg,#f8fafc 0%,#ffffff 100%);
+      color:var(--text);
+    }
+
+    .page{
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+
+    .topbar{
+      flex:0 0 auto;
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+      padding:14px 18px 10px;
+      border-bottom:1px solid #eef2f7;
+      background:#fff;
+    }
+
+    .title-wrap{min-width:280px}
+    .eyebrow{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900;color:var(--text)}
+    .eyebrow-dot{width:10px;height:10px;border-radius:999px;background:var(--blue)}
+    .subtitle{margin-top:6px;font-size:12px;color:var(--muted);line-height:1.45}
+
+    .actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .pill,.btn{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:10px 12px;
+      box-shadow:var(--shadow-soft);
+      font-size:12px;
+      font-weight:800;
+    }
+    .pill span:last-child{font-weight:900;color:var(--text);margin-left:8px}
+    .btn{cursor:pointer;transition:.15s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--blue-soft);border-color:#dbeafe;color:#1d4ed8}
+    .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#b91c1c}
+
+    .panel{
+      flex:1 1 auto;
+      background:var(--card);
+      overflow:auto;
+      position:relative;
+    }
+
+    .panel-head{
+      position:sticky;
+      top:0;
+      z-index:10;
+      padding:14px 16px;
+      border-bottom:1px solid #eef2f7;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      background:rgba(255,255,255,.92);
+      backdrop-filter: blur(8px);
+    }
+
+    .panel-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900}
+    .status{font-size:12px;color:var(--muted)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap}
+    .legend-chip{
+      display:inline-flex;align-items:center;gap:6px;
+      border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;
+      border:1px solid var(--line);background:#fff;
+    }
+    .legend-dot{width:8px;height:8px;border-radius:999px}
+
+    .chart-area{
+      padding:18px 18px 40px;
+      min-height:calc(100vh - 88px);
+    }
+
+    #chartWrap{
+      position:relative;
+      min-height:100%;
+      padding-right:260px;
+    }
+
+    #linesSvg{
+      position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible
+    }
+
+    #levels{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:34px;
+      padding-bottom:80px;
+    }
+
+    .level-row{
+      display:flex;
+      justify-content:center;
+      gap:34px;
+      align-items:flex-start;
+      flex-wrap:nowrap;
+      position:relative;
+    }
+
+    .stakeholder-card-wrap{position:relative;width:320px;min-width:320px}
+    .stakeholder-card{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:#fff;
+      box-shadow:var(--shadow);
+      padding:16px 18px 16px;
+      cursor:pointer;
+      position:relative;
+      transition:.16s ease;
+      min-height:250px;
+    }
+    .stakeholder-card:hover{transform:translateY(-2px)}
+    .stakeholder-card.selected{outline:2px dashed var(--blue);outline-offset:2px}
+    .stakeholder-card.health-strong{box-shadow:0 0 0 1px rgba(22,163,74,.12), 0 16px 34px rgba(22,163,74,.08)}
+    .stakeholder-card.health-medium{box-shadow:0 0 0 1px rgba(217,119,6,.12), 0 16px 34px rgba(217,119,6,.08)}
+    .stakeholder-card.health-weak{box-shadow:0 0 0 1px rgba(220,38,38,.12), 0 16px 34px rgba(220,38,38,.08)}
+
+    .top-badges{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:flex-start;
+    }
+
+    .left-badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .right-actions{display:flex;gap:8px;align-items:center}
+
+    .sentiment-badge,.health-badge{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid
+    }
+    .supporter{background:var(--green-soft);color:#166534;border-color:#dcfce7}
+    .neutral{background:#f8fafc;color:#334155;border-color:#e2e8f0}
+    .detractor{background:#fff1f2;color:#991b1b;border-color:#fee2e2}
+    .health-strong-b{background:var(--green-soft);color:#166534;border-color:#dcfce7}
+    .health-medium-b{background:var(--amber-soft);color:#92400e;border-color:#fde68a}
+    .health-weak-b{background:var(--red-soft);color:#991b1b;border-color:#fee2e2}
+
+    .icon-btn{
+      border:1px solid #e5e7eb;
+      background:#fff;
+      color:#475569;
+      border-radius:12px;
+      padding:7px 9px;
+      font-size:12px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:var(--shadow-soft);
+    }
+
+    .stakeholder-main{
+      display:flex;gap:12px;margin-top:14px;align-items:center;padding-right:28px
+    }
+    .avatar{
+      width:54px;height:54px;border-radius:999px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;flex:0 0 auto
+    }
+    .stakeholder-name{font-size:15px;font-weight:900;line-height:1.2}
+    .stakeholder-title{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
+
+    .influence{display:flex;gap:5px;margin-top:12px}
+    .influence span{width:8px;height:8px;border-radius:999px;border:1px solid #cbd5e1;background:#fff}
+    .influence span.on{background:var(--blue);border-color:var(--blue)}
+
+    .stakeholder-notes{
+      margin-top:14px;
+      font-size:12px;
+      line-height:1.5;
+      color:#475569;
+      background:#fafcff;
+      border:1px solid #eef2f7;
+      border-radius:14px;
+      padding:10px 12px;
+      min-height:62px;
+    }
+
+    .fab-rail-label{
+      margin-top:18px;
+      padding-top:12px;
+      border-top:1px solid #eef2f7;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      color:#475569;
+      display:flex;
+      justify-content:space-between;
+      align-items:center
+    }
+    .fab-rail-hint{font-size:11px;color:var(--muted);font-weight:800}
+
+    .fab-rail{
+      position:absolute;
+      right:-34px;
+      top:70px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:3
+    }
+
+    .fab-pill{
+      position:relative;
+      width:56px;height:56px;
+      border-radius:999px;
+      border:1px solid #cbd5e1;
+      background:#fff;
+      box-shadow:0 10px 20px rgba(15,23,42,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:.16s ease
+    }
+    .fab-pill:hover{transform:translateX(2px)}
+    .fab-pill.active{border-color:#93c5fd;background:#eff6ff;box-shadow:0 12px 24px rgba(37,99,235,.18)}
+    .fab-pill-empty{border-style:dashed;color:#94a3b8;background:#f8fafc}
+    .fab-pill-avatar{
+      width:40px;height:40px;border-radius:999px;background:#dbeafe;color:#1e3a8a;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;position:relative
+    }
+    .fab-pill.secondary .fab-pill-avatar{background:#ede9fe;color:#5b21b6}
+    .fab-pill-icon{
+      position:absolute;right:-1px;bottom:-1px;width:16px;height:16px;border-radius:999px;background:#fff;border:1px solid #dbeafe;display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1
+    }
+
+    .coverage-drawer{
+      position:absolute;
+      top:58px;
+      left:calc(100% + 14px);
+      width:250px;
+      background:#fff;
+      border:1px solid #dbeafe;
+      border-radius:22px;
+      box-shadow:0 20px 40px rgba(15,23,42,.14);
+      padding:12px;
+      opacity:0;
+      pointer-events:none;
+      transform:translateX(-12px) scale(.98);
+      transition:.18s ease;
+      z-index:5
+    }
+    .coverage-drawer.open{opacity:1;pointer-events:auto;transform:translateX(0) scale(1)}
+    .coverage-drawer::before{
+      content:"";
+      position:absolute;
+      left:-8px;
+      top:30px;
+      width:16px;height:16px;
+      background:#fff;
+      border-left:1px solid #dbeafe;
+      border-bottom:1px solid #dbeafe;
+      transform:rotate(45deg)
+    }
+
+    .drawer-top{display:flex;gap:10px;align-items:center}
+    .drawer-avatar{
+      width:46px;height:46px;border-radius:999px;background:#dbeafe;color:#1e3a8a;display:flex;align-items:center;justify-content:center;font-weight:900
+    }
+    .drawer-avatar.secondary{background:#ede9fe;color:#5b21b6}
+    .drawer-name{font-size:13px;font-weight:900;line-height:1.2}
+    .drawer-role{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.3}
+    .drawer-meta{margin-top:10px;display:grid;gap:8px}
+    .mini-field{padding:9px 10px;border:1px solid #eef2f7;border-radius:12px;background:#fafcff}
+    .mini-field .k{font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+    .mini-field .v{font-size:12px;font-weight:800;margin-top:4px;line-height:1.35;color:var(--text)}
+    .drawer-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .drawer-btn{
+      border:1px solid #dbeafe;background:#eff6ff;color:#1d4ed8;border-radius:12px;padding:9px 10px;font-size:12px;font-weight:900;cursor:pointer
+    }
+    .drawer-btn.secondary{
+      border:1px solid #e5e7eb;background:#fff;color:#334155;
+    }
+    .drawer-btn.danger{
+      border:1px solid #fecdd3;background:#fff1f2;color:#b91c1c;
+    }
+
+    .source-badge{
+      display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900;border:1px solid;white-space:nowrap
+    }
+    .src-facility{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+    .src-opportunity{background:#eefcf4;border-color:#bbf7d0;color:#166534}
+    .src-exec{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+    .src-trade{background:#f5f3ff;border-color:#ddd6fe;color:#6d28d9}
+    .src-treasury{background:#fefce8;border-color:#fde68a;color:#854d0e}
+    .src-prior{background:#f8fafc;border-color:#e2e8f0;color:#475569}
+
+    #backdrop{
+      position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(2px);display:none;z-index:9998
+    }
+
+    #stakeholderFlyout,#coverageFlyout,#editorModal{
+      position:fixed;
+      top:0;right:0;
+      height:100vh;
+      width:min(500px,95vw);
+      background:#fff;
+      border-left:1px solid var(--line);
+      box-shadow:-18px 0 42px rgba(15,23,42,.18);
+      transform:translateX(110%);
+      transition:transform .22s ease;
+      z-index:10000;
+      display:flex;
+      flex-direction:column
+    }
+
+    #editorModal{
+      width:min(620px,96vw);
+      z-index:10001;
+    }
+
+    .flyout-head{
+      padding:14px 16px;border-bottom:1px solid #eef2f7;display:flex;justify-content:space-between;align-items:center;gap:10px
+    }
+    .flyout-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:900}
+    .close-btn{
+      width:32px;height:32px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:18px;font-weight:900;color:#64748b
+    }
+    .flyout-body{
+      padding:16px;overflow:auto;display:flex;flex-direction:column;gap:14px
+    }
+
+    .section{
+      border:1px solid #eef2f7;border-radius:16px;background:#fff;padding:14px;box-shadow:var(--shadow-soft)
+    }
+    .section-label{
+      font-size:11px;font-weight:900;color:#64748b;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px
+    }
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .field{padding:10px;border:1px solid #eef2f7;border-radius:12px;background:#fafcff}
+    .field .k{font-size:11px;color:var(--muted);font-weight:800}
+    .field .v{font-size:12px;font-weight:900;color:var(--text);margin-top:4px;line-height:1.35}
+    .narrative{font-size:12px;color:#334155;line-height:1.6}
+
+    .person-hero{display:flex;gap:12px;align-items:center}
+    .person-hero .hero-avatar{
+      width:56px;height:56px;border-radius:999px;background:#dbeafe;color:#1e3a8a;display:flex;align-items:center;justify-content:center;font-weight:900
+    }
+    .person-hero .hero-name{font-size:15px;font-weight:900}
+    .person-hero .hero-role{font-size:12px;color:var(--muted);margin-top:4px}
+
+    .assignment-card{
+      border:1px solid #e5e7eb;border-radius:14px;background:#fbfdff;padding:12px
+    }
+    .assignment-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .assignment-name{font-size:12px;font-weight:900}
+    .assignment-role{font-size:11px;color:var(--muted);margin-top:3px}
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .form-field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .form-field.full{grid-column:1 / -1}
+    .form-field label{
+      font-size:12px;
+      font-weight:900;
+      color:#475569;
+    }
+    .form-field input,.form-field select,.form-field textarea{
+      width:100%;
+      border:1px solid #dbe2ea;
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      font-family:inherit;
+      background:#fff;
+      color:#0f172a;
+      outline:none;
+    }
+    .form-field textarea{
+      resize:vertical;
+      min-height:90px;
+    }
+
+    .modal-footer{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .small-muted{font-size:12px;color:#64748b}
+    .sub-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    @media (max-width:1200px){
+      #chartWrap{padding-right:290px}
+      .stakeholder-card-wrap{width:300px;min-width:300px}
+      .coverage-drawer{width:230px}
+    }
+    @media (max-width:760px){
+      .topbar{padding:12px}
+      .panel-head{padding:12px}
+      .chart-area{padding:14px}
+      .stakeholder-card-wrap{width:280px;min-width:280px}
+      .level-row{gap:24px}
+      .fab-rail{right:-28px}
+      .coverage-drawer{left:calc(100% + 8px);width:210px}
+      .form-grid,.detail-grid{grid-template-columns:1fr}
+    }
+  </style>
+<style id="stakeholder-print-styles">
+  #btnPrint{position:fixed;top:12px;right:18px;z-index:20}
+  #btnNewStakeholder{position:fixed;top:12px;right:146px;z-index:20}
+  .stakeholder-add-zone{position:absolute;top:calc(100% - 3px);left:calc(50% - 32px);width:64px;height:34px;z-index:3;display:flex;justify-content:center;align-items:center}
+  .stakeholder-add-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--blue);border-radius:50%;background:var(--card);color:var(--blue);font-family:inherit;font-size:20px;line-height:1;cursor:pointer;opacity:0;transition:opacity .12s ease}
+  .stakeholder-add-zone:hover .stakeholder-add-btn,.stakeholder-add-zone:focus-within .stakeholder-add-btn{opacity:1}
+  .stakeholder-add-btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  @media(hover:none){.stakeholder-add-btn{opacity:1}}
+  #btnCollapseHeader{position:fixed;top:12px;right:100px;z-index:20;width:36px;height:36px;padding:8px;display:flex;align-items:center;justify-content:center}
+  #btnCollapseHeader svg{width:16px;height:16px;transition:transform .15s ease}
+  #btnCollapseHeader[aria-expanded="false"] svg{transform:rotate(180deg)}
+  #stakeholderFlyout,#coverageFlyout{width:min(560px,95vw)}
+  .flyout-head{padding:8px 12px}
+  .flyout-body{padding:10px 12px;gap:8px;min-height:0}
+  .section{padding:10px;border-radius:12px;box-shadow:none}
+  .section-label{margin-bottom:6px;font-size:10px}
+  .detail-grid{gap:6px}
+  #stakeholderBody .detail-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .field{padding:7px 8px;border-radius:8px}
+  .field .k{font-size:10px}
+  .field .v{margin-top:3px}
+  .narrative{line-height:1.4}
+  .person-hero{gap:10px}
+  .person-hero .hero-avatar{width:40px;height:40px;flex:0 0 40px}
+  .person-hero .hero-name{font-size:14px}
+  .person-hero .hero-role{margin-top:2px}
+  .assignment-card{padding:8px 10px;border-radius:8px;margin-bottom:6px!important}
+  #stakeholderBody .section:last-child>div:last-child,
+  #coverageBody .section:last-child>div:last-child{margin-top:8px!important}
+  .flyout-body .btn{padding:8px 10px}
+  .form-grid{gap:8px}
+  .form-field{gap:4px}
+  .form-field input,.form-field select,.form-field textarea{padding:8px 10px;border-radius:8px}
+  .form-field textarea{min-height:64px}
+  @media(max-width:520px){
+    #stakeholderBody .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  #stakeholderPrintSurface{position:fixed;left:-100000px;top:0;background:var(--card);pointer-events:none}
+  #stakeholderPrintSurface #chartWrap{padding-right:48px;min-height:0}
+  #stakeholderPrintSurface #levels{padding-bottom:0}
+  #stakeholderPrintSurface .stakeholder-card-wrap{width:320px;min-width:320px}
+  #stakeholderPrintSurface .right-actions,
+  #stakeholderPrintSurface .stakeholder-add-zone,
+  #stakeholderPrintSurface .fab-pill-empty,
+  #stakeholderPrintSurface .coverage-drawer{display:none}
+  #stakeholderPrintSurface .stakeholder-card{box-shadow:none;outline:none}
+  #stakeholderPrintSurface .print-coverage{font-size:11px;color:var(--muted);margin-top:8px}
+  @page{size:A4 landscape;margin:10mm}
+  @media print{
+    html,body{height:auto!important;overflow:visible!important;background:var(--card)!important}
+    body>.page,#btnPrint,#btnNewStakeholder,#btnCollapseHeader,#backdrop,#stakeholderFlyout,#coverageFlyout,#editorModal{display:none!important}
+    #stakeholderPrintSurface{position:static;left:auto;zoom:var(--print-scale);print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  }
+</style></head>
+<body>
+  <button type="button" class="btn" id="btnPrint" title="Print stakeholder hierarchy" disabled>Print</button>
+  <button type="button" class="btn" id="btnCollapseHeader" aria-label="Collapse form header" aria-expanded="true" title="Collapse form header" disabled>
+  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 10 4-4 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button><button type="button" class="btn primary" id="btnNewStakeholder" disabled>+ New Stakeholder</button><div class="page">
+    <div class="topbar" hidden style="display:none">
+      <div class="title-wrap">
+        <div class="eyebrow"><div class="eyebrow-dot"></div><div>FAB Stakeholder Coverage Map</div></div>
+        <div class="subtitle">Customer hierarchy with FAB coverage collapsed on the right edge of each stakeholder card. Edit stakeholders, win-back strategies, and FAB covering personas. Changes are saved to Dataverse for the selected account.</div>
+      </div>
+
+      <div class="actions">
+        <div class="pill"><span>Account</span><span id="accountName">Loading...</span></div>
+        <div class="pill"><span>Session</span><span id="sessionId">—</span></div>
+        <button class="btn" id="btnExport">Export JSON</button>
+        <button class="btn primary" id="btnReset">Reset</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head" hidden style="display:none">
+        <div class="panel-title"><div class="eyebrow-dot"></div><div>Customer Hierarchy with FAB Edge Coverage</div></div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+          <div class="legend">
+            <div class="legend-chip"><span class="legend-dot" style="background:#16a34a"></span> Strong coverage</div>
+            <div class="legend-chip"><span class="legend-dot" style="background:#d97706"></span> Medium coverage</div>
+            <div class="legend-chip"><span class="legend-dot" style="background:#dc2626"></span> Weak / gap</div>
+          </div>
+          <div class="status" id="statusText">Loaded</div>
+        </div>
+      </div>
+
+      <div class="chart-area">
+        <div id="chartWrap">
+          <svg id="linesSvg"></svg>
+          <div id="levels"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="backdrop"></div>
+
+  <aside id="stakeholderFlyout">
+    <div class="flyout-head">
+      <div class="flyout-title"><div class="eyebrow-dot"></div><div>Stakeholder Summary</div></div>
+      <button class="close-btn" id="closeStakeholder">×</button>
+    </div>
+    <div class="flyout-body" id="stakeholderBody"></div>
+  </aside>
+
+  <aside id="coverageFlyout">
+    <div class="flyout-head">
+      <div class="flyout-title"><div class="eyebrow-dot"></div><div>FAB Covering Persona</div></div>
+      <button class="close-btn" id="closeCoverage">×</button>
+    </div>
+    <div class="flyout-body" id="coverageBody"></div>
+  </aside>
+
+  <aside id="editorModal">
+    <div class="flyout-head">
+      <div class="flyout-title"><div class="eyebrow-dot"></div><div id="editorTitle">Edit</div></div>
+      <button class="close-btn" id="closeEditor">×</button>
+    </div>
+    <div class="flyout-body" id="editorBody"></div>
+  </aside>
+
+  <script>(function (root, factory) {
+    "use strict";
+    if (typeof module === "object" && module.exports) module.exports = factory();
+    else root.FABStakeholderData = factory();
+}(typeof window === "undefined" ? globalThis : window, function () {
+    "use strict";
+    const base = 100000000;
+    const tags = ["supporter", "neutral", "detractor"];
+    const types = ["primary", "secondary"];
+    const sources = ["facility", "opportunity", "exec", "trade", "treasury", "prior"];
+    const strengths = ["strong", "medium", "weak"];
+    const contactFields = "contactid,fullname,firstname,middlename,lastname,jobtitle,_parentcustomerid_value," +
+        "_fsi_reportsto_value,fsi_stakeholdersentiment,fsi_stakeholderinfluence,fsi_stakeholdernotes,fsi_winbackstrategy,fsi_stakeholdernextaction";
+    const coverageFields = "fsi_stakeholdercoverageid,_fsi_contact_value,_fsi_account_value,_fsi_user_value,fsi_name," +
+        "fsi_coveragetype,fsi_sourcetype,fsi_relationshipstrength,fsi_role,fsi_team,fsi_sourcelabel,fsi_coveragebasis,fsi_lasttouch,fsi_nextstep,fsi_personnotes";
+    const guid = v => typeof v === "string" && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(v) ? v.toLowerCase() : null;
+    function requiredId(v) { const id = guid(v); if (!id) throw new Error("Invalid record identifier."); return id; }
+    function text(v, max, label) {
+        if (typeof v !== "string" || v.length > max) throw new Error(label + " exceeds its field limit.");
+        return v;
+    }
+    function choice(v, list, optional = false) {
+        if (optional && (v === null || v === "")) return null;
+        const i = list.indexOf(v);
+        if (i < 0) throw new Error("Select a valid choice.");
+        return base + i;
+    }
+    function graph(rows) {
+        const map = new Map(rows.map(r => [r.id, r.parentId]));
+        for (const row of rows) {
+            const visited = new Set([row.id]);
+            let p = row.parentId;
+            while (p) {
+                if (!map.has(p)) throw new Error("Reports To must be a contact in this account.");
+                if (visited.has(p)) throw new Error("Reporting relationships cannot contain a cycle.");
+                visited.add(p); p = map.get(p);
+            }
+        }
+    }
+    function create(host) {
+        const snapshot = host.snapshot();
+        const accountId = requiredId(snapshot.accountId);
+        const stamp = JSON.stringify(snapshot);
+        let contactRows = new Map(), coverageRows = new Map(), users = new Map(), locked = false, ready = false;
+        const createdContacts = new Set();
+        const deletedContacts = new Set();
+        function active() {
+            if (!host.isActive() || JSON.stringify(host.snapshot()) !== stamp)
+                throw new Error("Account context changed. Reopen Stakeholder Management.");
+        }
+        async function request(method, path, body, headers) {
+            active();
+            const r = await host.request(method, path, body, headers);
+            active();
+            return r;
+        }
+        async function all(path) {
+            const out = [], seen = new Set();
+            const prefix = path.split("?")[0];
+            while (path) {
+                if (seen.has(path) || seen.size >= 50) throw new Error("Data paging limit exceeded; no incomplete map will be shown.");
+                seen.add(path);
+                const result = await request("GET", path);
+                if (!Array.isArray(result.value)) throw new Error("Invalid Dataverse collection.");
+                out.push(...result.value);
+                if (result["@odata.nextLink"]) {
+                    const link = new URL(result["@odata.nextLink"], host.clientUrl);
+                    if (link.origin !== new URL(host.clientUrl).origin || link.pathname !== "/api/data/v9.2/" + prefix)
+                        throw new Error("Unexpected paging destination.");
+                    path = prefix + link.search;
+                } else path = null;
+            }
+            return out;
+        }
+        const query = (set, fields, filter, order) => set + "?$select=" + fields +
+            "&$filter=" + encodeURIComponent(filter) + (order ? "&$orderby=" + encodeURIComponent(order) : "");
+        function project() {
+            const stakeholders = [...contactRows.values()].map(r => ({
+                id: r.contactid, parentId: r._fsi_reportsto_value || null, name: r.fullname || "",
+                title: r.jobtitle || "", tag: tags[r.fsi_stakeholdersentiment - base] || null,
+                influence: r.fsi_stakeholderinfluence ?? null, notes: r.fsi_stakeholdernotes || "",
+                winBackStrategy: r.fsi_winbackstrategy || "", nextAction: r.fsi_stakeholdernextaction || "",
+                coverage: [...coverageRows.values()].filter(c => c._fsi_contact_value === r.contactid).map(c => {
+                    const u = users.get(c._fsi_user_value);
+                    return {
+                        id: c.fsi_stakeholdercoverageid, userId: c._fsi_user_value, name: u?.fullname || c.fsi_name || "Unavailable user",
+                        type: types[c.fsi_coveragetype - base], role: c.fsi_role || "", team: c.fsi_team || "",
+                        sourceType: sources[c.fsi_sourcetype - base], sourceLabel: c.fsi_sourcelabel || "",
+                        relationshipStrength: strengths[c.fsi_relationshipstrength - base], basis: c.fsi_coveragebasis || "",
+                        lastTouch: c.fsi_lasttouch || "", nextStep: c.fsi_nextstep || "", personNotes: c.fsi_personnotes || ""
+                    };
+                }).sort((a, b) => a.type === b.type ? a.id.localeCompare(b.id) : a.type === "primary" ? -1 : 1)
+            }));
+            graph(stakeholders);
+            for (const s of stakeholders) {
+                if (s.coverage.length > 2) throw new Error("More than two FAB assignments exist for " + s.name + ". Resolve them in Dataverse.");
+            }
+            return { selectedStakeholderId: null, activeCoverageId: null, stakeholders };
+        }
+        async function load() {
+            ready = false;
+            const contacts = await all(query("contacts", contactFields,
+                "_parentcustomerid_value eq " + accountId, "fullname asc,contactid asc"));
+            const coverage = await all(query("fsi_stakeholdercoverages", coverageFields,
+                "_fsi_account_value eq " + accountId, "fsi_stakeholdercoverageid asc"));
+            for (const c of contacts) {
+                if (c._parentcustomerid_value !== accountId) throw new Error("Contact account mismatch.");
+            }
+            const ids = new Set(contacts.map(c => c.contactid));
+            for (const c of coverage) {
+                if (!ids.has(c._fsi_contact_value) || c._fsi_account_value !== accountId || !guid(c._fsi_user_value))
+                    throw new Error("A coverage assignment has inconsistent account, contact or user links.");
+            }
+            contactRows = new Map(contacts.map(c => [c.contactid, c]));
+            coverageRows = new Map(coverage.map(c => [c.fsi_stakeholdercoverageid, c]));
+            const userIds = [...new Set(coverage.map(c => requiredId(c._fsi_user_value)))];
+            users = new Map();
+            if (userIds.length) {
+                for (let i = 0; i < userIds.length; i += 40) {
+                    const list = await all(query("systemusers", "systemuserid,fullname,jobtitle,internalemailaddress,isdisabled",
+                        userIds.slice(i, i + 40).map(id => "systemuserid eq " + id).join(" or ")));
+                    list.forEach(u => users.set(u.systemuserid, u));
+                }
+            }
+            const state = project(); ready = true; return state;
+        }
+        async function resolveUser(id) {
+            id = requiredId(id);
+            const u = await request("GET", "systemusers(" + id + ")?$select=systemuserid,fullname,jobtitle,isdisabled");
+            if (u.isdisabled || !u.fullname) throw new Error("Choose an active Dynamics user.");
+            users.set(id, u); return u;
+        }
+        function known(id) {
+            active();
+            if (!ready) throw new Error("Reload the map before saving.");
+            const c = contactRows.get(requiredId(id));
+            if (!c) throw new Error("Contact does not belong to the loaded account.");
+            return c;
+        }
+        function patchContact(c, body) {
+            return { method: "PATCH", path: "contacts(" + c.contactid + ")", body, etag: c["@odata.etag"] };
+        }
+        async function batch(ops) {
+            const boundary = "batch_" + crypto.randomUUID().replaceAll("-", "");
+            const change = "changeset_" + crypto.randomUUID().replaceAll("-", "");
+            let body = "--" + boundary + "\r\nContent-Type: multipart/mixed; boundary=" + change + "\r\n\r\n";
+            ops.forEach((op, i) => {
+                if (op.method !== "POST" && !/^W\/"\d+"$/.test(op.etag || "")) throw new Error("Missing concurrency token.");
+                body += "--" + change + "\r\nContent-Type: application/http\r\nContent-Transfer-Encoding: binary\r\nContent-ID: " + (i + 1) +
+                    "\r\n\r\n" + op.method + " /api/data/v9.2/" + op.path + " HTTP/1.1\r\nContent-Type: application/json\r\n";
+                if (op.etag) body += "If-Match: " + op.etag + "\r\n";
+                body += "\r\n" + (op.body ? JSON.stringify(op.body) : "") + "\r\n";
+            });
+            body += "--" + change + "--\r\n--" + boundary + "--\r\n";
+            const result = await request("POST", "$batch", body, { "Content-Type": "multipart/mixed; boundary=" + boundary });
+            const codes = [...result.matchAll(/HTTP\/1\.[01] (\d{3})/g)].map(m => Number(m[1]));
+            if (codes.includes(412)) throw new Error("Someone changed these records. Reset to reload before saving.");
+            if (codes.length !== ops.length || codes.some(c => c < 200 || c >= 300)) {
+                const message = result.match(/"message"\s*:\s*"((?:\\.|[^"\\])*)"/);
+                throw new Error(message ? JSON.parse('"' + message[1] + '"') : "Dataverse rejected the transaction; nothing was saved.");
+            }
+        }
+        async function change(operation) {
+            active();
+            if (locked) throw new Error("A save is already in progress.");
+            locked = true;
+            try { await operation(); return await load(); }
+            finally { locked = false; }
+        }
+        function writeStakeholder(id, value, isNew) {
+            return change(async () => {
+                id = requiredId(id);
+                if (isNew && createdContacts.has(id)) return;
+                if (!ready) throw new Error("Reload the map before saving.");
+                const old = isNew ? null : known(id);
+                if (isNew && contactRows.has(id)) throw new Error("This contact already exists. Reload the map before editing it.");
+                const name = text(value.name.trim(), 160, "Name");
+                if (!name) throw new Error("Enter the contact name.");
+                const parentId = value.parentId ? requiredId(value.parentId) : null;
+                const rows = project().stakeholders.map(r => r.id === id ? { ...r, parentId } : r);
+                if (isNew) rows.push({ id, parentId });
+                graph(rows);
+                const influence = value.influence === null ? null : Number(value.influence);
+                if (influence !== null && (!Number.isInteger(influence) || influence < 1 || influence > 5))
+                    throw new Error("Influence must be between 1 and 5.");
+                const body = {
+                    jobtitle: text(value.title, 100, "Title") || null,
+                    fsi_stakeholdersentiment: choice(value.tag, tags, true), fsi_stakeholderinfluence: influence,
+                    fsi_stakeholdernotes: text(value.notes, 10000, "Notes") || null,
+                    fsi_winbackstrategy: text(value.winBackStrategy, 10000, "Win-back Strategy") || null,
+                    fsi_stakeholdernextaction: text(value.nextAction, 10000, "Next Action") || null,
+                    "fsi_reportsto@odata.bind": parentId ? "/contacts(" + parentId + ")" : null
+                };
+                if (name !== old?.fullname) {
+                    const parts = name.split(/\s+/);
+                    body.firstname = parts.length > 1 ? parts.shift() : null;
+                    body.middlename = null;
+                    body.lastname = text(parts.join(" "), 50, "Last name");
+                    if (body.firstname) text(body.firstname, 50, "First name");
+                }
+                if (isNew) {
+                    body.contactid = id;
+                    body["parentcustomerid_account@odata.bind"] = "/accounts(" + accountId + ")";
+                    if (!parentId) delete body["fsi_reportsto@odata.bind"];
+                }
+                const ops = [isNew ? { method: "POST", path: "contacts", body } : patchContact(old, body)];
+                // Lock the ancestor chain in the same changeset so concurrent reverse links cannot form a cycle.
+                if (parentId !== old?._fsi_reportsto_value) {
+                    let p = parentId;
+                    while (p) {
+                        const ancestor = known(p);
+                        ops.push(patchContact(ancestor, { fsi_stakeholdernotes: ancestor.fsi_stakeholdernotes ?? null }));
+                        p = ancestor._fsi_reportsto_value;
+                    }
+                }
+                await batch(ops);
+                if (isNew) createdContacts.add(id);
+            });
+        }
+        function saveStakeholder(id, value) { return writeStakeholder(id, value, false); }
+        function createStakeholder(id, value) { return writeStakeholder(id, value, true); }
+        function deleteStakeholder(id) {
+            return change(async () => {
+                id = requiredId(id);
+                if (deletedContacts.has(id)) return;
+                const contact = known(id);
+                if ([...contactRows.values()].some(c => c._fsi_reportsto_value === id))
+                    throw new Error("Reassign this stakeholder's direct reports before deleting.");
+                const reports = await all(query("contacts", "contactid", "_fsi_reportsto_value eq " + id));
+                if (reports.length) throw new Error("Reassign this stakeholder's direct reports before deleting.");
+                const linked = await all(query("fsi_stakeholdercoverages", coverageFields, "_fsi_contact_value eq " + id));
+                const expected = [...coverageRows.values()].filter(c => c._fsi_contact_value === id);
+                if (linked.length !== expected.length || linked.some(c => {
+                    const old = coverageRows.get(c.fsi_stakeholdercoverageid);
+                    return c._fsi_account_value !== accountId || !old || old["@odata.etag"] !== c["@odata.etag"];
+                })) throw new Error("Coverage changed. Reopen Stakeholder Management before deleting.");
+                const ops = expected.map(c => ({
+                    method: "DELETE", path: "fsi_stakeholdercoverages(" + c.fsi_stakeholdercoverageid + ")",
+                    etag: c["@odata.etag"]
+                }));
+                ops.push({ method: "DELETE", path: "contacts(" + id + ")", etag: contact["@odata.etag"] });
+                await batch(ops);
+                deletedContacts.add(id);
+            });
+        }
+        function saveCoverage(contactId, value, coverageId) {
+            return change(async () => {
+                const c = known(contactId), state = project().stakeholders.find(s => s.id === contactId);
+                const old = coverageId ? coverageRows.get(requiredId(coverageId)) : null;
+                if (coverageId && (!old || old._fsi_contact_value !== contactId)) throw new Error("Coverage assignment mismatch.");
+                if (!old && state.coverage.length >= 2) throw new Error("Maximum two FAB personas per stakeholder.");
+                const user = await resolveUser(value.userId);
+                choice(value.type, types);
+                if (state.coverage.some(v => v.id !== coverageId && v.userId === user.systemuserid))
+                    throw new Error("This user is already assigned to this stakeholder.");
+                const proposed = state.coverage.filter(v => v.id !== coverageId);
+                const id = old ? coverageId : crypto.randomUUID();
+                proposed.push({ ...value, id });
+                // Preserve the original one-primary/two-persona contract, honoring the edited selection.
+                const primary = value.type === "primary" ? id : proposed.find(v => v.id !== id && v.type === "primary")?.id || proposed[0].id;
+                const body = {
+                    fsi_name: user.fullname.slice(0, 200), "fsi_contact@odata.bind": "/contacts(" + contactId + ")",
+                    "fsi_account@odata.bind": "/accounts(" + accountId + ")",
+                    "fsi_user@odata.bind": "/systemusers(" + user.systemuserid + ")",
+                    fsi_coveragetype: choice(id === primary ? "primary" : "secondary", types),
+                    fsi_sourcetype: choice(value.sourceType, sources),
+                    fsi_relationshipstrength: choice(value.relationshipStrength, strengths)
+                };
+                for (const [key, field, max] of [
+                    ["role", "fsi_role", 200], ["team", "fsi_team", 200], ["sourceLabel", "fsi_sourcelabel", 200],
+                    ["basis", "fsi_coveragebasis", 10000], ["lastTouch", "fsi_lasttouch", 10000],
+                    ["nextStep", "fsi_nextstep", 10000], ["personNotes", "fsi_personnotes", 10000]
+                ]) body[field] = text(value[key], max, key) || null;
+                if (!body.fsi_role) throw new Error("Enter a Role.");
+                const ops = [patchContact(c, { fsi_stakeholdernotes: c.fsi_stakeholdernotes ?? null })];
+                if (old) ops.push({ method: "PATCH", path: "fsi_stakeholdercoverages(" + id + ")", body, etag: old["@odata.etag"] });
+                else ops.push({ method: "POST", path: "fsi_stakeholdercoverages", body: { ...body, fsi_stakeholdercoverageid: id } });
+                for (const other of state.coverage.filter(v => v.id !== coverageId)) {
+                    const type = other.id === primary ? "primary" : "secondary";
+                    if (other.type !== type) ops.push({
+                        method: "PATCH", path: "fsi_stakeholdercoverages(" + other.id + ")",
+                        body: { fsi_coveragetype: choice(type, types) }, etag: coverageRows.get(other.id)["@odata.etag"]
+                    });
+                }
+                await batch(ops);
+            });
+        }
+        function deleteCoverage(contactId, coverageId) {
+            return change(async () => {
+                const c = known(contactId), old = coverageRows.get(requiredId(coverageId));
+                if (!old || old._fsi_contact_value !== contactId) throw new Error("Coverage assignment mismatch.");
+                const ops = [
+                    patchContact(c, { fsi_stakeholdernotes: c.fsi_stakeholdernotes ?? null }),
+                    { method: "DELETE", path: "fsi_stakeholdercoverages(" + coverageId + ")", etag: old["@odata.etag"] }
+                ];
+                for (const other of coverageRows.values()) {
+                    if (other._fsi_contact_value === contactId && other.fsi_stakeholdercoverageid !== coverageId)
+                        ops.push({ method: "PATCH", path: "fsi_stakeholdercoverages(" + other.fsi_stakeholdercoverageid + ")",
+                            body: { fsi_coveragetype: base }, etag: other["@odata.etag"] });
+                }
+                await batch(ops);
+            });
+        }
+        return { load, saveStakeholder, createStakeholder, deleteStakeholder, saveCoverage, deleteCoverage, resolveUser,
+            async selectUser() {
+                active();
+                const selected = await host.selectUser();
+                active();
+                return selected ? resolveUser(requiredId(selected.id.replace(/[{}]/g, ""))) : null;
+            }
+        };
+    }
+    return Object.freeze({ create, graph, guid });
+}));
+</script>
+  <script>
+    (function(){
+      
+      
+
+      const $ = (id) => document.getElementById(id);
+
+      const escapeHtml = (s='') => String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+
+      const makeId = (prefix) => prefix + '-' + Math.random().toString(16).slice(2,8).toUpperCase();
+
+
+      let state = { selectedStakeholderId:null, activeCoverageId:null, stakeholders:[] };
+      let api = null, currentHost = null, version = 0, saving = false;
+      function saveState(){ /* Selection state stays in memory, not Dataverse. */ }
+      function getSessionId(){ return 'FAB-' + crypto.randomUUID().slice(0,6).toUpperCase(); }
+      function headerChanged(visible){
+        const button=$('btnCollapseHeader');
+        button.disabled=saving || visible == null;
+        button.setAttribute('aria-expanded',String(visible !== false));
+        button.title=visible == null ? 'Form header control unavailable' : visible ? 'Collapse form header' : 'Expand form header';
+        button.setAttribute('aria-label',button.title);
+      }
+      $('btnCollapseHeader').addEventListener('click',()=>{
+        if(saving || !currentHost?.isActive()) return;
+        try{headerChanged(currentHost.toggleHeader());requestAnimationFrame(drawConnectors);}
+        catch(error){showError(error.message);}
+      });
+      $('btnNewStakeholder').addEventListener('click',()=>{
+        if(!saving && api && currentHost?.isActive()) openStakeholderEditor(null);
+      });
+      window.__fabDeleteStakeholder = id => {
+        if(saving) return;
+        if(!api || !currentHost?.isActive()){showError('Reopen Stakeholder Management before deleting.');return;}
+        const stakeholder=findStakeholder(id);
+        if(!stakeholder){showError('Stakeholder is not in the loaded account.');return;}
+        if(state.stakeholders.some(s=>s.parentId===id)){
+          showError("Reassign this stakeholder's direct reports before deleting.");return;
+        }
+        const message='Delete "'+stakeholder.name+'"?\n\nThis deletes the Contact from Dataverse, not just from this hierarchy, and removes its FAB coverage assignments. Related records may be affected by Dataverse relationship rules. FAB users will not be deleted. There is no undo in this page.';
+        if(!confirm(message)) return;
+        persist(null,()=>api.deleteStakeholder(id),'Stakeholder deleted from Dataverse');
+      };
+      async function load(){
+        if(!api || saving) return;
+        const expected = version, controller = api;
+        setStatus('Loading Dataverse...');
+        try{
+          const next = await controller.load();
+          if(expected !== version || controller !== api || !currentHost.isActive()) return;
+          state = next; closeFlyouts(); renderChart(); $('btnPrint').disabled = !state.stakeholders.length;
+          $('btnNewStakeholder').disabled=false;
+          setStatus(state.stakeholders.length ? 'Loaded from Dataverse' : 'No contacts for this account');
+        }catch(error){ if(expected === version) { setStatus(error.message); showError(error.message); } }
+      }
+      function showError(message){
+        let el = $('editorError');
+        if(!el){ el=document.createElement('div'); el.id='editorError'; el.className='small-muted'; el.setAttribute('role','alert'); $('editorBody').prepend(el); }
+        el.textContent=message;
+        if($('editorModal').style.transform !== 'translateX(0px)' && $('editorModal').style.transform !== 'translateX(0)') alert(message);
+      }
+      async function persist(button, work, message){
+        if(saving || !api || !currentHost.isActive()) return;
+        const expected = version;
+        saving=true;
+        const buttons=[...document.querySelectorAll('button')].map(el=>[el,el.disabled]);
+        buttons.forEach(([el])=>el.disabled=true);
+        try{
+          const next = await work();
+          if(expected !== version || !currentHost.isActive()) return;
+          state=next; closeFlyouts(); renderChart(); setStatus(message);
+        }catch(error){ if(expected === version) {setStatus(error.message); showError(error.message);} }
+        finally{
+          saving=false;
+          buttons.forEach(([el,disabled])=>{if(el.isConnected)el.disabled=disabled;});
+          $('btnPrint').disabled=!currentHost?.isActive() || !state.stakeholders.length;
+          if(!currentHost?.isActive()) $('btnNewStakeholder').disabled=true;
+        }
+      }
+      window.FABStakeholderPage = {
+        headerChanged,
+        async initialize(host){
+          $('btnNewStakeholder').disabled=true;
+          $('btnPrint').disabled=true;
+          version++; currentHost=host;
+          headerChanged(typeof host.getHeaderVisible === 'function' ? host.getHeaderVisible() : null);
+          state={selectedStakeholderId:null,activeCoverageId:null,stakeholders:[]};
+          $('accountName').textContent=host.snapshot().accountName || 'Select an account';
+          renderChart();
+          if(!host.snapshot().accountId){setStatus('Select a saved account on the Account Plan.');return;}
+          api=window.FABStakeholderData.create(host);
+          await load();
+        },
+        invalidate(){
+          $('btnNewStakeholder').disabled=true;
+          headerChanged(null);
+          $('btnPrint').disabled=true;
+          version++; api=null; currentHost=null;
+          state={selectedStakeholderId:null,activeCoverageId:null,stakeholders:[]};
+          closeFlyouts(); $('editorBody').replaceChildren(); $('stakeholderBody').replaceChildren(); $('coverageBody').replaceChildren();
+          $('accountName').textContent=''; renderChart(); setStatus('Account context changed');
+        }
+      };
+
+      function initials(name='U'){
+        return name.trim().split(/\s+/).slice(0,2).map(p => p[0] || '').join('').toUpperCase();
+      }
+
+      function childrenOf(parentId){
+        return state.stakeholders.filter(s => s.parentId === parentId);
+      }
+
+      function findStakeholder(id){
+        return state.stakeholders.find(s => s.id === id);
+      }
+
+      function findCoverage(stakeholderId, coverageId){
+        const s = findStakeholder(stakeholderId);
+        if(!s) return null;
+        return (s.coverage || []).find(c => c.id === coverageId) || null;
+      }
+
+      function getHealth(stakeholder){
+        const coverage = stakeholder.coverage || [];
+        if(!coverage.length) return 'weak';
+        if(coverage.length >= 2) return 'strong';
+        const first = coverage[0];
+        if(first && (first.relationshipStrength === 'strong' || first.sourceType === 'exec')) return 'strong';
+        return 'medium';
+      }
+
+      function sourceClass(type){
+        return {
+          facility:'src-facility',
+          opportunity:'src-opportunity',
+          exec:'src-exec',
+          trade:'src-trade',
+          treasury:'src-treasury',
+          prior:'src-prior'
+        }[type] || 'src-prior';
+      }
+
+      function healthBadge(health){
+        if(health === 'strong') return '<span class="health-badge health-strong-b">Strong Coverage</span>';
+        if(health === 'medium') return '<span class="health-badge health-medium-b">Medium Coverage</span>';
+        return '<span class="health-badge health-weak-b">Weak Coverage</span>';
+      }
+
+      function sentimentBadge(tag){
+        const cls = tag === 'supporter' ? 'supporter' : tag === 'detractor' ? 'detractor' : 'neutral';
+        const text = tag === 'supporter' ? 'Supporter' : tag === 'detractor' ? 'Detractor' : tag === 'neutral' ? 'Neutral' : 'Not assessed';
+        return '<span class="sentiment-badge '+cls+'">'+text+'</span>';
+      }
+
+      function influenceDots(n){
+        let html = '<div class="influence">';
+        for(let i=1;i<=5;i++) html += '<span class="'+(i<=Number(n||0)?'on':'')+'"></span>';
+        html += '</div>';
+        return html;
+      }
+
+      function buildLevels(){
+        const roots = state.stakeholders.filter(s => !s.parentId);
+        const levels = [];
+        let current = roots.slice();
+        const seen = new Set();
+        while(current.length){
+          levels.push(current);
+          const next = [];
+          current.forEach(item => {
+            if(seen.has(item.id)) return;
+            seen.add(item.id);
+            childrenOf(item.id).forEach(ch => next.push(ch));
+          });
+          current = next;
+        }
+        return levels;
+      }
+
+      function renderFabRail(stakeholder){
+        const active = state.activeCoverageId;
+        const coverage = (stakeholder.coverage || []).slice(0,2);
+        let html = coverage.map(item => {
+          const isActive = active === item.id;
+          return `
+            <button class="fab-pill ${item.type === 'secondary' ? 'secondary' : ''} ${isActive ? 'active' : ''}" data-stakeholder-id="${stakeholder.id}" data-cover-id="${item.id}" type="button" title="${escapeHtml(item.name)}">
+              <div class="fab-pill-avatar">${escapeHtml(initials(item.name))}<span class="fab-pill-icon">👤</span></div>
+            </button>
+          `;
+        }).join('');
+
+        if(coverage.length < 2){
+          html += `
+            <button class="fab-pill fab-pill-empty" data-add-coverage="${stakeholder.id}" type="button" title="Add FAB coverage">
+              <div class="fab-pill-avatar" style="background:#f1f5f9;color:#94a3b8">+</div>
+            </button>
+          `;
+        }
+        return html;
+      }
+
+      function renderCoverageDrawer(stakeholder){
+        const item = (stakeholder.coverage || []).find(c => c.id === state.activeCoverageId);
+        if(!item) return '<div class="coverage-drawer"></div>';
+
+        return `
+          <div class="coverage-drawer open">
+            <div class="drawer-top">
+              <div class="drawer-avatar ${item.type === 'secondary' ? 'secondary' : ''}">${escapeHtml(initials(item.name))}</div>
+              <div>
+                <div class="drawer-name">${item.type === 'primary' ? '⭐ ' : ''}${escapeHtml(item.name)}</div>
+                <div class="drawer-role">${escapeHtml(item.role)}</div>
+              </div>
+            </div>
+
+            <div class="drawer-meta">
+              <div class="mini-field">
+                <div class="k">Source</div>
+                <div class="v"><span class="source-badge ${sourceClass(item.sourceType)}">${escapeHtml(item.sourceLabel)}</span></div>
+              </div>
+              <div class="mini-field">
+                <div class="k">Coverage Basis</div>
+                <div class="v">${escapeHtml(item.basis || '')}</div>
+              </div>
+            </div>
+
+            <div class="drawer-actions">
+              <button class="drawer-btn" type="button" data-open-full="${item.id}" data-stakeholder-id="${stakeholder.id}">Open Full Details</button>
+              <button class="drawer-btn secondary" type="button" data-edit-coverage="${item.id}" data-stakeholder-id="${stakeholder.id}">Edit</button>
+              <button class="drawer-btn danger" type="button" data-delete-coverage="${item.id}" data-stakeholder-id="${stakeholder.id}">Delete</button>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderChart(){
+        const levels = buildLevels();
+        const container = $('levels');
+        container.innerHTML = '';
+
+        levels.forEach(level => {
+          const row = document.createElement('div');
+          row.className = 'level-row';
+
+          level.forEach(stakeholder => {
+            const health = getHealth(stakeholder);
+            const selected = stakeholder.id === state.selectedStakeholderId ? 'selected' : '';
+            const wrap = document.createElement('div');
+            wrap.className = 'stakeholder-card-wrap';
+
+            wrap.innerHTML = `
+              <div class="stakeholder-card health-${health} ${selected}" data-stakeholder-id="${stakeholder.id}">
+                <div class="top-badges">
+                  <div class="left-badges">
+                    ${sentimentBadge(stakeholder.tag)}
+                    ${healthBadge(health)}
+                  </div>
+                  <div class="right-actions">
+                    <button class="icon-btn" type="button" data-edit-stakeholder="${stakeholder.id}">✏️ Edit</button>
+                  </div>
+                </div>
+
+                <div class="stakeholder-main">
+                  <div class="avatar">${escapeHtml(initials(stakeholder.name))}</div>
+                  <div>
+                    <div class="stakeholder-name">${escapeHtml(stakeholder.name)}</div>
+                    <div class="stakeholder-title">${escapeHtml(stakeholder.title)}</div>
+                    ${influenceDots(stakeholder.influence)}
+                  </div>
+                </div>
+
+                <div class="stakeholder-notes">
+                  ${escapeHtml((stakeholder.notes || '').replace('DEMO ONLY: Reporting lines, sentiment and influence are fictional scenario assumptions, not verified ADNOC facts.', '').trim())}
+                </div>
+
+                <div class="fab-rail-label">
+                  <span>FAB Coverage</span>
+                  <span class="fab-rail-hint">${(stakeholder.coverage || []).length}/2 assigned</span>
+                </div>
+              </div>
+
+              <div class="stakeholder-add-zone"><button type="button" class="stakeholder-add-btn" data-add-stakeholder="${stakeholder.id}" aria-label="Add stakeholder reporting to ${escapeHtml(stakeholder.name)}" title="Add direct report">+</button></div>
+              <div class="fab-rail">${renderFabRail(stakeholder)}</div>
+              ${renderCoverageDrawer(stakeholder)}
+            `;
+            row.appendChild(wrap);
+          });
+
+          container.appendChild(row);
+        });
+
+        bindCardEvents();
+        requestAnimationFrame(drawConnectors);
+      }
+
+      function bindCardEvents(){
+        document.querySelectorAll('[data-add-stakeholder]').forEach(button=>{
+          button.addEventListener('click',event=>{
+            event.stopPropagation();
+            if(!saving && api && currentHost?.isActive()) openStakeholderEditor(null,button.dataset.addStakeholder);
+          });
+        });
+        document.querySelectorAll('.stakeholder-card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            if(
+              e.target.closest('.fab-pill') ||
+              e.target.closest('[data-edit-stakeholder]') ||
+              e.target.closest('[data-open-full]') ||
+              e.target.closest('[data-edit-coverage]') ||
+              e.target.closest('[data-delete-coverage]') ||
+              e.target.closest('[data-add-coverage]')
+            ) return;
+
+            const id = card.getAttribute('data-stakeholder-id');
+            state.selectedStakeholderId = id;
+            state.activeCoverageId = null;
+            saveState();
+            renderChart();
+            openStakeholderFlyout(id);
+            setStatus('Stakeholder selected');
+          });
+        });
+
+        document.querySelectorAll('[data-edit-stakeholder]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openStakeholderEditor(btn.getAttribute('data-edit-stakeholder'));
+          });
+        });
+
+        document.querySelectorAll('.fab-pill[data-cover-id]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const stakeholderId = btn.getAttribute('data-stakeholder-id');
+            const coverId = btn.getAttribute('data-cover-id');
+            state.selectedStakeholderId = stakeholderId;
+            state.activeCoverageId = state.activeCoverageId === coverId ? null : coverId;
+            saveState();
+            closeFlyouts();
+            renderChart();
+            setStatus(state.activeCoverageId ? 'FAB coverage expanded' : 'FAB coverage collapsed');
+          });
+        });
+
+        document.querySelectorAll('[data-add-coverage]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openCoverageEditor(btn.getAttribute('data-add-coverage'), null);
+          });
+        });
+
+        document.querySelectorAll('[data-open-full]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openCoverageFlyout(btn.getAttribute('data-stakeholder-id'), btn.getAttribute('data-open-full'));
+            setStatus('Opened full FAB coverage details');
+          });
+        });
+
+        document.querySelectorAll('[data-edit-coverage]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openCoverageEditor(btn.getAttribute('data-stakeholder-id'), btn.getAttribute('data-edit-coverage'));
+          });
+        });
+
+        document.querySelectorAll('[data-delete-coverage]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteCoverage(btn.getAttribute('data-stakeholder-id'), btn.getAttribute('data-delete-coverage'));
+          });
+        });
+      }
+
+      function drawConnectors(){ drawScopedConnectors(document); }
+      function drawScopedConnectors(scope){
+        const svg = scope.querySelector('#linesSvg');
+        const wrap = scope.querySelector('#chartWrap');
+        const levelsEl = scope.querySelector('#levels');
+        svg.innerHTML = '';
+
+        const wrapRect = wrap.getBoundingClientRect();
+        const width = wrap.scrollWidth;
+        const height = wrap.scrollHeight;
+
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.style.height = height + 'px';
+        svg.style.width = width + 'px';
+
+        const getCenterBottom = (el) => {
+          const r = el.getBoundingClientRect();
+          return { x:(r.left - wrapRect.left) + r.width/2, y:(r.top - wrapRect.top) + r.height };
+        };
+        const getCenterTop = (el) => {
+          const r = el.getBoundingClientRect();
+          return { x:(r.left - wrapRect.left) + r.width/2, y:(r.top - wrapRect.top) };
+        };
+
+        state.stakeholders.forEach(child => {
+          if(!child.parentId) return;
+
+          const parentCard = levelsEl.querySelector(`.stakeholder-card[data-stakeholder-id="${child.parentId}"]`);
+          const childCard = levelsEl.querySelector(`.stakeholder-card[data-stakeholder-id="${child.id}"]`);
+          if(!parentCard || !childCard) return;
+
+          const p = getCenterBottom(parentCard);
+          const c = getCenterTop(childCard);
+          const midY = (p.y + c.y) / 2;
+
+          const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d', `M ${p.x} ${p.y} C ${p.x} ${midY}, ${c.x} ${midY}, ${c.x} ${c.y}`);
+          path.setAttribute('fill','none');
+          path.setAttribute('stroke','#94a3b8');
+          path.setAttribute('stroke-width','2');
+          path.setAttribute('opacity','.9');
+          svg.appendChild(path);
+        });
+      }
+
+      function openBackdrop(){ $('backdrop').style.display = 'block'; }
+      function closeBackdrop(){ $('backdrop').style.display = 'none'; }
+
+      function closeFlyouts(){
+        $('stakeholderFlyout').style.transform = 'translateX(110%)';
+        $('coverageFlyout').style.transform = 'translateX(110%)';
+        $('editorModal').style.transform = 'translateX(110%)';
+        closeBackdrop();
+      }
+
+      function setStatus(text){
+        $('statusText').textContent = text;
+      }
+
+      function openStakeholderFlyout(id){
+        const s = findStakeholder(id);
+        if(!s) return;
+
+        const health = getHealth(s);
+        $('coverageFlyout').style.transform='translateX(110%)';
+        $('editorModal').style.transform='translateX(110%)';
+
+        $('stakeholderBody').innerHTML = `
+          <div class="section">
+            <div class="person-hero">
+              <div class="hero-avatar">${escapeHtml(initials(s.name))}</div>
+              <div>
+                <div class="hero-name">${escapeHtml(s.name)}</div>
+                <div class="hero-role">${escapeHtml(s.title)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Stakeholder Details</div>
+            <div class="detail-grid">
+              <div class="field"><div class="k">Sentiment</div><div class="v">${s.tag ? s.tag[0].toUpperCase()+s.tag.slice(1) : 'Not assessed'}</div></div>
+              <div class="field"><div class="k">Coverage Health</div><div class="v">${health[0].toUpperCase()+health.slice(1)}</div></div>
+              <div class="field"><div class="k">Influence</div><div class="v">${s.influence == null ? 'Not assessed' : s.influence+'/5'}</div></div>
+              <div class="field"><div class="k">FAB Owners</div><div class="v">${(s.coverage || []).length}/2</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Notes</div>
+            <div class="narrative">${escapeHtml(s.notes || '')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Win-back Strategy</div>
+            <div class="narrative">${escapeHtml(s.winBackStrategy || '—')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Next Action</div>
+            <div class="narrative">${escapeHtml(s.nextAction || '')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Assigned FAB Coverage</div>
+            ${(s.coverage || []).slice(0,2).map(item => `
+              <div class="assignment-card" style="margin-bottom:10px;">
+                <div class="assignment-top">
+                  <div>
+                    <div class="assignment-name">${item.type==='primary'?'⭐ ':''}${escapeHtml(item.name)}</div>
+                    <div class="assignment-role">${escapeHtml(item.role)} · ${escapeHtml(item.team)}</div>
+                  </div>
+                  <div class="source-badge ${sourceClass(item.sourceType)}">${escapeHtml(item.sourceLabel)}</div>
+                </div>
+              </div>
+            `).join('') || '<div class="narrative">No assigned FAB owners yet.</div>'}
+
+            <div style="margin-top:12px;">
+              <button class="btn primary" type="button" onclick="window.__fabEditStakeholder('${s.id}')">Edit Stakeholder</button>
+               <button class="btn danger" type="button" id="detailDeleteStakeholder" onclick="window.__fabDeleteStakeholder('${s.id}')">Delete Stakeholder</button>
+            </div>
+          </div>
+        `;
+
+        openBackdrop();
+        $('stakeholderFlyout').style.transform='translateX(0)';
+      }
+
+      function openCoverageFlyout(stakeholderId, coverId){
+        const s = findStakeholder(stakeholderId);
+        const item = findCoverage(stakeholderId, coverId);
+        if(!s || !item) return;
+
+        state.selectedStakeholderId = stakeholderId;
+        state.activeCoverageId = coverId;
+        saveState();
+
+        $('stakeholderFlyout').style.transform='translateX(110%)';
+        $('editorModal').style.transform='translateX(110%)';
+
+        $('coverageBody').innerHTML = `
+          <div class="section">
+            <div class="person-hero">
+              <div class="hero-avatar">${escapeHtml(initials(item.name))}</div>
+              <div>
+                <div class="hero-name">${escapeHtml(item.name)}</div>
+                <div class="hero-role">${escapeHtml(item.role)} · ${escapeHtml(item.team)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Coverage Assignment</div>
+            <div class="detail-grid">
+              <div class="field"><div class="k">Coverage Type</div><div class="v">${item.type === 'primary' ? 'Primary Owner' : 'Secondary Owner'}</div></div>
+              <div class="field"><div class="k">Stakeholder</div><div class="v">${escapeHtml(s.name)}</div></div>
+              <div class="field"><div class="k">Source of Coverage</div><div class="v">${escapeHtml(item.sourceLabel)}</div></div>
+              <div class="field"><div class="k">Relationship Strength</div><div class="v">${escapeHtml((item.relationshipStrength || '').charAt(0).toUpperCase() + (item.relationshipStrength || '').slice(1))}</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Why This Person Covers the Stakeholder</div>
+            <div class="narrative">${escapeHtml(item.basis || '')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Last Touch</div>
+            <div class="narrative">${escapeHtml(item.lastTouch || '')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Next Step</div>
+            <div class="narrative">${escapeHtml(item.nextStep || '')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Additional Notes</div>
+            <div class="narrative">${escapeHtml(item.personNotes || '')}</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn primary" type="button" onclick="window.__fabEditCoverage('${stakeholderId}','${coverId}')">Edit Persona</button>
+              <button class="btn danger" type="button" onclick="window.__fabDeleteCoverage('${stakeholderId}','${coverId}')">Delete Persona</button>
+            </div>
+          </div>
+        `;
+
+        openBackdrop();
+        $('coverageFlyout').style.transform='translateX(0)';
+      }
+
+      function openEditor(title, html){
+        $('editorTitle').textContent = title;
+        $('editorBody').innerHTML = html;
+        openBackdrop();
+        $('stakeholderFlyout').style.transform='translateX(110%)';
+        $('coverageFlyout').style.transform='translateX(110%)';
+        $('editorModal').style.transform='translateX(0)';
+      }
+
+
+      function openStakeholderEditor(id, parentId=null){
+        const isNew=!id, draftId=isNew?crypto.randomUUID():id;
+        const s=isNew?{id:draftId,name:'',title:'',tag:null,influence:null,parentId,notes:'',winBackStrategy:'',nextAction:'',coverage:[]}:findStakeholder(id);
+        if(!s){showError('Stakeholder is not in the loaded account.');return;}
+        openEditor(isNew?'New Stakeholder':'Edit Stakeholder', `
+          <div class="section">
+            <div class="section-label">Stakeholder</div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Name</label>
+                <input id="st_name" value="${escapeHtml(s.name)}" />
+              </div>
+              <div class="form-field">
+                <label>Title</label>
+                <input id="st_title" value="${escapeHtml(s.title)}" />
+              </div>
+              <div class="form-field">
+                <label>Sentiment</label>
+                <select id="st_tag"><option value="" ${!s.tag?'selected':''}>Not assessed</option>
+                  <option value="supporter" ${s.tag==='supporter'?'selected':''}>Supporter</option>
+                  <option value="neutral" ${s.tag==='neutral'?'selected':''}>Neutral</option>
+                  <option value="detractor" ${s.tag==='detractor'?'selected':''}>Detractor</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Influence</label>
+                <select id="st_influence"><option value="" ${s.influence == null?'selected':''}>Not assessed</option>
+                  <option value="1" ${Number(s.influence)===1?'selected':''}>1</option>
+                  <option value="2" ${Number(s.influence)===2?'selected':''}>2</option>
+                  <option value="3" ${Number(s.influence)===3?'selected':''}>3</option>
+                  <option value="4" ${Number(s.influence)===4?'selected':''}>4</option>
+                  <option value="5" ${Number(s.influence)===5?'selected':''}>5</option>
+                </select>
+              </div>
+              <div class="form-field full">
+                <label>Reports to</label>
+                <select id="st_parent">
+                  <option value="">Not assigned</option>
+                  ${state.stakeholders.filter(p=>p.id !== s.id).map(p=>`<option value="${p.id}" ${p.id === s.parentId?'selected':''}>${escapeHtml(p.name)} · ${escapeHtml(p.title)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="form-field full">
+                <label>Notes</label>
+                <textarea id="st_notes">${escapeHtml(s.notes || '')}</textarea>
+              </div>
+              <div class="form-field full">
+                <label>Win-back Strategy</label>
+                <textarea id="st_winback">${escapeHtml(s.winBackStrategy || '')}</textarea>
+              </div>
+              <div class="form-field full">
+                <label>Next Action</label>
+                <textarea id="st_next">${escapeHtml(s.nextAction || '')}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Coverage Teams</div>
+            <div class="small-muted">${isNew?'Save this stakeholder first, then assign FAB coverage.':'You can manage up to 2 FAB personas per stakeholder.'}</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn primary" type="button" id="editorAddCoverageBtn" ${(isNew || (s.coverage||[]).length>=2)?'disabled style="opacity:.5;cursor:not-allowed"':''}>+ Add FAB Persona</button>
+            </div>
+            <div style="margin-top:12px;display:grid;gap:10px;">
+              ${(s.coverage || []).map(item => `
+                <div class="assignment-card">
+                  <div class="assignment-top">
+                    <div>
+                      <div class="assignment-name">${item.type==='primary'?'⭐ ':''}${escapeHtml(item.name)}</div>
+                      <div class="assignment-role">${escapeHtml(item.role)} · ${escapeHtml(item.team)}</div>
+                    </div>
+                    <div class="source-badge ${sourceClass(item.sourceType)}">${escapeHtml(item.sourceLabel)}</div>
+                  </div>
+                  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn primary" type="button" onclick="window.__fabEditCoverage('${s.id}','${item.id}')">Edit</button>
+                    <button class="btn danger" type="button" onclick="window.__fabDeleteCoverage('${s.id}','${item.id}')">Delete</button>
+                  </div>
+                </div>
+              `).join('') || '<div class="small-muted" style="margin-top:10px;">No FAB personas assigned yet.</div>'}
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="modal-footer">
+              <div class="small-muted">${isNew?'Creates a new Contact under '+escapeHtml(currentHost.snapshot().accountName || 'the selected account')+'.':'Changes are saved to this contact in Dataverse.'}</div>
+              <div class="sub-actions">
+                ${!isNew?`<button class="btn danger" type="button" id="editorDeleteStakeholder" onclick="window.__fabDeleteStakeholder('${s.id}')">Delete Stakeholder</button>`:''}
+                 <button class="btn" type="button" id="editorCancelStakeholder">Cancel</button>
+                <button class="btn primary" type="button" id="editorSaveStakeholder">${isNew?'Create Stakeholder':'Save Stakeholder'}</button>
+              </div>
+            </div>
+          </div>
+        `);
+
+        const addBtn = $('editorAddCoverageBtn');
+        if(addBtn){
+          addBtn.addEventListener('click', () => {
+            if(isNew || (s.coverage || []).length >= 2) return;
+            openCoverageEditor(id, null);
+          });
+        }
+
+        $('editorCancelStakeholder').addEventListener('click', closeFlyouts);
+
+        $('editorSaveStakeholder').addEventListener('click', event => {
+          const next = {
+            name:$('st_name').value.trim(), title:$('st_title').value.trim(), parentId:$('st_parent').value || null,
+            tag:$('st_tag').value || null, influence:$('st_influence').value ? Number($('st_influence').value) : null,
+            notes:$('st_notes').value.trim(), winBackStrategy:$('st_winback').value.trim(), nextAction:$('st_next').value.trim()
+          };
+          persist(event.currentTarget,()=>isNew?api.createStakeholder(draftId,next):api.saveStakeholder(id,next),
+            isNew?'Stakeholder created in Dataverse':'Stakeholder saved to Dataverse');
+        });
+      }
+
+      function openCoverageEditor(stakeholderId, coverageId){
+        const s = findStakeholder(stakeholderId);
+        if(!s) return;
+
+        const isNew = !coverageId;
+        if(isNew && (s.coverage || []).length >= 2){
+          alert('Maximum 2 FAB personas allowed per stakeholder.');
+          return;
+        }
+
+        const item = coverageId ? structuredClone(findCoverage(stakeholderId, coverageId)) : {
+          id: makeId('CV'),
+          type: (s.coverage || []).length === 0 ? 'primary' : 'secondary',
+          name:'',
+          role:'',
+          team:'',
+          sourceType:'opportunity',
+          sourceLabel:'',
+          relationshipStrength:'medium',
+          basis:'',
+          lastTouch:'',
+          nextStep:'',
+          personNotes:''
+        };
+
+        openEditor(isNew ? 'Add FAB Persona' : 'Edit FAB Persona', `
+          <div class="section">
+            <div class="section-label">FAB Persona</div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Name</label>
+                <input id="cv_name" value="${escapeHtml(item.name || '')}" readonly placeholder="Select a Dynamics user" aria-label="Select FAB user" style="cursor:pointer" />
+              </div>
+              <div class="form-field">
+                <label>Role</label>
+                <input id="cv_role" value="${escapeHtml(item.role || '')}" />
+              </div>
+              <div class="form-field">
+                <label>Team</label>
+                <input id="cv_team" value="${escapeHtml(item.team || '')}" />
+              </div>
+              <div class="form-field">
+                <label>Coverage Type</label>
+                <select id="cv_type">
+                  <option value="primary" ${item.type==='primary'?'selected':''}>Primary</option>
+                  <option value="secondary" ${item.type==='secondary'?'selected':''}>Secondary</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Source Type</label>
+                <select id="cv_sourceType">
+                  <option value="facility" ${item.sourceType==='facility'?'selected':''}>Facility</option>
+                  <option value="opportunity" ${item.sourceType==='opportunity'?'selected':''}>Opportunity</option>
+                  <option value="exec" ${item.sourceType==='exec'?'selected':''}>Executive</option>
+                  <option value="trade" ${item.sourceType==='trade'?'selected':''}>Trade</option>
+                  <option value="treasury" ${item.sourceType==='treasury'?'selected':''}>Treasury</option>
+                  <option value="prior" ${item.sourceType==='prior'?'selected':''}>Prior Relationship</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Source Label</label>
+                <input id="cv_sourceLabel" value="${escapeHtml(item.sourceLabel || '')}" />
+              </div>
+              <div class="form-field">
+                <label>Relationship Strength</label>
+                <select id="cv_strength">
+                  <option value="strong" ${item.relationshipStrength==='strong'?'selected':''}>Strong</option>
+                  <option value="medium" ${item.relationshipStrength==='medium'?'selected':''}>Medium</option>
+                  <option value="weak" ${item.relationshipStrength==='weak'?'selected':''}>Weak</option>
+                </select>
+              </div>
+              <div class="form-field full">
+                <label>Coverage Basis</label>
+                <textarea id="cv_basis">${escapeHtml(item.basis || '')}</textarea>
+              </div>
+              <div class="form-field full">
+                <label>Last Touch</label>
+                <textarea id="cv_lastTouch">${escapeHtml(item.lastTouch || '')}</textarea>
+              </div>
+              <div class="form-field full">
+                <label>Next Step</label>
+                <textarea id="cv_nextStep">${escapeHtml(item.nextStep || '')}</textarea>
+              </div>
+              <div class="form-field full">
+                <label>Additional Notes</label>
+                <textarea id="cv_notes">${escapeHtml(item.personNotes || '')}</textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="modal-footer">
+              <div class="small-muted">Saved as a contact-to-user assignment in Dataverse.</div>
+              <div class="sub-actions">
+                <button class="btn" type="button" id="editorCancelCoverage">Cancel</button>
+                <button class="btn primary" type="button" id="editorSaveCoverage">${isNew ? 'Add Persona' : 'Save Persona'}</button>
+              </div>
+            </div>
+          </div>
+        `);
+
+
+        $('cv_name').addEventListener('click', async () => {
+          if(saving || !api) return;
+          const nameInput=$('cv_name'), expected=version;
+          try{
+            const user=await api.selectUser();
+            if(!user || expected !== version || !nameInput.isConnected) return;
+            item.userId=user.systemuserid; item.name=user.fullname; nameInput.value=user.fullname;
+            if(!$('cv_role').value) $('cv_role').value=user.jobtitle || '';
+          }catch(error){if(expected === version)showError(error.message);}
+        });
+        $('cv_name').addEventListener('keydown', event => {
+          if(event.key==='Enter' || event.key===' '){event.preventDefault();$('cv_name').click();}
+        });
+        $('editorCancelCoverage').addEventListener('click', closeFlyouts);
+
+        $('editorSaveCoverage').addEventListener('click', event => {
+          const next={
+            userId:item.userId, name:$('cv_name').value.trim(), role:$('cv_role').value.trim(),
+            team:$('cv_team').value.trim(), type:$('cv_type').value, sourceType:$('cv_sourceType').value,
+            sourceLabel:$('cv_sourceLabel').value.trim(), relationshipStrength:$('cv_strength').value,
+            basis:$('cv_basis').value.trim(), lastTouch:$('cv_lastTouch').value.trim(),
+            nextStep:$('cv_nextStep').value.trim(), personNotes:$('cv_notes').value.trim()
+          };
+          if(!next.userId){showError('Select a Dynamics user from the Name field.');return;}
+          persist(event.currentTarget,()=>api.saveCoverage(stakeholderId,next,coverageId),
+            isNew?'FAB persona saved to Dataverse':'FAB persona updated in Dataverse');
+        });
+      }
+
+      function normalizeCoverageTypes(stakeholder){
+        if(!stakeholder || !Array.isArray(stakeholder.coverage)) return;
+        stakeholder.coverage = stakeholder.coverage.slice(0,2);
+
+        const primaryIndex = stakeholder.coverage.findIndex(c => c.type === 'primary');
+        if(primaryIndex === -1 && stakeholder.coverage[0]){
+          stakeholder.coverage[0].type = 'primary';
+          if(stakeholder.coverage[1]) stakeholder.coverage[1].type = 'secondary';
+          return;
+        }
+
+        stakeholder.coverage.forEach((c, i) => {
+          c.type = i === primaryIndex ? 'primary' : 'secondary';
+        });
+
+        stakeholder.coverage.sort((a,b) => a.type === 'primary' ? -1 : b.type === 'primary' ? 1 : 0);
+      }
+
+      function deleteCoverage(stakeholderId, coverageId){
+        const s = findStakeholder(stakeholderId);
+        if(!s) return;
+        const item = findCoverage(stakeholderId, coverageId);
+        if(!item) return;
+
+        if(!confirm(`Delete FAB persona "${item.name}"?`)) return;
+
+
+        persist(null,()=>api.deleteCoverage(stakeholderId,coverageId),'FAB coverage assignment deleted');
+      }
+
+      function exportJson(){
+        const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'fab_stakeholder_coverage_map.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function bindGlobal(){
+        $('sessionId').textContent = getSessionId();
+
+        $('backdrop').addEventListener('click', closeFlyouts);
+        $('closeStakeholder').addEventListener('click', closeFlyouts);
+        $('closeCoverage').addEventListener('click', closeFlyouts);
+        $('closeEditor').addEventListener('click', closeFlyouts);
+
+
+        $('btnReset').addEventListener('click', () => {
+          if(saving || !api) return;
+          if(!confirm('Reload saved Dataverse data and discard unsaved editor changes?')) return;
+          load();
+        });
+
+        $('btnExport').addEventListener('click', exportJson);
+
+        window.addEventListener('resize', drawConnectors);
+
+        document.addEventListener('keydown', (e) => {
+          if(e.key === 'Escape'){
+            closeFlyouts();
+          }
+        });
+      }
+
+      window.__fabEditStakeholder = openStakeholderEditor;
+      window.__fabEditCoverage = openCoverageEditor;
+      window.__fabDeleteCoverage = deleteCoverage;
+
+      bindGlobal();
+      renderChart();
+
+      function preparePrint(){
+        document.getElementById('stakeholderPrintSurface')?.remove();
+        if(!state.stakeholders.length) return;
+        const surface=document.createElement('div');
+        surface.id='stakeholderPrintSurface';
+        surface.setAttribute('aria-hidden','true');
+        surface.appendChild($('chartWrap').cloneNode(true));
+        const maxColumns=Math.max(...buildLevels().map(level=>level.length));
+        surface.style.width=(maxColumns*320+Math.max(0,maxColumns-1)*34+48)+'px';
+        document.body.appendChild(surface);
+        surface.querySelectorAll('.stakeholder-card').forEach(card=>{
+          const stakeholder=state.stakeholders.find(s=>s.id===card.dataset.stakeholderId);
+          const names=document.createElement('div');
+          names.className='print-coverage';
+          names.textContent=(stakeholder.coverage || []).map(c=>c.name+' - '+c.role).join('; ');
+          card.appendChild(names);
+        });
+        drawScopedConnectors(surface);
+        const width=surface.scrollWidth, height=surface.scrollHeight;
+        surface.style.setProperty('--print-scale',Math.min(1,1040/width,680/height));
+      }
+      $('btnPrint').addEventListener('click',()=>window.print());
+      window.addEventListener('beforeprint',preparePrint);
+      window.addEventListener('afterprint',()=>document.getElementById('stakeholderPrintSurface')?.remove());
+      setStatus('Connecting to Account Plan...');
+
+    })();
+  </script>
+</body>
+</html>

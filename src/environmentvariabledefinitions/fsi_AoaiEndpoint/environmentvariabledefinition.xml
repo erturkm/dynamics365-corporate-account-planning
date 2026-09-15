@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="fsi_AoaiEndpoint">
+  <description default="Azure OpenAI chat completions URL used by the GTI AI service flow.">
+    <label description="Azure OpenAI chat completions URL used by the GTI AI service flow." languagecode="1033" />
+  </description>
+  <displayname default="fsi_AoaiEndpoint">
+    <label description="fsi_AoaiEndpoint" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

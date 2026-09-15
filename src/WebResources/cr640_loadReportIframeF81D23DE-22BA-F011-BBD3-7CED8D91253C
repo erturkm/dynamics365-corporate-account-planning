@@ -1,0 +1,28 @@
+function loadReportIframe(executionContext) {
+    const formContext = executionContext.getFormContext();
+
+    const mappings = [
+        { tabName: "tab_3", attr: "cr640_limitsandutilizationreport", iframe: "IFRAME_new_1" },
+        { tabName: "tab_4", attr: "fsi_walletsharereport",            iframe: "IFRAME_new_2" }
+    ];
+
+    mappings.forEach(m => {
+        const tab = formContext.ui.tabs.get(m.tabName);
+        if (!tab) return;
+
+        const handler = function () {
+            if (tab.getDisplayState() === "expanded") {
+                const url = formContext.getAttribute(m.attr)?.getValue();
+                if (url && url.trim() !== "") {
+                    const frame = formContext.getControl(m.iframe);
+                    if (frame) {
+                        frame.setSrc(url);
+                    }
+                }
+            }
+        };
+
+        tab.addTabStateChange(handler); // Fires when tab expands
+        handler();                      // Run on load in case tab is already expanded
+    });
+}

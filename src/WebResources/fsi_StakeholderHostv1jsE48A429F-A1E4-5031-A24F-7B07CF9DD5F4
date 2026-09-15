@@ -1,0 +1,150 @@
+(function (root) {
+    "use strict";
+    let dispose;
+    function onLoad(context) {
+        if (dispose) dispose();
+        const form = context.getFormContext();
+        const tab = form.ui.tabs.get("tab_8"), control = form.getControl("WebResource_new_3");
+        if (!tab || !control) return;
+        const account = form.getAttribute("fsi_customer");
+        const clientUrl = root.Xrm.Utility.getGlobalContext().getClientUrl();
+        let stopped = false, busy = false, win = null, connected = null, connectedPage = null, generation = 0;
+        const header = form.ui.headerSection, process = form.ui.process;
+        let originalVisibility = null;
+        const supportsHeader = () => typeof header?.getBodyVisible === "function" &&
+            typeof header?.setBodyVisible === "function" &&
+            (!process || (typeof process.getVisible === "function" && typeof process.setVisible === "function"));
+        const headerVisible = () => supportsHeader() ? header.getBodyVisible() || !!process?.getVisible() : null;
+        function restoreHeader() {
+            if (!originalVisibility) return;
+            const failures = [];
+            for (const [name, target, setter] of [["header", header, "setBodyVisible"], ["process", process, "setVisible"]]) {
+                if (!target || originalVisibility[name] === undefined) continue;
+                try {
+                    target[setter](originalVisibility[name]);
+                    delete originalVisibility[name];
+                } catch (error) { failures.push(error.message); }
+            }
+            if (failures.length) throw new Error("Could not restore form header: " + failures.join("; "));
+            originalVisibility = null;
+        }
+        function snapshot() {
+            const value = account.getValue()?.[0];
+            return {
+                accountId: value?.entityType === "account" ? String(value.id).replace(/[{}]/g, "").toLowerCase() : null,
+                accountName: value?.name || "", planId: form.data.entity.getId()
+            };
+        }
+        function active(token, stamp) {
+            return !stopped && generation === token && connectedPage === win?.FABStakeholderPage &&
+                tab.getDisplayState() === "expanded" &&
+                JSON.stringify(snapshot()) === stamp;
+        }
+        function invalidate() {
+            generation++; connected = null;
+            if (connectedPage) connectedPage.invalidate();
+            connectedPage = null;
+            restoreHeader();
+        }
+        async function attach() {
+            if (stopped) return;
+            if (busy) return;
+            busy = true;
+            try {
+                if (tab.getDisplayState() !== "expanded") {
+                    if (connected) invalidate();
+                    return;
+                }
+                const state = snapshot(), stamp = JSON.stringify(state);
+                const candidate = await control.getContentWindow();
+                if (stopped || tab.getDisplayState() !== "expanded" || JSON.stringify(snapshot()) !== stamp) return;
+                if (!candidate.FABStakeholderPage) return;
+                if (connected === stamp && win === candidate && connectedPage === candidate.FABStakeholderPage) {
+                    connectedPage.headerChanged?.(headerVisible());
+                    return;
+                }
+                invalidate();
+                win = candidate; connected = stamp; connectedPage = candidate.FABStakeholderPage;
+                const token = generation;
+                const host = {
+                    clientUrl, snapshot: () => state, isActive: () => active(token, stamp),
+                    getHeaderVisible() {
+                        if (!active(token, stamp)) throw new Error("Account context changed.");
+                        return headerVisible();
+                    },
+                    toggleHeader() {
+                        if (!active(token, stamp)) throw new Error("Account context changed.");
+                        if (!supportsHeader()) throw new Error("Form header visibility is unavailable.");
+                        if (originalVisibility) restoreHeader();
+                        else {
+                            originalVisibility = { header: header.getBodyVisible(), process: process?.getVisible() };
+                            const visible = !headerVisible();
+                            try {
+                                header.setBodyVisible(visible);
+                                process?.setVisible(visible);
+                            } catch (error) {
+                                try { restoreHeader(); }
+                                catch (restoreError) { throw new Error(error.message + "; " + restoreError.message); }
+                                throw error;
+                            }
+                        }
+                        return headerVisible();
+                    },
+                    async request(method, path, body, extra = {}) {
+                        if (!active(token, stamp)) throw new Error("Account context changed.");
+                        if (!/^(accounts|contacts|systemusers|fsi_stakeholdercoverages|\$batch)([?(]|$)/.test(path))
+                            throw new Error("Unsupported stakeholder endpoint.");
+                        const headers = { Accept: "application/json", "OData-Version": "4.0",
+                            "OData-MaxVersion": "4.0", "If-None-Match": "null", ...extra };
+                        if (body && typeof body !== "string") headers["Content-Type"] = "application/json";
+                        const response = await root.fetch(clientUrl + "/api/data/v9.2/" + path, {
+                            method, credentials: "same-origin", headers,
+                            signal: AbortSignal.timeout(60000),
+                            body: body ? typeof body === "string" ? body : JSON.stringify(body) : undefined
+                        });
+                        const text = await response.text();
+                        if (!response.ok) {
+                            if (response.status === 412) throw new Error("Someone changed these records. Reset to reload before saving.");
+                            let message = response.statusText;
+                            if (text && response.headers.get("content-type")?.includes("json")) {
+                                const error = JSON.parse(text); message = error.error?.message || message;
+                            }
+                            throw new Error("Dataverse " + response.status + ": " + message);
+                        }
+                        if (!active(token, stamp)) throw new Error("Account context changed during request.");
+                        return path === "$batch" ? text : text ? JSON.parse(text) : {};
+                    },
+                    async selectUser() {
+                        if (!active(token, stamp)) throw new Error("Account context changed.");
+                        const selected = await root.Xrm.Utility.lookupObjects({
+                            entityTypes: ["systemuser"], defaultEntityType: "systemuser", allowMultiSelect: false,
+                            filters: [{ entityLogicalName: "systemuser",
+                                filterXml: '<filter><condition attribute="isdisabled" operator="eq" value="0" /></filter>' }]
+                        });
+                        if (!active(token, stamp)) throw new Error("Account context changed.");
+                        return selected?.[0] || null;
+                    }
+                };
+                await connectedPage.initialize(host);
+                form.ui.clearFormNotification("fsi-stakeholder");
+            } catch (error) {
+                form.ui.setFormNotification("Stakeholder map unavailable: " + error.message, "ERROR", "fsi-stakeholder");
+            } finally { busy = false; }
+        }
+        const change = () => {
+            try { invalidate(); }
+            catch (error) { form.ui.setFormNotification(error.message, "ERROR", "fsi-stakeholder"); }
+            attach();
+        };
+        account.addOnChange(change);
+        tab.addTabStateChange(attach);
+        const timer = root.setInterval(attach, 750);
+        dispose = () => {
+            stopped = true; invalidate(); root.clearInterval(timer);
+            account.removeOnChange(change); tab.removeTabStateChange(attach);
+        };
+        attach();
+    }
+    root.FAB = root.FAB || {};
+    root.FAB.StakeholderHost = Object.freeze({ onLoad });
+}(window));

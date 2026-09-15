@@ -1,0 +1,352 @@
+(function (root) {
+    "use strict";
+
+    var CONTROL = "WebResource_new_7";
+    var TAB = "tab_10";
+    var NOTICE = "FAB.AccountPlanSummaryHost";
+    var current = null;
+
+    function guid(value) {
+        var normalized = String(value || "").trim().replace(/^\{|\}$/g, "").toLowerCase();
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(normalized)
+            ? normalized : null;
+    }
+
+    function copy(value) {
+        if (value == null || typeof value !== "object") return value;
+        if (value instanceof Date) return value.toISOString();
+        if (Array.isArray(value)) return value.map(copy);
+        var result = {};
+        Object.keys(value).forEach(function (key) {
+            result[key] = key === "id" ? guid(value[key]) : copy(value[key]);
+        });
+        return result;
+    }
+
+    function snapshot(form) {
+        var customer = form.getAttribute("fsi_customer");
+        var lookup = customer && customer.getValue();
+        var account = lookup && lookup[0];
+        if (!account || String(account.entityType).toLowerCase() !== "account") account = null;
+        var fields = {};
+        // Include every available fsi field, so strategy/SWOT additions need no host deployment.
+        form.data.entity.attributes.forEach(function (attribute) {
+            var name = attribute.getName();
+            if (name.indexOf("fsi_") === 0) {
+                fields[name] = copy(attribute.getValue());
+                if (typeof attribute.getText === "function") {
+                    fields[name + "@OData.Community.Display.V1.FormattedValue"] = attribute.getText();
+                }
+            }
+        });
+        var entity = form.data.entity;
+        return {
+            accountId: account ? guid(account.id) : null,
+            accountName: account ? account.name || "" : "",
+            planId: guid(entity.getId()),
+            planTitle: (typeof entity.getPrimaryAttributeValue === "function"
+                ? entity.getPrimaryAttributeValue() : fields.fsi_name || fields.fsi_title) || "",
+            planFields: fields
+        };
+    }
+
+    function signature(value) {
+        // Attribute collections need not enumerate in the same order after a data refresh.
+        return JSON.stringify(value, function (key, item) {
+            if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+            var sorted = {};
+            Object.keys(item).sort().forEach(function (name) { sorted[name] = item[name]; });
+            return sorted;
+        });
+    }
+
+    function notify(state, visible) {
+        try {
+            var app = state.contentWindow && state.contentWindow.FABAccountPlanSummary;
+            if (app && typeof app.headerChanged === "function") app.headerChanged(visible);
+        } catch (_) {
+            // A navigating iframe may already have released its previous application.
+        }
+    }
+
+    function processSupported(state) {
+        return state.process && typeof state.process.getVisible === "function" &&
+            typeof state.process.setVisible === "function";
+    }
+
+    function headerVisible(state) {
+        return state.header.getBodyVisible() || !!(processSupported(state) && state.process.getVisible());
+    }
+
+    function restoreHeader(state, strict) {
+        var failures = [];
+        [
+            ["originalHeaderVisible", state.header, "setBodyVisible"],
+            ["originalProcessVisible", state.process, "setVisible"]
+        ].forEach(function (part) {
+            if (state[part[0]] === undefined) return;
+            try {
+                part[1][part[2]](state[part[0]]);
+                state[part[0]] = undefined;
+            } catch (error) {
+                failures.push(error.message || String(error));
+            }
+        });
+        if (failures.length) {
+            var error = new Error("Could not restore form header / Business Process Flow: " + failures.join("; "));
+            if (strict) throw error;
+            report(state, error);
+        } else if (state.header && typeof state.header.getBodyVisible === "function") {
+            notify(state, headerVisible(state));
+        }
+    }
+
+    function invalidate(state) {
+        state.generation += 1;
+        restoreHeader(state);
+    }
+
+    function expanded(state) {
+        return state.tab && state.tab.getDisplayState() === "expanded";
+    }
+
+    function valid(state, generation, stamp) {
+        if (current !== state || state.disposed || generation !== state.generation) return false;
+        try {
+            if (!expanded(state)) {
+                invalidate(state);
+                return false;
+            }
+            if (signature(snapshot(state.form)) !== stamp) {
+                invalidate(state);
+                var replacementGeneration = state.generation;
+                Promise.resolve().then(function () {
+                    if (current === state && !state.disposed &&
+                        state.generation === replacementGeneration && expanded(state)) initialize(state);
+                });
+                return false;
+            }
+        } catch (_) {
+            invalidate(state);
+            return false;
+        }
+        return true;
+    }
+
+    function report(state, error) {
+        if (current !== state || state.disposed) return;
+        state.form.ui.setFormNotification(
+            "Account plan summary is unavailable. Expand the Summary tab to retry. " +
+            (error && error.message ? error.message : ""),
+            "ERROR", NOTICE
+        );
+    }
+
+    function bridge(state, generation, value, stamp) {
+        function assertActive() {
+            if (!valid(state, generation, stamp)) throw new Error("Account plan summary host is stale.");
+        }
+
+        function invoke(area, method, args) {
+            assertActive();
+            var api = root.Xrm && root.Xrm[area];
+            if (!api || typeof api[method] !== "function") {
+                return Promise.reject(new Error("Xrm." + area + "." + method + " is unavailable."));
+            }
+            return Promise.resolve().then(function () {
+                assertActive();
+                return api[method].apply(api, args);
+            }).then(function (result) {
+                assertActive();
+                return result;
+            }, function (error) {
+                assertActive();
+                throw error;
+            });
+        }
+
+        function supportsHeader() {
+            return state.header && typeof state.header.getBodyVisible === "function" &&
+                typeof state.header.setBodyVisible === "function";
+        }
+
+        return Object.freeze({
+            snapshot: function () {
+                assertActive();
+                return copy(value);
+            },
+            retrieveRecord: function (entity, id, options) {
+                return invoke("WebApi", "retrieveRecord", [entity, id, options]);
+            },
+            retrieveMultipleRecords: function (entity, options, maxPageSize) {
+                return invoke("WebApi", "retrieveMultipleRecords", [entity, options, maxPageSize]);
+            },
+            openForm: function (options, parameters) {
+                return invoke("Navigation", "openForm", [options, parameters]);
+            },
+            getHeaderVisible: function () {
+                assertActive();
+                return supportsHeader() ? headerVisible(state) : null;
+            },
+            toggleHeader: function () {
+                assertActive();
+                if (!supportsHeader()) throw new Error("Header body visibility is not supported.");
+                if (state.process && !processSupported(state)) {
+                    throw new Error("Business Process Flow visibility is not supported.");
+                }
+                if (state.originalHeaderVisible !== undefined || state.originalProcessVisible !== undefined) {
+                    restoreHeader(state, true);
+                    return headerVisible(state);
+                }
+                state.originalHeaderVisible = state.header.getBodyVisible();
+                if (processSupported(state)) state.originalProcessVisible = state.process.getVisible();
+                try {
+                    state.header.setBodyVisible(false);
+                    if (processSupported(state)) state.process.setVisible(false);
+                } catch (error) {
+                    try { restoreHeader(state, true); }
+                    catch (restoreError) {
+                        throw new Error(error.message + "; " + restoreError.message);
+                    }
+                    throw error;
+                }
+                var visible = headerVisible(state);
+                notify(state, visible);
+                return visible;
+            },
+            isActive: function () { return valid(state, generation, stamp); }
+        });
+    }
+
+    function initialize(state) {
+        if (current !== state || state.disposed) return;
+        invalidate(state);
+        if (!state.tab) {
+            report(state, new Error("Summary tab " + TAB + " was not found."));
+            return;
+        }
+        if (!expanded(state)) return;
+        var generation = state.generation;
+        var value;
+        var stamp;
+        try {
+            value = snapshot(state.form);
+            stamp = signature(value);
+            var control = state.form.getControl(CONTROL);
+            if (!control || typeof control.getContentWindow !== "function") {
+                throw new Error("Web resource control " + CONTROL + " was not found.");
+            }
+            Promise.resolve(control.getContentWindow()).then(function (contentWindow) {
+                if (current !== state || state.disposed || generation !== state.generation) return;
+                if (!valid(state, generation, stamp)) return;
+                var app = contentWindow && contentWindow.FABAccountPlanSummary;
+                if (!app || typeof app.initialize !== "function") {
+                    throw new Error("The summary web resource has not finished loading.");
+                }
+                state.contentWindow = contentWindow;
+                state.application = app;
+                return Promise.resolve(app.initialize(bridge(state, generation, value, stamp))).then(function () {
+                    if (valid(state, generation, stamp)) state.form.ui.clearFormNotification(NOTICE);
+                });
+            }).catch(function (error) {
+                if (valid(state, generation, stamp)) {
+                    invalidate(state);
+                    report(state, error);
+                }
+            });
+        } catch (error) {
+            report(state, error);
+        }
+    }
+
+    function dispose() {
+        var state = current;
+        if (!state) return;
+        state.disposed = true;
+        invalidate(state);
+        state.cleanup.forEach(function (remove) {
+            try { remove(); } catch (_) {
+                // Continue releasing other handlers if a navigating form has disposed a target.
+            }
+        });
+        state.cleanup.length = 0;
+        state.contentWindow = null;
+        current = null;
+    }
+
+    function wire(state, target, add, remove, handler) {
+        if (!target || typeof target[add] !== "function" || typeof target[remove] !== "function") return;
+        target[add](handler);
+        state.cleanup.push(function () { target[remove](handler); });
+    }
+
+    function onLoad(executionContext) {
+        var form = executionContext.getFormContext();
+        if (current && current.form === form && !current.disposed) {
+            initialize(current);
+            return;
+        }
+        dispose();
+        var state = {
+            form: form,
+            tab: form.ui.tabs.get(TAB),
+            header: form.ui.headerSection,
+            process: form.ui.process,
+            originalHeaderVisible: undefined,
+            originalProcessVisible: undefined,
+            generation: 0,
+            disposed: false,
+            contentWindow: null,
+            application: null,
+            probing: false,
+            cleanup: []
+        };
+        current = state;
+        var refresh = function () { initialize(state); };
+        var tabChanged = function () {
+            if (current !== state || state.disposed) return;
+            if (expanded(state)) initialize(state);
+            else invalidate(state);
+        };
+        wire(state, form.getAttribute("fsi_customer"), "addOnChange", "removeOnChange", refresh);
+        wire(state, form.data, "addOnLoad", "removeOnLoad", refresh);
+        wire(state, state.tab, "addTabStateChange", "removeTabStateChange", tabChanged);
+        var pagehide = function () {
+            if (current === state) dispose();
+        };
+        root.addEventListener("pagehide", pagehide);
+        state.cleanup.push(function () { root.removeEventListener("pagehide", pagehide); });
+        // Unified Interface may recreate the iframe after OnLoad without changing tabs.
+        // Compare app identities through the supported control API, not parent DOM access.
+        var watchdog = root.setInterval(function () {
+            if (current !== state || state.disposed || !expanded(state) || state.probing) return;
+            var control = state.form.getControl(CONTROL);
+            if (!control || typeof control.getContentWindow !== "function") return;
+            state.probing = true;
+            Promise.resolve(control.getContentWindow()).then(function (contentWindow) {
+                if (current !== state || state.disposed || !expanded(state)) return;
+                var app = contentWindow && contentWindow.FABAccountPlanSummary;
+                if (app && typeof app.initialize === "function" && app !== state.application) initialize(state);
+            }).catch(function (error) {
+                report(state, error);
+            }).finally(function () { state.probing = false; });
+        }, 2000);
+        state.cleanup.push(function () { root.clearInterval(watchdog); });
+        initialize(state);
+    }
+
+    root.FAB = root.FAB || {};
+    root.FAB.AccountPlanSummaryHost = Object.freeze({
+        onLoad: onLoad,
+        dispose: dispose,
+        getStatus: function () {
+            return current ? {
+                generation: current.generation,
+                tabExpanded: !!expanded(current),
+                disposed: current.disposed,
+                bound: !!current.application,
+                probing: current.probing
+            } : { initialized: false };
+        }
+    });
+}(window));

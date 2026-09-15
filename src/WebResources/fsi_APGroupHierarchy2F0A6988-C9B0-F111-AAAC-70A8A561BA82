@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Group Hierarchy &amp; UBO</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #172033;
+    }
+
+    body {
+      padding: 16px;
+    }
+
+    .viewer-shell {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 32px);
+      background: #ffffff;
+      border: 1px solid #e7edf5;
+      border-radius: 28px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+      overflow: hidden;
+    }
+
+    .toolbar {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e7edf5;
+      border-radius: 16px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn {
+      border: 1px solid #d9e2ee;
+      background: #ffffff;
+      color: #1f2a44;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn:hover {
+      background: #f8fbff;
+      border-color: #bfd0e5;
+    }
+
+    .zoom-readout {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 68px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #334155;
+      background: #f8fbff;
+      border: 1px solid #d9e2ee;
+    }
+
+    .viewport {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      background:
+        radial-gradient(circle at 1px 1px, rgba(148,163,184,0.12) 1px, transparent 0);
+      background-size: 22px 22px;
+    }
+
+    .viewport.dragging {
+      cursor: grabbing;
+    }
+
+    .canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+      user-select: none;
+    }
+
+    .content {
+      display: inline-block;
+      padding: 28px 28px 60px 28px;
+    }
+
+    .tree {
+      display: flex;
+      justify-content: center;
+      min-width: max-content;
+      padding: 10px 10px 24px 10px;
+    }
+
+    .tree ul {
+      position: relative;
+      padding-top: 46px;
+      padding-left: 0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      flex-wrap: nowrap;
+    }
+
+    .tree li {
+      list-style: none;
+      text-align: center;
+      position: relative;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tree li::before,
+    .tree li::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 50%;
+      width: 50%;
+      height: 34px;
+      border-top: 3px solid #b8c6d8;
+      border-radius: 18px 0 0 0;
+    }
+
+    .tree li::after {
+      right: auto;
+      left: 50%;
+      border-left: 3px solid #b8c6d8;
+      border-radius: 0 18px 0 0;
+    }
+
+    .tree li:only-child::before,
+    .tree li:only-child::after {
+      display: none;
+    }
+
+    .tree li:first-child::before,
+    .tree li:last-child::after {
+      border: 0 none;
+    }
+
+    .tree li:last-child::before {
+      border-right: 3px solid #b8c6d8;
+      border-radius: 0 18px 0 0;
+    }
+
+    .tree li:first-child::after {
+      border-radius: 18px 0 0 0;
+    }
+
+    .tree ul ul::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      height: 46px;
+      border-left: 3px solid #b8c6d8;
+      transform: translateX(-50%);
+    }
+
+    .company-card {
+      width: 420px;
+      max-width: 420px;
+      background: #ffffff;
+      border: 2px solid #dfe7f0;
+      border-radius: 26px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .company-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 42px rgba(15, 23, 42, 0.12);
+      border-color: #c9d8e8;
+    }
+
+    .company-card.expanded {
+      transform: scale(1.02);
+      border-color: #2f6fed;
+      box-shadow: 0 0 0 5px rgba(47, 111, 237, 0.08), 0 24px 56px rgba(15, 23, 42, 0.16);
+    }
+
+    .card-main {
+      padding: 16px;
+    }
+
+    .pill-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .pill-strategic {
+      background: #e9f8ef;
+      color: #17663a;
+      border-color: #cbeed7;
+    }
+
+    .pill-strategic::before {
+      background: #22c55e;
+    }
+
+    .pill-watch {
+      background: #fff7df;
+      color: #a16207;
+      border-color: #f7e3a5;
+    }
+
+    .pill-watch::before {
+      background: #f59e0b;
+    }
+
+    .pill-risk {
+      background: #fdecec;
+      color: #a12622;
+      border-color: #f5c7c5;
+    }
+
+    .pill-risk::before {
+      background: #ef4444;
+    }
+
+    .pill-neutral {
+      background: #f2f5f9;
+      color: #475569;
+      border-color: #dbe3ec;
+    }
+
+    .pill-neutral::before {
+      background: #94a3b8;
+    }
+
+    .pill-rating {
+      background: #eef4ff;
+      color: #1f4fd1;
+      border-color: #d6e2ff;
+    }
+
+    .pill-rating::before {
+      display: none;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #d8dee7;
+      color: #172033;
+      font-size: 28px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .identity-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .name-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .company-name {
+      font-size: 21px;
+      line-height: 1.14;
+      font-weight: 800;
+      color: #172033;
+      letter-spacing: -0.02em;
+      min-width: 0;
+    }
+
+    .raroc-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eefbf4;
+      color: #166534;
+      border: 1px solid #d2f1dd;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .company-role {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .compact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mini-stat {
+      background: #f8fbff;
+      border: 1px solid #e2eaf4;
+      border-radius: 14px;
+      padding: 10px 11px;
+      min-width: 0;
+    }
+
+    .mini-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .mini-value {
+      font-size: 13px;
+      font-weight: 800;
+      color: #172033;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .compact-pair-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .compact-box {
+      background: #f8fafc;
+      border: 1px solid #e5edf5;
+      border-radius: 14px;
+      padding: 10px 11px;
+      min-width: 0;
+    }
+
+    .compact-box .mini-value {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .exposure-visual {
+      background: linear-gradient(180deg, #f8fbff 0%, #f4f8fd 100%);
+      border: 1px solid #e2eaf4;
+      border-radius: 14px;
+      padding: 11px;
+      margin-bottom: 10px;
+    }
+
+    .exposure-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .exposure-total {
+      font-size: 15px;
+      font-weight: 800;
+      color: #172033;
+    }
+
+    .stack-bar {
+      width: 100%;
+      height: 10px;
+      background: #e7eef6;
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 8px;
+    }
+
+    .stack-funded {
+      height: 100%;
+      background: linear-gradient(90deg, #2f6fed 0%, #4f8cff 100%);
+    }
+
+    .stack-nonfunded {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .legend-item {
+      background: #ffffff;
+      border: 1px solid #e4ebf3;
+      border-radius: 12px;
+      padding: 8px 9px;
+    }
+
+    .legend-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-dot-funded {
+      background: #2f6fed;
+    }
+
+    .legend-dot-nonfunded {
+      background: #8b5cf6;
+    }
+
+    .legend-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .legend-value {
+      font-size: 13px;
+      font-weight: 800;
+      color: #172033;
+    }
+
+    .legend-sub {
+      margin-top: 2px;
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    .risk-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .risk-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .dot-score {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid #d5dde7;
+      background: #ffffff;
+    }
+
+    .dot.filled {
+      background: #2f6fed;
+      border-color: #2f6fed;
+    }
+
+    .dot.warning {
+      background: #f59e0b;
+      border-color: #f59e0b;
+    }
+
+    .dot.danger {
+      background: #ef4444;
+      border-color: #ef4444;
+    }
+
+    .expand-area {
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: max-height 0.38s ease, opacity 0.24s ease;
+      border-top: 1px solid transparent;
+      background: linear-gradient(180deg, #fbfdff 0%, #f6f9fd 100%);
+    }
+
+    .company-card.expanded .expand-area {
+      max-height: 1200px;
+      opacity: 1;
+      border-top-color: #e6edf5;
+    }
+
+    .expand-inner {
+      padding: 0 16px 16px 16px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 16px 0 10px 0;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-item {
+      background: #ffffff;
+      border: 1px solid #e4ebf3;
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .detail-item.wide {
+      grid-column: 1 / -1;
+    }
+
+    .detail-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .detail-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #172033;
+    }
+
+    .detail-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: #1f4fd1;
+      background: #eef4ff;
+      border: 1px solid #d6e2ff;
+      border-radius: 999px;
+      padding: 5px 9px;
+      white-space: nowrap;
+    }
+
+    .detail-sub {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    .flag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .flag::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .flag-clear {
+      background: #e9f8ef;
+      color: #17663a;
+      border-color: #cbeed7;
+    }
+
+    .flag-clear::before {
+      background: #22c55e;
+    }
+
+    .flag-watch {
+      background: #fff7df;
+      color: #a16207;
+      border-color: #f7e3a5;
+    }
+
+    .flag-watch::before {
+      background: #f59e0b;
+    }
+
+    .flag-alert {
+      background: #fdecec;
+      color: #a12622;
+      border-color: #f5c7c5;
+    }
+
+    .flag-alert::before {
+      background: #ef4444;
+    }
+
+    .toggle-btn {
+      width: 100%;
+      margin-top: 12px;
+      border: 1px solid #d9e2ee;
+      background: #ffffff;
+      color: #1f2a44;
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .toggle-btn:hover {
+      background: #f8fbff;
+      border-color: #bfd0e5;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        padding: 8px;
+      }
+
+      .viewer-shell {
+        height: calc(100vh - 16px);
+      }
+
+      .toolbar {
+        top: 10px;
+        right: 10px;
+      }
+
+      .company-card {
+        width: 360px;
+        max-width: 360px;
+      }
+
+      .name-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .compact-grid,
+      .compact-pair-grid,
+      .legend-row,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ---- additions for the Account Plan group hierarchy ---- */
+    .hier-head {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 30;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      max-width: calc(100% - 320px);
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e7edf5;
+      border-radius: 16px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+    }
+    .hier-title { font-size: 13px; font-weight: 800; color: #0f172a; letter-spacing: .01em; }
+    .hier-sub { margin-top: 2px; font-size: 11px; font-weight: 600; color: #64748b; }
+    .hier-metrics { display: flex; gap: 14px; flex-wrap: wrap; }
+    .hier-metric { min-width: 78px; }
+    .hier-metric .m-label {
+      font-size: 9px; font-weight: 800; letter-spacing: .09em;
+      text-transform: uppercase; color: #94a3b8;
+    }
+    .hier-metric .m-value { font-size: 14px; font-weight: 800; color: #0f172a; margin-top: 1px; }
+    .hier-legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .legend-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 700; color: #334155;
+    }
+    .legend-swatch {
+      width: 12px; height: 12px; border-radius: 4px; border: 2px solid #dfe7f0; background: #fff;
+    }
+    .swatch-parent { border-color: #1e3a8a; background: #eef2ff; }
+    .swatch-sub { border-color: #0e7490; background: #ecfeff; }
+    .swatch-related { border-color: #b45309; background: #fffbeb; }
+    .swatch-ubo { border-color: #7c3aed; background: #f5f3ff; }
+    .swatch-fab { border-color: #16a34a; background: #f0fdf4; }
+    .swatch-nonfab { border-color: #94a3b8; background: #f8fafc; border-style: dashed; }
+
+    /* kind-driven card accents, layered on top of the original card styling */
+    .company-card.kind-parent { border-color: #1e3a8a; }
+    .company-card.kind-subsidiary { border-color: #0e7490; }
+    .company-card.kind-related { border-color: #b45309; }
+    .company-card.kind-ubo { border-color: #7c3aed; }
+    .company-card.non-client { border-style: dashed; border-color: #94a3b8; background: #fcfdfe; }
+
+    .kind-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+    }
+    .kind-badge.kb-parent { background: #eef2ff; color: #1e3a8a; }
+    .kind-badge.kb-subsidiary { background: #ecfeff; color: #0e7490; }
+    .kind-badge.kb-related { background: #fffbeb; color: #b45309; }
+    .kind-badge.kb-ubo { background: #f5f3ff; color: #7c3aed; }
+    .client-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 10px; font-weight: 800;
+    }
+    .client-badge.is-client { background: #f0fdf4; color: #15803d; }
+    .client-badge.not-client { background: #f1f5f9; color: #64748b; }
+
+    .branch-toggle {
+      margin-top: 10px;
+      padding: 5px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #334155;
+      font: 700 11px/1 "Segoe UI", system-ui, sans-serif;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+    .branch-toggle:hover { background: #1e3a8a; border-color: #1e3a8a; color: #ffffff; }
+    .tree li.is-collapsed > ul { display: none; }
+
+    .detail-panel {
+      position: absolute;
+      top: 14px; right: 14px; bottom: 14px;
+      width: 340px;
+      z-index: 40;
+      background: #ffffff;
+      border: 1px solid #e7edf5;
+      border-radius: 20px;
+      box-shadow: -12px 0 40px rgba(15, 23, 42, 0.12);
+      padding: 18px;
+      overflow-y: auto;
+      transform: translateX(calc(100% + 24px));
+      transition: transform .26s ease;
+    }
+    .detail-panel.open { transform: translateX(0); }
+    .dp-close {
+      position: absolute; top: 12px; right: 12px;
+      border: 1px solid #d9e2ee; background: #fff; color: #1f2a44;
+      width: 28px; height: 28px; border-radius: 9px; cursor: pointer; font-weight: 800;
+    }
+    .dp-name { font-size: 16px; font-weight: 800; color: #0f172a; padding-right: 34px; }
+    .dp-role { font-size: 11px; font-weight: 600; color: #64748b; margin-top: 2px; }
+    .dp-badges { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
+    .dp-section {
+      margin-top: 16px; font-size: 9px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: #94a3b8;
+    }
+    .dp-row {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid #f1f5f9;
+      font-size: 12px;
+    }
+    .dp-row span:first-child { color: #64748b; font-weight: 600; }
+    .dp-row span:last-child { color: #0f172a; font-weight: 800; text-align: right; }
+    .dp-note { font-size: 11.5px; color: #475569; line-height: 1.5; margin-top: 6px; }
+    .dp-link {
+      display: inline-block; margin-top: 14px; padding: 9px 14px;
+      background: #1e3a8a; color: #fff; border: 0; border-radius: 10px;
+      font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .dp-link[disabled] { background: #cbd5e1; cursor: default; }
+
+    .hier-state {
+      position: absolute; inset: 0; z-index: 25;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.92);
+      font-size: 13px; font-weight: 700; color: #475569;
+      text-align: center; padding: 40px;
+    }
+    .hier-state.hidden { display: none; }
+
+    @media (max-width: 900px) {
+      .hier-head { max-width: calc(100% - 28px); }
+      .detail-panel { width: calc(100% - 28px); }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="viewer-shell">
+    <div class="hier-head">
+      <div>
+        <div class="hier-title" id="hierTitle">Group Hierarchy &amp; UBO</div>
+        <div class="hier-sub" id="hierSub">Loading…</div>
+      </div>
+      <div class="hier-metrics">
+        <div class="hier-metric"><div class="m-label">Entities</div><div class="m-value" id="mEntities">–</div></div>
+        <div class="hier-metric"><div class="m-label">FAB Clients</div><div class="m-value" id="mClients">–</div></div>
+        <div class="hier-metric"><div class="m-label">Group Exposure</div><div class="m-value" id="mExposure">–</div></div>
+        <div class="hier-metric"><div class="m-label">Countries</div><div class="m-value" id="mCountries">–</div></div>
+      </div>
+      <div class="hier-legend">
+        <span class="legend-chip"><span class="legend-swatch swatch-ubo"></span>UBO / Owner</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-parent"></span>Parent</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-sub"></span>Subsidiary</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-related"></span>Related entity</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-fab"></span>FAB customer</span>
+        <span class="legend-chip"><span class="legend-swatch swatch-nonfab"></span>Non-FAB entity</span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="zoomOutBtn">−</button>
+      <div class="zoom-readout" id="zoomReadout">100%</div>
+      <button class="btn" id="zoomInBtn">+</button>
+      <button class="btn" id="fitBtn">Fit</button>
+      <button class="btn" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <div class="canvas" id="canvas">
+        <div class="content" id="content">
+          <div class="tree" id="treeRoot"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="detail-panel" id="detailPanel" aria-live="polite">
+      <button class="dp-close" id="dpClose" type="button" aria-label="Close">×</button>
+      <div id="dpBody"></div>
+    </aside>
+
+    <div class="hier-state" id="hierState">Loading group hierarchy…</div>
+  </div>
+
+  <script>
+/* Shared Account Plan tab runtime.
+ * Resolves the current fsi_accountplanning record and its fsi_customer account dynamically
+ * from the hosting form, then exposes small Web API + formatting helpers.
+ * No record GUIDs are hardcoded anywhere.
+ * Mirrors the pattern already used by fsi_LimitUtilizationLive and fsi_shareofwallet.
+ */
+var APCtx = (function () {
+  "use strict";
+
+  var API = "/api/data/v9.2/";
+
+  function getXrm() {
+    try {
+      if (window.parent && window.parent !== window && window.parent.Xrm) return window.parent.Xrm;
+    } catch (e) { /* cross-origin during navigation */ }
+    if (window.Xrm) return window.Xrm;
+    return null;
+  }
+
+  function clientUrl() {
+    var xrm = getXrm();
+    if (!xrm) return "";
+    try { return xrm.Utility.getGlobalContext().getClientUrl(); } catch (e) { return ""; }
+  }
+
+  function normaliseGuid(value) {
+    return String(value || "").replace(/[{}]/g, "").toLowerCase();
+  }
+
+  /* Resolve { planId, accountId, accountName, planTitle, clientUrl }.
+   * Works whether the web resource sits on the account plan form or (as a fallback)
+   * directly on an account form. */
+  function resolve() {
+    var xrm = getXrm();
+    if (!xrm) {
+      return Promise.reject(new Error(
+        "Xrm context not found. Host this page as a web resource inside the model-driven app."));
+    }
+    var url = clientUrl();
+    var form = xrm.Page;
+    var entityName = "";
+    var recordId = "";
+    try {
+      entityName = form.data.entity.getEntityName();
+      recordId = normaliseGuid(form.data.entity.getId());
+    } catch (e) { /* form not ready */ }
+
+    if (entityName === "account") {
+      var accountName = "";
+      try { accountName = form.getAttribute("name").getValue() || ""; } catch (e) { }
+      return Promise.resolve({
+        clientUrl: url, planId: null, planTitle: "", accountId: recordId, accountName: accountName
+      });
+    }
+
+    var lookup = null;
+    try {
+      var attribute = form.getAttribute("fsi_customer");
+      lookup = attribute && attribute.getValue();
+    } catch (e) { }
+
+    var planTitle = "";
+    try {
+      var title = form.getAttribute("fsi_title");
+      planTitle = (title && title.getValue()) || "";
+    } catch (e) { }
+
+    if (lookup && lookup[0] && String(lookup[0].entityType).toLowerCase() === "account") {
+      return Promise.resolve({
+        clientUrl: url, planId: recordId, planTitle: planTitle,
+        accountId: normaliseGuid(lookup[0].id), accountName: lookup[0].name || ""
+      });
+    }
+
+    // The lookup may not be loaded onto the form yet - read it back from the plan record.
+    if (!recordId) {
+      return Promise.reject(new Error("The account plan record has not been saved yet."));
+    }
+    return fetchJson(url + API + "fsi_accountplannings(" + recordId + ")" +
+      "?$select=fsi_title,_fsi_customer_value").then(function (plan) {
+        var id = plan["_fsi_customer_value"];
+        if (!id) throw new Error("This account plan has no Customer set, so there is nothing to show yet.");
+        return {
+          clientUrl: url,
+          planId: recordId,
+          planTitle: plan.fsi_title || planTitle,
+          accountId: normaliseGuid(id),
+          accountName: plan["_fsi_customer_value@OData.Community.Display.V1.FormattedValue"] || ""
+        };
+      });
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+      },
+      credentials: "same-origin"
+    }).then(function (response) {
+      if (!response.ok) {
+        return response.text().then(function (text) {
+          throw new Error("Dataverse " + response.status + ": " + text.slice(0, 300));
+        });
+      }
+      return response.json();
+    });
+  }
+
+  /* Read a table, tolerating tables/columns that are absent in a given environment. */
+  function query(scope, entitySet, options) {
+    var url = scope.clientUrl + API + entitySet + (options ? "?" + options : "");
+    return fetchJson(url).then(function (result) {
+      return result.value || [];
+    }).catch(function (error) {
+      console.warn("[AccountPlan] " + entitySet + " unavailable:", error.message);
+      return [];
+    });
+  }
+
+  function record(scope, entitySet, id, options) {
+    var url = scope.clientUrl + API + entitySet + "(" + id + ")" + (options ? "?" + options : "");
+    return fetchJson(url).catch(function (error) {
+      console.warn("[AccountPlan] " + entitySet + "(" + id + ") unavailable:", error.message);
+      return null;
+    });
+  }
+
+  function openRecord(entityName, id) {
+    var xrm = getXrm();
+    if (!xrm || !id) return;
+    try { xrm.Navigation.openForm({ entityName: entityName, entityId: id }); } catch (e) { }
+  }
+
+  // ---- formatting -----------------------------------------------------------
+  function number(value) {
+    return typeof value === "number" && isFinite(value) ? value : null;
+  }
+
+  function compact(value, currency) {
+    var n = number(value);
+    if (n === null) return "–";
+    var prefix = currency ? currency + " " : "";
+    var sign = n < 0 ? "-" : "";
+    var abs = Math.abs(n);
+    if (abs >= 1e9) return sign + prefix + (abs / 1e9).toFixed(abs / 1e9 >= 100 ? 0 : 1) + "bn";
+    if (abs >= 1e6) return sign + prefix + (abs / 1e6).toFixed(abs / 1e6 >= 100 ? 0 : 1) + "m";
+    if (abs >= 1e3) return sign + prefix + (abs / 1e3).toFixed(0) + "k";
+    return sign + prefix + abs.toFixed(0);
+  }
+
+  function pct(value, digits) {
+    var n = number(value);
+    return n === null ? "–" : n.toFixed(typeof digits === "number" ? digits : 1) + "%";
+  }
+
+  function ratio(value, digits) {
+    var n = number(value);
+    return n === null ? "–" : n.toFixed(typeof digits === "number" ? digits : 2) + "x";
+  }
+
+  function dateText(value) {
+    if (!value) return "–";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return "–";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function daysBetween(from, to) {
+    var a = new Date(from), b = to ? new Date(to) : new Date();
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+    return Math.round((b - a) / 86400000);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function initials(name) {
+    var parts = String(name || "?").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    return parts[0].charAt(0).toUpperCase();
+  }
+
+  function sum(rows, field) {
+    return rows.reduce(function (total, row) {
+      var n = number(row[field]);
+      return total + (n === null ? 0 : n);
+    }, 0);
+  }
+
+  return {
+    API: API, resolve: resolve, query: query, record: record, fetchJson: fetchJson,
+    openRecord: openRecord, getXrm: getXrm,
+    compact: compact, pct: pct, ratio: ratio, dateText: dateText, daysBetween: daysBetween,
+    escapeHtml: escapeHtml, initials: initials, num: number, sum: sum
+  };
+}());
+
+  </script>
+
+  <script>
+    // Shared by the card wiring and the pan/zoom state machine, exactly as in the original design.
+    let isDraggingCanvas = false;
+    let dragMoved = false;
+
+
+    function renderRiskDots(level) {
+      let html = '<div class="dot-score">';
+      for (let i = 1; i <= 5; i++) {
+        let cls = "dot";
+        if (i <= level) {
+          cls += " filled";
+          if (level <= 2) cls += " danger";
+          else if (level === 3) cls += " warning";
+        }
+        html += '<span class="' + cls + '"></span>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function renderFlags(flags) {
+      return (flags || []).map(function(flag) {
+        return '<span class="flag ' + flag.className + '">' + flag.text + '</span>';
+      }).join('');
+    }
+
+    function renderCard(node) {
+      return `
+        <div class="company-card" data-card-id="${node.id}">
+          <div class="card-main">
+            <div class="pill-row">
+              <span class="pill ${node.statusClass}">${node.statusText}</span>
+              <span class="pill pill-rating">${node.rating}</span>
+            </div>
+
+            <div class="identity">
+              <div class="avatar">${node.shortLabel}</div>
+              <div class="identity-text">
+                <div class="name-row">
+                  <div class="company-name">${node.name}</div>
+                  <div class="raroc-pill">RAROC ${node.raroc}</div>
+                </div>
+                <div class="company-role">${node.role}</div>
+              </div>
+            </div>
+
+            <div class="compact-grid">
+              <div class="mini-stat">
+                <div class="mini-label">Industry</div>
+                <div class="mini-value">${node.industry}</div>
+              </div>
+              <div class="mini-stat">
+                <div class="mini-label">Ownership</div>
+                <div class="mini-value">${node.ownership}</div>
+              </div>
+            </div>
+
+            <div class="compact-pair-grid">
+              <div class="compact-box">
+                <div class="mini-label">Primary UBO</div>
+                <div class="mini-value">${node.primaryUbo}</div>
+              </div>
+              <div class="compact-box">
+                <div class="mini-label">RM</div>
+                <div class="mini-value">${node.rm}</div>
+              </div>
+            </div>
+
+            <div class="exposure-visual">
+              <div class="exposure-top">
+                <div class="mini-label" style="margin-bottom:0;">Exposure Mix</div>
+                <div class="exposure-total">${node.totalExposure}</div>
+              </div>
+
+              <div class="stack-bar">
+                <div class="stack-funded" style="width:${node.fundedPct}%;"></div>
+                <div class="stack-nonfunded" style="width:${node.nonFundedPct}%;"></div>
+              </div>
+
+              <div class="legend-row">
+                <div class="legend-item">
+                  <div class="legend-head">
+                    <span class="legend-dot legend-dot-funded"></span>
+                    <span class="legend-label">Funded</span>
+                  </div>
+                  <div class="legend-value">${node.fundedExposure}</div>
+                  <div class="legend-sub">${node.fundedPct}% of total</div>
+                </div>
+
+                <div class="legend-item">
+                  <div class="legend-head">
+                    <span class="legend-dot legend-dot-nonfunded"></span>
+                    <span class="legend-label">Non-Funded</span>
+                  </div>
+                  <div class="legend-value">${node.nonFundedExposure}</div>
+                  <div class="legend-sub">${node.nonFundedPct}% of total</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="risk-row">
+              <div class="risk-label">Risk Indicator</div>
+              ${renderRiskDots(node.riskLevel)}
+            </div>
+
+            <button class="toggle-btn" type="button">Show More Details</button>
+          </div>
+
+          <div class="expand-area">
+            <div class="expand-inner">
+              <div class="section-title">Financial Snapshot</div>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <div class="detail-top">
+                    <div class="detail-title">Company Revenue</div>
+                    <div class="detail-tag">${node.revenue}</div>
+                  </div>
+                  <div class="detail-sub">Latest annual revenue from financial statements.</div>
+                </div>
+
+                <div class="detail-item">
+                  <div class="detail-top">
+                    <div class="detail-title">EBITDA</div>
+                    <div class="detail-tag">${node.ebitda}</div>
+                  </div>
+                  <div class="detail-sub">Operating profit before interest, tax, depreciation, and amortization.</div>
+                </div>
+
+                <div class="detail-item">
+                  <div class="detail-top">
+                    <div class="detail-title">Debt</div>
+                    <div class="detail-tag">${node.debt}</div>
+                  </div>
+                  <div class="detail-sub">Total debt position across funded obligations.</div>
+                </div>
+
+                <div class="detail-item">
+                  <div class="detail-top">
+                    <div class="detail-title">Net Leverage</div>
+                    <div class="detail-tag">${node.netLeverage}</div>
+                  </div>
+                  <div class="detail-sub">Net debt to EBITDA used in credit review.</div>
+                </div>
+              </div>
+
+              <div class="section-title">Compliance & Screening</div>
+              <div class="detail-grid">
+                <div class="detail-item wide">
+                  <div class="detail-top">
+                    <div class="detail-title">Screening Flags</div>
+                  </div>
+                  <div class="flag-row">
+                    ${renderFlags(node.screeningFlags)}
+                  </div>
+                </div>
+              </div>
+
+              <div class="section-title">Strategic Activity</div>
+              <div class="detail-grid">
+                <div class="detail-item wide">
+                  <div class="detail-top">
+                    <div class="detail-title">M&A Activity</div>
+                  </div>
+                  <div class="detail-sub">${node.ma}</div>
+                </div>
+
+                <div class="detail-item wide">
+                  <div class="detail-top">
+                    <div class="detail-title">Opportunity Focus</div>
+                  </div>
+                  <div class="detail-sub">${node.opportunity}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNode(node) {
+      let html = "<li>";
+      html += renderCard(node);
+
+      if (node.children && node.children.length) {
+        html += "<ul>";
+        node.children.forEach(function(child) {
+          html += renderNode(child);
+        });
+        html += "</ul>";
+      }
+
+      html += "</li>";
+      return html;
+    }
+
+
+    function wireCards() {
+
+    document.querySelectorAll(".company-card").forEach(function(card) {
+      const btn = card.querySelector(".toggle-btn");
+
+      function syncText() {
+        btn.textContent = card.classList.contains("expanded")
+          ? "Hide Details"
+          : "Show More Details";
+      }
+
+      function toggleCard() {
+        if (dragMoved) return;
+        card.classList.toggle("expanded");
+        syncText();
+        setTimeout(fitToScreenIfNeededAfterExpand, 50);
+      }
+
+      card.addEventListener("click", function(e) {
+        if (isDraggingCanvas || dragMoved) return;
+        if (e.target.tagName !== "BUTTON") {
+          toggleCard();
+        }
+      });
+
+      btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (isDraggingCanvas || dragMoved) return;
+        toggleCard();
+      });
+
+      syncText();
+    });
+
+    }
+
+    const viewport = document.getElementById("viewport");
+    const canvas = document.getElementById("canvas");
+    const content = document.getElementById("content");
+    const zoomReadout = document.getElementById("zoomReadout");
+
+    const state = {
+      scale: 1,
+      minScale: 0.12,
+      maxScale: 2.5,
+      x: 0,
+      y: 0,
+      dragging: false,
+      startX: 0,
+      startY: 0,
+      startPanX: 0,
+      startPanY: 0
+    };
+
+    function applyTransform() {
+      canvas.style.transform = "translate(" + state.x + "px," + state.y + "px) scale(" + state.scale + ")";
+      zoomReadout.textContent = Math.round(state.scale * 100) + "%";
+    }
+
+    /* A large group renders several thousand pixels wide, so a true fit-to-screen
+       shrinks the cards past the point of being readable. Automatic fits (initial
+       render and window resize) are clamped to a legible floor and anchored to the
+       top-left; the Fit button passes showEverything to get the full overview. */
+    const LEGIBLE_FLOOR = 0.62;
+
+    function fitToScreen(showEverything) {
+      const vw = viewport.clientWidth;
+      const vh = viewport.clientHeight;
+      const cw = content.offsetWidth;
+      const ch = content.offsetHeight;
+
+      if (!cw || !ch) return;
+
+      const padding = 60;
+      const scaleX = (vw - padding) / cw;
+      const scaleY = (vh - padding) / ch;
+
+      let nextScale = Math.min(scaleX, scaleY);
+      if (!isFinite(nextScale) || nextScale <= 0) nextScale = 1;
+
+      if (showEverything !== true) nextScale = Math.max(nextScale, LEGIBLE_FLOOR);
+
+      state.scale = Math.max(state.minScale, Math.min(nextScale, state.maxScale));
+      /* Horizontally the tree is centred on its root; vertically it is anchored to the
+         top whenever it is taller than the viewport, so the ultimate parent stays visible. */
+      state.x = Math.min(30, (vw - (cw * state.scale)) / 2);
+      state.y = ((ch * state.scale) > (vh - padding)) ? 24 : (vh - (ch * state.scale)) / 2;
+
+      applyTransform();
+    }
+
+    function fitToScreenIfNeededAfterExpand() {
+      applyTransform();
+    }
+
+    function resetView() {
+      state.scale = 1;
+      state.x = 30;
+      state.y = 30;
+      applyTransform();
+    }
+
+    function zoomAt(factor, clientX, clientY) {
+      const rect = viewport.getBoundingClientRect();
+      const px = clientX - rect.left;
+      const py = clientY - rect.top;
+
+      const oldScale = state.scale;
+      const newScale = Math.max(state.minScale, Math.min(oldScale * factor, state.maxScale));
+      if (newScale === oldScale) return;
+
+      state.x = px - ((px - state.x) * (newScale / oldScale));
+      state.y = py - ((py - state.y) * (newScale / oldScale));
+      state.scale = newScale;
+
+      applyTransform();
+    }
+
+    document.getElementById("zoomInBtn").addEventListener("click", function() {
+      const rect = viewport.getBoundingClientRect();
+      zoomAt(1.15, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+
+    document.getElementById("zoomOutBtn").addEventListener("click", function() {
+      const rect = viewport.getBoundingClientRect();
+      zoomAt(1 / 1.15, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+
+    document.getElementById("fitBtn").addEventListener("click", function () { fitToScreen(true); });
+    document.getElementById("resetBtn").addEventListener("click", resetView);
+
+    viewport.addEventListener("wheel", function(e) {
+      e.preventDefault();
+      zoomAt(e.deltaY < 0 ? 1.08 : (1 / 1.08), e.clientX, e.clientY);
+    }, { passive: false });
+
+    viewport.addEventListener("mousedown", function(e) {
+      state.dragging = true;
+      isDraggingCanvas = false;
+      dragMoved = false;
+      viewport.classList.add("dragging");
+      state.startX = e.clientX;
+      state.startY = e.clientY;
+      state.startPanX = state.x;
+      state.startPanY = state.y;
+    });
+
+    window.addEventListener("mousemove", function(e) {
+      if (!state.dragging) return;
+
+      const dx = e.clientX - state.startX;
+      const dy = e.clientY - state.startY;
+
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        isDraggingCanvas = true;
+        dragMoved = true;
+      }
+
+      state.x = state.startPanX + dx;
+      state.y = state.startPanY + dy;
+      applyTransform();
+    });
+
+    window.addEventListener("mouseup", function() {
+      state.dragging = false;
+      viewport.classList.remove("dragging");
+      setTimeout(function() {
+        isDraggingCanvas = false;
+        dragMoved = false;
+      }, 0);
+    });
+
+    viewport.addEventListener("touchstart", function(e) {
+      if (e.touches.length === 1) {
+        state.dragging = true;
+        isDraggingCanvas = false;
+        dragMoved = false;
+        state.startX = e.touches[0].clientX;
+        state.startY = e.touches[0].clientY;
+        state.startPanX = state.x;
+        state.startPanY = state.y;
+      }
+    }, { passive: true });
+
+    viewport.addEventListener("touchmove", function(e) {
+      if (e.touches.length === 1 && state.dragging) {
+        const dx = e.touches[0].clientX - state.startX;
+        const dy = e.touches[0].clientY - state.startY;
+
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+          isDraggingCanvas = true;
+          dragMoved = true;
+        }
+
+        state.x = state.startPanX + dx;
+        state.y = state.startPanY + dy;
+        applyTransform();
+      }
+    }, { passive: true });
+
+    viewport.addEventListener("touchend", function() {
+      state.dragging = false;
+      setTimeout(function() {
+        isDraggingCanvas = false;
+        dragMoved = false;
+      }, 0);
+    });
+
+    window.addEventListener("resize", function () { fitToScreen(); });
+
+    requestAnimationFrame(function() {
+      fitToScreen();
+    });
+
+/* Dataverse data layer for the Account Plan "Group Hierarchy & UBO" tab.
+ * The visual design above this point is the existing fsi_CorporateHierarchyV2 design, unchanged.
+ * Everything below replaces the original hard-coded `const hierarchy = {...}` literal.
+ */
+(function () {
+  "use strict";
+
+  var ENTITY_KIND = { 100000000: "Parent", 100000001: "Subsidiary", 100000002: "Joint Venture", 100000003: "Associate" };
+  var STATUS_TEXT = {
+    100000000: "Strategic", 100000001: "Core Entity", 100000002: "Neutral",
+    100000003: "Watchlist", 100000004: "Target", 100000005: "Non-Client"
+  };
+  var STATUS_PILL = {
+    100000000: "pill-strategic", 100000001: "pill-strategic", 100000002: "pill-neutral",
+    100000003: "pill-watch", 100000004: "pill-watch", 100000005: "pill-risk"
+  };
+
+  var state = { nodes: {}, root: null, account: null, financial: null };
+
+  function setState(message) {
+    var el = document.getElementById("hierState");
+    if (!el) return;
+    if (message === null) { el.classList.add("hidden"); return; }
+    el.classList.remove("hidden");
+    el.textContent = message;
+  }
+
+  function kindKey(row) {
+    if (row.fsi_is_ubo) return "ubo";
+    if (row.fsi_entity_kind === 100000000) return "parent";
+    if (row.fsi_entity_kind === 100000001) return "subsidiary";
+    return "related";
+  }
+
+  function money(value) {
+    return APCtx.num(value) ? APCtx.compact(value, "AED") : "AED 0";
+  }
+
+  /* Map one fsi_borrowerentity row onto the card model the original renderer expects. */
+  /* Seeded rows carry an "ILLUSTRATIVE DEMO |" marker; the banner already states that,
+     so strip it from free text rather than repeating it on every card. */
+  function cleanNote(value) {
+    var text = String(value || "").trim();
+    if (!/^ILLUSTRATIVE DEMO/i.test(text)) return text;
+    var parts = text.split("|");
+    return parts.slice(1).join("|").trim();
+  }
+
+  function toNode(row, groupFinancial) {    var total = APCtx.num(row.fsi_exposure_amount) || 0;
+    var funded = APCtx.num(row.fsi_funded_exposure) || 0;
+    var nonFunded = APCtx.num(row.fsi_nonfunded_exposure) || 0;
+    if (total && !funded && !nonFunded) { funded = total; }
+    var denominator = funded + nonFunded;
+    var fundedPct = denominator ? Math.round(funded / denominator * 100) : 0;
+
+    var kind = kindKey(row);
+    var isClient = !!row.fsi_is_fab_client;
+    var flags = [];
+    flags.push(isClient
+      ? { className: "flag-clear", text: "FAB customer" }
+      : { className: "flag-watch", text: "Non-FAB entity" });
+    flags.push(row.fsi_is_ubo
+      ? { className: "flag-clear", text: "UBO verified" }
+      : { className: "flag-clear", text: "Screening clear" });
+    if (row.fsi_hierarchy_status === 100000003) {
+      flags.push({ className: "flag-watch", text: "On watchlist" });
+    }
+
+    var isGroupParent = kind === "parent" && !row.fsi_is_ubo;
+    var snapshot = isGroupParent && groupFinancial ? groupFinancial : null;
+
+    return {
+      id: row.fsi_borrowerentityid,
+      raw: row,
+      kind: kind,
+      isClient: isClient,
+      name: APCtx.escapeHtml(row.fsi_name || "Unnamed entity"),
+      shortLabel: APCtx.initials(row.fsi_name),
+      statusClass: STATUS_PILL[row.fsi_hierarchy_status] || "pill-neutral",
+      statusText: STATUS_TEXT[row.fsi_hierarchy_status] || (isClient ? "Client" : "Non-Client"),
+      rating: APCtx.escapeHtml(row.fsi_rating || "Unrated"),
+      raroc: APCtx.num(row.fsi_raroc_pct) !== null ? APCtx.pct(row.fsi_raroc_pct) : "n/a",
+      role: ENTITY_KIND[row.fsi_entity_kind] || "Related entity",
+      industry: APCtx.escapeHtml(row.fsi_sector || "–"),
+      ownership: APCtx.num(row.fsi_ownership_pct) !== null ? APCtx.pct(row.fsi_ownership_pct, 1) : "–",
+      primaryUbo: APCtx.escapeHtml(row.fsi_ubo_name || "–"),
+      rm: APCtx.escapeHtml(row.fsi_rm_name || "Unassigned"),
+      totalExposure: total ? money(total) : "No facilities",
+      fundedExposure: money(funded),
+      nonFundedExposure: money(nonFunded),
+      fundedPct: fundedPct,
+      nonFundedPct: 100 - fundedPct,
+      riskLevel: APCtx.num(row.fsi_risk_level) || 1,
+      revenue: snapshot ? money(snapshot.fsi_revenue) : "Group level",
+      ebitda: snapshot ? money(snapshot.fsi_ebitda) : "Group level",
+      debt: snapshot ? money(snapshot.fsi_totaldebt) : "Group level",
+      netLeverage: snapshot && APCtx.num(snapshot.fsi_ebitda)
+        ? APCtx.ratio((APCtx.num(snapshot.fsi_totaldebt) - APCtx.num(snapshot.fsi_cashandequivalents)) / snapshot.fsi_ebitda)
+        : "Group level",
+      screeningFlags: flags,
+      ma: APCtx.escapeHtml(cleanNote(row.fsi_relationship_note) || "No activity recorded."),
+      opportunity: isClient
+        ? "Existing FAB client \u00b7 cross-sell and wallet expansion tracked in the Pipeline tab."
+        : "Not currently banked by FAB \u00b7 acquisition target for the coverage team.",
+      children: []
+    };
+  }
+
+  function buildTree(rows, groupFinancial) {
+    var byId = {};
+    rows.forEach(function (row) {
+      byId[row.fsi_borrowerentityid] = toNode(row, groupFinancial);
+    });
+    state.nodes = byId;
+
+    var roots = [];
+    rows.forEach(function (row) {
+      var node = byId[row.fsi_borrowerentityid];
+      var parentId = row["_fsi_parententity_value"];
+      var parent = parentId ? byId[parentId] : null;
+      if (parent && parent !== node) { parent.children.push(node); } else { roots.push(node); }
+    });
+
+    // Sort children: FAB clients first, then by exposure, then alphabetically.
+    Object.keys(byId).forEach(function (key) {
+      byId[key].children.sort(function (a, b) {
+        if (a.isClient !== b.isClient) return a.isClient ? -1 : 1;
+        var ea = APCtx.num(a.raw.fsi_exposure_amount) || 0;
+        var eb = APCtx.num(b.raw.fsi_exposure_amount) || 0;
+        if (ea !== eb) return eb - ea;
+        return String(a.raw.fsi_name).localeCompare(String(b.raw.fsi_name));
+      });
+    });
+
+    if (!roots.length) return null;
+    if (roots.length === 1) return roots[0];
+
+    // More than one root: present a synthetic group node so the canvas still renders one tree.
+    return {
+      id: "synthetic-group-root",
+      kind: "parent",
+      isClient: true,
+      raw: {},
+      name: APCtx.escapeHtml((state.account && state.account.name) || "Group"),
+      shortLabel: APCtx.initials((state.account && state.account.name) || "G"),
+      statusClass: "pill-strategic", statusText: "Group", rating: "–", raroc: "n/a",
+      role: "Group holding view", industry: "–", ownership: "–",
+      primaryUbo: "–", rm: "–",
+      totalExposure: "–", fundedExposure: "AED 0", nonFundedExposure: "AED 0",
+      fundedPct: 0, nonFundedPct: 0, riskLevel: 1,
+      revenue: "–", ebitda: "–", debt: "–", netLeverage: "–",
+      screeningFlags: [], ma: "–", opportunity: "–",
+      children: roots
+    };
+  }
+
+  // ---- decoration + interaction -------------------------------------------
+  var KIND_LABEL = { ubo: "UBO", parent: "Parent", subsidiary: "Subsidiary", related: "Related" };
+
+  /* Wide groups are hard to read fully expanded, so every parent gets a collapse
+     control. Children are hidden with a class so the original connector CSS is untouched. */
+  function wireBranchToggles() {
+    var items = document.querySelectorAll("#treeRoot li");
+    Array.prototype.forEach.call(items, function (item) {
+      var childList = null;
+      for (var i = 0; i < item.children.length; i++) {
+        if (item.children[i].tagName === "UL") { childList = item.children[i]; break; }
+      }
+      if (!childList) return;
+
+      var count = childList.children.length;
+      var toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "branch-toggle";
+      item.insertBefore(toggle, childList);
+
+      function paint() {
+        var collapsed = item.classList.contains("is-collapsed");
+        toggle.textContent = collapsed ? "+ " + count : "\u2212 hide " + count;
+        toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        toggle.title = (collapsed ? "Show " : "Hide ") + count +
+          (count === 1 ? " subsidiary" : " subsidiaries");
+      }
+
+      toggle.addEventListener("click", function (event) {
+        event.stopPropagation();
+        item.classList.toggle("is-collapsed");
+        paint();
+        requestAnimationFrame(function () { applyTransform(); });
+      });
+      paint();
+    });
+  }
+
+  /* fitToScreen applies the legibility floor itself, but the iframe can still be
+     hidden when the tree first renders, so re-fit once it is actually measurable. */
+  function initialView() {
+    var ticks = 0;
+    var timer = setInterval(function () {
+      var content = document.getElementById("content");
+      if (content && content.offsetWidth) {
+        ticks += 1;
+        fitToScreen();
+        if (ticks >= 3) { clearInterval(timer); }
+      }
+    }, 150);
+  }
+
+  function decorateCards() {
+    document.querySelectorAll(".company-card").forEach(function (card) {
+      var node = state.nodes[card.getAttribute("data-card-id")];
+      if (!node) return;
+      card.classList.add("kind-" + node.kind);
+      if (!node.isClient) card.classList.add("non-client");
+
+      var pillRow = card.querySelector(".pill-row");
+      if (pillRow && !pillRow.querySelector(".kind-badge")) {
+        var kindBadge = document.createElement("span");
+        kindBadge.className = "kind-badge kb-" + node.kind;
+        kindBadge.textContent = KIND_LABEL[node.kind] || "Entity";
+        pillRow.insertBefore(kindBadge, pillRow.firstChild);
+
+        var clientBadge = document.createElement("span");
+        clientBadge.className = "client-badge " + (node.isClient ? "is-client" : "not-client");
+        clientBadge.textContent = node.isClient ? "FAB client" : "Not banked";
+        pillRow.appendChild(clientBadge);
+      }
+    });
+  }
+
+  function detailRow(label, value) {
+    return '<div class="dp-row"><span>' + label + "</span><span>" + value + "</span></div>";
+  }
+
+  function openDetail(node) {
+    var row = node.raw || {};
+    var linked = row["_fsi_linked_account_value"];
+    var html = '<div class="dp-name">' + node.name + "</div>" +
+      '<div class="dp-role">' + node.role + " \u00b7 " + APCtx.escapeHtml(row.fsi_country || "–") + "</div>" +
+      '<div class="dp-badges">' +
+        '<span class="kind-badge kb-' + node.kind + '">' + (KIND_LABEL[node.kind] || "Entity") + "</span>" +
+        '<span class="client-badge ' + (node.isClient ? "is-client" : "not-client") + '">' +
+          (node.isClient ? "FAB client" : "Not banked") + "</span>" +
+        '<span class="pill ' + node.statusClass + '">' + node.statusText + "</span>" +
+      "</div>" +
+      '<div class="dp-section">Ownership</div>' +
+      detailRow("Ownership held", node.ownership) +
+      detailRow("Ultimate owner", node.primaryUbo) +
+      detailRow("Entity type", node.role) +
+      detailRow("Country", APCtx.escapeHtml(row.fsi_country || "–")) +
+      detailRow("Sector", node.industry) +
+      '<div class="dp-section">FAB relationship</div>' +
+      detailRow("Relationship status", node.statusText) +
+      detailRow("Internal rating", node.rating) +
+      detailRow("RAROC", node.raroc) +
+      detailRow("Relationship manager", node.rm) +
+      '<div class="dp-section">Exposure</div>' +
+      detailRow("Total exposure", node.totalExposure) +
+      detailRow("Funded", node.fundedExposure + " (" + node.fundedPct + "%)") +
+      detailRow("Non-funded", node.nonFundedExposure + " (" + node.nonFundedPct + "%)") +
+      '<div class="dp-section">Coverage note</div>' +
+      '<div class="dp-note">' + node.ma + "</div>" +
+      (linked
+        ? '<button class="dp-link" data-account-id="' + linked + '">Open Customer 360</button>'
+        : '<button class="dp-link" disabled>No linked account record</button>');
+
+    var panel = document.getElementById("detailPanel");
+    document.getElementById("dpBody").innerHTML = html;
+    panel.classList.add("open");
+
+    var link = panel.querySelector(".dp-link[data-account-id]");
+    if (link) {
+      link.addEventListener("click", function () {
+        APCtx.openRecord("account", link.getAttribute("data-account-id"));
+      });
+    }
+  }
+
+  function wireDetailPanel() {
+    document.getElementById("dpClose").addEventListener("click", function () {
+      document.getElementById("detailPanel").classList.remove("open");
+    });
+    document.querySelectorAll(".company-card").forEach(function (card) {
+      card.addEventListener("click", function () {
+        if (isDraggingCanvas || dragMoved) return;
+        var node = state.nodes[card.getAttribute("data-card-id")];
+        if (node) openDetail(node);
+      });
+    });
+  }
+
+  function updateHeader(rows, scope) {
+    var clients = rows.filter(function (r) { return r.fsi_is_fab_client; }).length;
+    var exposure = APCtx.sum(rows, "fsi_exposure_amount");
+    var countries = {};
+    rows.forEach(function (r) { if (r.fsi_country) countries[r.fsi_country] = 1; });
+
+    document.getElementById("hierTitle").textContent =
+      (scope.accountName || "Group") + " \u2014 Group Hierarchy & UBO";
+    document.getElementById("hierSub").textContent =
+      "Ultimate beneficial ownership and legal entity structure \u00b7 illustrative demo data";
+    document.getElementById("mEntities").textContent = rows.length;
+    document.getElementById("mClients").textContent = clients + " / " + rows.length;
+    document.getElementById("mExposure").textContent = APCtx.compact(exposure, "AED");
+    document.getElementById("mCountries").textContent = Object.keys(countries).length;
+  }
+
+  // ---- load ----------------------------------------------------------------
+  APCtx.resolve().then(function (scope) {
+    state.account = { id: scope.accountId, name: scope.accountName };
+
+    var entities = APCtx.query(scope, "fsi_borrowerentities", [
+      "$select=fsi_borrowerentityid,fsi_name,fsi_entity_kind,fsi_ownership_pct,fsi_country,",
+      "fsi_sector,fsi_exposure_amount,fsi_funded_exposure,fsi_nonfunded_exposure,fsi_is_ubo,",
+      "fsi_ubo_name,fsi_is_fab_client,fsi_hierarchy_status,fsi_rating,fsi_raroc_pct,fsi_rm_name,",
+      "fsi_risk_level,fsi_relationship_note,_fsi_parententity_value,_fsi_linked_account_value",
+      "&$filter=_fsi_account_value eq " + scope.accountId
+    ].join(""));
+
+    var financials = APCtx.query(scope, "fsi_companyfinancials",
+      "$select=fsi_revenue,fsi_ebitda,fsi_totaldebt,fsi_cashandequivalents,fsi_yearended" +
+      "&$filter=_fsi_company_value eq " + scope.accountId +
+      "&$orderby=fsi_yearended desc&$top=1");
+
+    return Promise.all([entities, financials]).then(function (results) {
+      var rows = results[0];
+      var groupFinancial = results[1][0] || null;
+      if (!rows.length) {
+        setState("No group entities have been recorded for " +
+          (scope.accountName || "this customer") + " yet.");
+        return;
+      }
+      state.financial = groupFinancial;
+      var tree = buildTree(rows, groupFinancial);
+      if (!tree) { setState("The group hierarchy could not be assembled."); return; }
+
+      document.getElementById("treeRoot").innerHTML = "<ul>" + renderNode(tree) + "</ul>";
+      decorateCards();
+      wireBranchToggles();
+      wireCards();
+      wireDetailPanel();
+      updateHeader(rows, scope);
+      setState(null);
+      requestAnimationFrame(function () { initialView(); });
+    });
+  }).catch(function (error) {
+    console.error("[GroupHierarchy]", error);
+    setState(error && error.message ? error.message : "Unable to load the group hierarchy.");
+  });
+}());
+
+  </script>
+</body>
+</html>

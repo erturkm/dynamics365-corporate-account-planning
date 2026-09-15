@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Covenants & Credit</title>
+  <style>
+/* Shared chrome for the new Account Plan tabs.
+ * Tokens mirror webresources/account-plan-summary-live/styles.css so the new screens
+ * read as part of the same application. */
+:root {
+  color-scheme: light;
+  --cp-bg: #ffffff;
+  --cp-bg-elevated: #f6f9fd;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f2f7fc;
+  --cp-border: #dbe5f0;
+  --cp-border-strong: #8ba3bf;
+  --cp-text: #172033;
+  --cp-text-muted: #55657d;
+  --cp-text-soft: #6c7d95;
+  --cp-accent: #1e3a8a;
+  --cp-accent-soft: rgba(30, 58, 138, 0.07);
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #d97706;
+  --cp-link: #1d4ed8;
+  --cp-series-1: #1e3a8a;
+  --cp-series-2: #2f6fb5;
+  --cp-series-3: #5aa0dd;
+  --cp-series-4: #0e7490;
+  --cp-series-5: #7c3aed;
+  --cp-series-6: #64748b;
+  --cp-shadow: 0 10px 30px rgba(23, 32, 51, 0.08);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #0f172a;
+  --cp-bg-elevated: #131f38;
+  --cp-surface: #16233d;
+  --cp-surface-soft: #1c2b47;
+  --cp-border: #2b3b58;
+  --cp-border-strong: #44577a;
+  --cp-text: #e2e8f0;
+  --cp-text-muted: #94a3b8;
+  --cp-text-soft: #b0bccd;
+  --cp-accent: #7ea6e0;
+  --cp-accent-soft: rgba(126, 166, 224, 0.15);
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #93c5fd;
+  --cp-series-1: #7ea6e0;
+  --cp-series-2: #4f9bd8;
+  --cp-series-3: #93c5fd;
+  --cp-series-4: #5eead4;
+  --cp-series-5: #c4a2f0;
+  --cp-series-6: #a5b4c8;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--cp-bg);
+  color: var(--cp-text);
+  font: 13px/1.45 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+main { max-width: 1440px; margin: 0 auto; padding: 14px 18px 28px; }
+
+/* ---- page header --------------------------------------------------------- */
+.page-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 18px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.page-title { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+.page-sub { margin-top: 3px; font-size: 12px; color: var(--cp-text-muted); }
+.source-note {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 11px; border-radius: 999px;
+  background: var(--cp-surface); border: 1px solid var(--cp-border);
+  font-size: 11px; font-weight: 600; color: var(--cp-text-muted);
+}
+.source-note .dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--cp-success);
+}
+.demo-note {
+  margin-bottom: 12px; padding: 8px 12px; border-radius: 10px;
+  background: var(--cp-accent-soft); border: 1px solid var(--cp-border);
+  font-size: 11px; font-weight: 600; color: var(--cp-text-muted);
+}
+
+/* ---- layout primitives --------------------------------------------------- */
+.grid { display: grid; gap: 12px; }
+.grid.k2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid.k3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.grid.k5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.grid.k6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.span2 { grid-column: span 2; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+.card {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 10px;
+}
+.card-title { font-size: 13px; font-weight: 700; }
+.card-sub { font-size: 11px; color: var(--cp-text-muted); font-weight: 600; }
+
+/* ---- KPI ----------------------------------------------------------------- */
+.kpi { position: relative; overflow: hidden; }
+.kpi::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--cp-accent); opacity: .85;
+}
+.kpi-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--cp-text-soft);
+}
+.kpi-value { font-size: 22px; font-weight: 700; margin-top: 5px; letter-spacing: -0.02em; }
+.kpi-value.sm { font-size: 17px; }
+.kpi-meta { margin-top: 5px; font-size: 11px; color: var(--cp-text-muted); font-weight: 600; }
+.kpi.good::after { background: var(--cp-success); }
+.kpi.warn::after { background: var(--cp-warning); }
+.kpi.bad::after { background: var(--cp-danger); }
+
+.delta { font-weight: 700; }
+.delta.up { color: var(--cp-success); }
+.delta.down { color: var(--cp-danger); }
+.delta.flat { color: var(--cp-text-muted); }
+
+/* ---- pills --------------------------------------------------------------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.ok { background: rgba(22,163,74,.10); color: var(--cp-success); border-color: rgba(22,163,74,.22); }
+.pill.warn { background: rgba(245,158,11,.12); color: #b45309; border-color: rgba(245,158,11,.28); }
+.pill.bad { background: rgba(220,38,38,.10); color: var(--cp-danger); border-color: rgba(220,38,38,.22); }
+.pill.info { background: rgba(29,78,216,.10); color: var(--cp-link); border-color: rgba(29,78,216,.22); }
+.pill.mute { background: var(--cp-surface-soft); color: var(--cp-text-muted); border-color: var(--cp-border); }
+.pill.plain::before { display: none; }
+
+/* ---- tables -------------------------------------------------------------- */
+.table-wrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.data th {
+  text-align: left; padding: 8px 10px;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--cp-text-soft); border-bottom: 1px solid var(--cp-border); white-space: nowrap;
+}
+table.data td {
+  padding: 9px 10px; border-bottom: 1px solid var(--cp-border);
+  vertical-align: middle;
+}
+table.data tbody tr:hover { background: var(--cp-surface-soft); }
+table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.data td.strong { font-weight: 700; }
+table.data tr.total td { font-weight: 700; border-top: 2px solid var(--cp-border-strong); }
+
+/* ---- bars ---------------------------------------------------------------- */
+.bar {
+  position: relative; height: 7px; border-radius: 999px;
+  background: var(--cp-surface-soft); overflow: hidden; min-width: 70px;
+}
+.bar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--cp-accent); }
+.bar.ok > span { background: var(--cp-success); }
+.bar.warn > span { background: var(--cp-warning); }
+.bar.bad > span { background: var(--cp-danger); }
+.bar-cell { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+.bar-cell .val { font-variant-numeric: tabular-nums; font-weight: 700; min-width: 46px; text-align: right; }
+
+/* ---- charts -------------------------------------------------------------- */
+.chart { width: 100%; height: 132px; display: block; }
+.chart-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.legend-key { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--cp-text-muted); }
+.legend-key i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* ---- collapsible --------------------------------------------------------- */
+details.section { border: 1px solid var(--cp-border); border-radius: 14px; background: var(--cp-surface); }
+details.section > summary {
+  list-style: none; cursor: pointer; padding: 12px 16px;
+  font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 10px;
+}
+details.section > summary::-webkit-details-marker { display: none; }
+details.section > summary::after {
+  content: "\25BE"; margin-left: auto; color: var(--cp-text-soft); transition: transform .18s ease;
+}
+details.section[open] > summary::after { transform: rotate(180deg); }
+details.section > .section-body { padding: 0 16px 16px; }
+
+/* ---- misc ---------------------------------------------------------------- */
+.muted { color: var(--cp-text-muted); }
+.tiny { font-size: 11px; }
+.nowrap { white-space: nowrap; }
+.tip { cursor: help; border-bottom: 1px dotted var(--cp-border-strong); }
+.state {
+  padding: 34px; text-align: center; color: var(--cp-text-muted);
+  font-size: 13px; font-weight: 600;
+}
+.empty {
+  padding: 22px; text-align: center; color: var(--cp-text-muted);
+  font-size: 12px; font-weight: 600; border: 1px dashed var(--cp-border); border-radius: 12px;
+}
+
+@media (max-width: 1100px) {
+  .grid.k5, .grid.k6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  main { padding: 12px 12px 22px; }
+  .grid.k2, .grid.k3, .grid.k4, .grid.k5, .grid.k6 { grid-template-columns: 1fr; }
+  .span2 { grid-column: span 1; }
+}
+
+/* Compact label/value list used to fill tall cards beside a chart. */
+.stat-list { margin-top: 16px; border-top: 1px solid var(--cp-border); }
+.stat-list .stat-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--cp-border);
+  font-size: 12px;
+}
+.stat-list .stat-row:last-child { border-bottom: 0; }
+.stat-list .stat-row span:first-child { color: var(--cp-text-soft); }
+.stat-list .stat-row span:last-child { font-weight: 700; color: var(--cp-text); }
+
+  </style>
+</head>
+<body>
+<main id="root">
+<div class="page-head">
+  <div>
+    <div class="page-title" id="pgTitle">Covenants &amp; Credit</div>
+    <div class="page-sub">Credit standing, exposure headroom, security and covenant compliance.</div>
+  </div>
+  <span class="source-note"><span class="dot"></span>Source: Dataverse credit &amp; covenant records</span>
+</div>
+
+<div id="state" class="state">Loading credit and covenant position…</div>
+
+<div id="content" hidden>
+  <div class="grid k4" id="ratingRow"></div>
+
+  <div class="grid k4" style="margin-top:12px;" id="exposureRow"></div>
+
+  <div class="card" style="margin-top:12px;">
+    <div class="card-head">
+      <div><div class="card-title">Covenant monitoring</div>
+        <div class="card-sub" id="covSub"></div></div>
+      <div class="row" id="covPills"></div>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr>
+          <th>Covenant</th><th>Type</th><th class="num">Required threshold</th>
+          <th class="num">Current value</th><th>Headroom</th>
+          <th>Last tested</th><th>Next review</th><th>Status</th>
+        </tr></thead>
+        <tbody id="covBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid k2" style="margin-top:12px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Exposure by facility line</div></div>
+      <div id="chartExposure"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">Credit quality signals</div></div>
+      <div id="signals"></div>
+    </div>
+  </div>
+
+  <details class="section" style="margin-top:12px;">
+    <summary>Collateral &amp; security <span class="pill mute plain" id="collateralCount"></span></summary>
+    <div class="section-body"><div id="collateralBody"></div></div>
+  </details>
+
+  <details class="section" style="margin-top:12px;">
+    <summary>Facility covenant status <span class="pill mute plain" id="facCount"></span></summary>
+    <div class="section-body">
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr>
+            <th>Facility</th><th class="num">Limit</th><th class="num">Drawn</th>
+            <th>Utilisation</th><th>Maturity</th><th>Covenant status</th>
+          </tr></thead>
+          <tbody id="facBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </details>
+</div>
+
+</main>
+<script>
+/* Shared Account Plan tab runtime.
+ * Resolves the current fsi_accountplanning record and its fsi_customer account dynamically
+ * from the hosting form, then exposes small Web API + formatting helpers.
+ * No record GUIDs are hardcoded anywhere.
+ * Mirrors the pattern already used by fsi_LimitUtilizationLive and fsi_shareofwallet.
+ */
+var APCtx = (function () {
+  "use strict";
+
+  var API = "/api/data/v9.2/";
+
+  function getXrm() {
+    try {
+      if (window.parent && window.parent !== window && window.parent.Xrm) return window.parent.Xrm;
+    } catch (e) { /* cross-origin during navigation */ }
+    if (window.Xrm) return window.Xrm;
+    return null;
+  }
+
+  function clientUrl() {
+    var xrm = getXrm();
+    if (!xrm) return "";
+    try { return xrm.Utility.getGlobalContext().getClientUrl(); } catch (e) { return ""; }
+  }
+
+  function normaliseGuid(value) {
+    return String(value || "").replace(/[{}]/g, "").toLowerCase();
+  }
+
+  /* Resolve { planId, accountId, accountName, planTitle, clientUrl }.
+   * Works whether the web resource sits on the account plan form or (as a fallback)
+   * directly on an account form. */
+  function resolve() {
+    var xrm = getXrm();
+    if (!xrm) {
+      return Promise.reject(new Error(
+        "Xrm context not found. Host this page as a web resource inside the model-driven app."));
+    }
+    var url = clientUrl();
+    var form = xrm.Page;
+    var entityName = "";
+    var recordId = "";
+    try {
+      entityName = form.data.entity.getEntityName();
+      recordId = normaliseGuid(form.data.entity.getId());
+    } catch (e) { /* form not ready */ }
+
+    if (entityName === "account") {
+      var accountName = "";
+      try { accountName = form.getAttribute("name").getValue() || ""; } catch (e) { }
+      return Promise.resolve({
+        clientUrl: url, planId: null, planTitle: "", accountId: recordId, accountName: accountName
+      });
+    }
+
+    var lookup = null;
+    try {
+      var attribute = form.getAttribute("fsi_customer");
+      lookup = attribute && attribute.getValue();
+    } catch (e) { }
+
+    var planTitle = "";
+    try {
+      var title = form.getAttribute("fsi_title");
+      planTitle = (title && title.getValue()) || "";
+    } catch (e) { }
+
+    if (lookup && lookup[0] && String(lookup[0].entityType).toLowerCase() === "account") {
+      return Promise.resolve({
+        clientUrl: url, planId: recordId, planTitle: planTitle,
+        accountId: normaliseGuid(lookup[0].id), accountName: lookup[0].name || ""
+      });
+    }
+
+    // The lookup may not be loaded onto the form yet - read it back from the plan record.
+    if (!recordId) {
+      return Promise.reject(new Error("The account plan record has not been saved yet."));
+    }
+    return fetchJson(url + API + "fsi_accountplannings(" + recordId + ")" +
+      "?$select=fsi_title,_fsi_customer_value").then(function (plan) {
+        var id = plan["_fsi_customer_value"];
+        if (!id) throw new Error("This account plan has no Customer set, so there is nothing to show yet.");
+        return {
+          clientUrl: url,
+          planId: recordId,
+          planTitle: plan.fsi_title || planTitle,
+          accountId: normaliseGuid(id),
+          accountName: plan["_fsi_customer_value@OData.Community.Display.V1.FormattedValue"] || ""
+        };
+      });
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Prefer": 'odata.include-annotations="OData.Community.Display.V1.FormattedValue"'
+      },
+      credentials: "same-origin"
+    }).then(function (response) {
+      if (!response.ok) {
+        return response.text().then(function (text) {
+          throw new Error("Dataverse " + response.status + ": " + text.slice(0, 300));
+        });
+      }
+      return response.json();
+    });
+  }
+
+  /* Read a table, tolerating tables/columns that are absent in a given environment. */
+  function query(scope, entitySet, options) {
+    var url = scope.clientUrl + API + entitySet + (options ? "?" + options : "");
+    return fetchJson(url).then(function (result) {
+      return result.value || [];
+    }).catch(function (error) {
+      console.warn("[AccountPlan] " + entitySet + " unavailable:", error.message);
+      return [];
+    });
+  }
+
+  function record(scope, entitySet, id, options) {
+    var url = scope.clientUrl + API + entitySet + "(" + id + ")" + (options ? "?" + options : "");
+    return fetchJson(url).catch(function (error) {
+      console.warn("[AccountPlan] " + entitySet + "(" + id + ") unavailable:", error.message);
+      return null;
+    });
+  }
+
+  function openRecord(entityName, id) {
+    var xrm = getXrm();
+    if (!xrm || !id) return;
+    try { xrm.Navigation.openForm({ entityName: entityName, entityId: id }); } catch (e) { }
+  }
+
+  // ---- formatting -----------------------------------------------------------
+  function number(value) {
+    return typeof value === "number" && isFinite(value) ? value : null;
+  }
+
+  function compact(value, currency) {
+    var n = number(value);
+    if (n === null) return "–";
+    var prefix = currency ? currency + " " : "";
+    var sign = n < 0 ? "-" : "";
+    var abs = Math.abs(n);
+    if (abs >= 1e9) return sign + prefix + (abs / 1e9).toFixed(abs / 1e9 >= 100 ? 0 : 1) + "bn";
+    if (abs >= 1e6) return sign + prefix + (abs / 1e6).toFixed(abs / 1e6 >= 100 ? 0 : 1) + "m";
+    if (abs >= 1e3) return sign + prefix + (abs / 1e3).toFixed(0) + "k";
+    return sign + prefix + abs.toFixed(0);
+  }
+
+  function pct(value, digits) {
+    var n = number(value);
+    return n === null ? "–" : n.toFixed(typeof digits === "number" ? digits : 1) + "%";
+  }
+
+  function ratio(value, digits) {
+    var n = number(value);
+    return n === null ? "–" : n.toFixed(typeof digits === "number" ? digits : 2) + "x";
+  }
+
+  function dateText(value) {
+    if (!value) return "–";
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return "–";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function daysBetween(from, to) {
+    var a = new Date(from), b = to ? new Date(to) : new Date();
+    if (isNaN(a.getTime()) || isNaN(b.getTime())) return null;
+    return Math.round((b - a) / 86400000);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function initials(name) {
+    var parts = String(name || "?").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    return parts[0].charAt(0).toUpperCase();
+  }
+
+  function sum(rows, field) {
+    return rows.reduce(function (total, row) {
+      var n = number(row[field]);
+      return total + (n === null ? 0 : n);
+    }, 0);
+  }
+
+  return {
+    API: API, resolve: resolve, query: query, record: record, fetchJson: fetchJson,
+    openRecord: openRecord, getXrm: getXrm,
+    compact: compact, pct: pct, ratio: ratio, dateText: dateText, daysBetween: daysBetween,
+    escapeHtml: escapeHtml, initials: initials, num: number, sum: sum
+  };
+}());
+
+</script>
+<script>
+/* Lightweight inline-SVG chart helpers shared by the new Account Plan tabs.
+ * Deliberately dependency-free: no chart library is loaded into the model-driven app. */
+var APChart = (function () {
+  "use strict";
+
+  var NS = "http://www.w3.org/2000/svg";
+
+  function css(name, fallback) {
+    try {
+      var value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return value || fallback;
+    } catch (e) { return fallback; }
+  }
+
+  function el(tag, attrs) {
+    var node = document.createElementNS(NS, tag);
+    Object.keys(attrs || {}).forEach(function (key) { node.setAttribute(key, attrs[key]); });
+    return node;
+  }
+
+  function svg(width, height) {
+    var node = el("svg", {
+      viewBox: "0 0 " + width + " " + height,
+      preserveAspectRatio: "none",
+      class: "chart"
+    });
+    node.setAttribute("role", "img");
+    return node;
+  }
+
+  function extent(series, zeroBaseline) {
+    var values = [];
+    series.forEach(function (s) {
+      s.values.forEach(function (v) { if (typeof v === "number" && isFinite(v)) values.push(v); });
+    });
+    if (!values.length) return { min: 0, max: 1 };
+    var min = Math.min.apply(null, values);
+    var max = Math.max.apply(null, values);
+    if (min === max) { max = min + Math.abs(min || 1); }
+    if (zeroBaseline === false) {
+      // Trend charts read better when the axis hugs the data instead of anchoring at zero.
+      var spread = max - min;
+      return { min: min - spread * 0.35, max: max + spread * 0.25 };
+    }
+    min = Math.min(min, 0);
+    var pad = (max - min) * 0.12;
+    return { min: min, max: max + pad };
+  }
+
+  /* Category labels are centred, except the outer two which would otherwise clip. */
+  function axisLabel(node, text, x, y, index, count, color) {
+    var anchor = "middle";
+    if (count > 1 && index === 0) anchor = "start";
+    if (count > 1 && index === count - 1) anchor = "end";
+    var label = el("text", {
+      x: x, y: y, "text-anchor": anchor, "font-size": 10, "font-weight": 600, fill: color
+    });
+    label.textContent = text;
+    node.appendChild(label);
+  }
+
+  /* Grouped bar chart. series = [{label, values:[], color}], labels = category names.
+     options.refLine = {value, label, color} draws a horizontal threshold across the plot. */
+  function bars(target, labels, series, options) {
+    options = options || {};
+    var host = typeof target === "string" ? document.getElementById(target) : target;
+    if (!host) return;
+    host.innerHTML = "";
+
+    var W = 480, H = 140, padL = 6, padR = 6, padT = 12, padB = 20;
+    var node = svg(W, H);
+    var ref = options.refLine;
+    /* The threshold has to be inside the domain or the line would sit off-canvas. */
+    var domain = ref && typeof ref.value === "number"
+      ? series.concat([{ values: [ref.value] }]) : series;
+    var range = extent(domain);
+    var plotH = H - padT - padB;
+    var plotW = W - padL - padR;
+    var groups = labels.length || 1;
+    var groupW = plotW / groups;
+    var barCount = series.length || 1;
+    var barW = Math.max(4, (groupW * 0.62) / barCount);
+
+    var y = function (value) {
+      return padT + plotH - (value - range.min) / (range.max - range.min) * plotH;
+    };
+
+    // baseline
+    node.appendChild(el("line", {
+      x1: padL, x2: W - padR, y1: y(0), y2: y(0),
+      stroke: css("--cp-border", "#dbe5f0"), "stroke-width": 1
+    }));
+
+    labels.forEach(function (label, gi) {
+      var groupX = padL + groupW * gi + (groupW - barW * barCount) / 2;
+      series.forEach(function (s, si) {
+        var value = s.values[gi];
+        if (typeof value !== "number" || !isFinite(value)) return;
+        var top = Math.min(y(value), y(0));
+        var height = Math.max(1.5, Math.abs(y(value) - y(0)));
+        var rect = el("rect", {
+          x: groupX + barW * si, y: top, width: barW, height: height,
+          rx: Math.min(3, barW / 2), fill: s.color || css("--cp-accent", "#1e3a8a")
+        });
+        rect.appendChild(el("title", {})).textContent =
+          s.label + " \u00b7 " + label + ": " + (options.format ? options.format(value) : value);
+        node.appendChild(rect);
+      });
+
+      /* Long category names collide once there are more than a handful of groups, so
+         clip each label to the width its group can actually afford and keep the full
+         text available as a tooltip. */
+      var budget = Math.max(3, Math.floor(groupW / 5.6));
+      var shown = label.length > budget ? label.slice(0, budget - 1).replace(/[\s\-–]+$/, "") + "\u2026" : label;
+
+      var text = el("text", {
+        x: padL + groupW * gi + groupW / 2, y: H - 6,
+        "text-anchor": "middle", "font-size": 10, "font-weight": 600,
+        fill: css("--cp-text-soft", "#6c7d95")
+      });
+      text.textContent = shown;
+      if (shown !== label) text.appendChild(el("title", {})).textContent = label;
+      node.appendChild(text);    });
+
+    if (ref && typeof ref.value === "number" && isFinite(ref.value)) {
+      var refY = y(ref.value);
+      node.appendChild(el("line", {
+        x1: padL, x2: W - padR, y1: refY, y2: refY,
+        stroke: ref.color || css("--cp-danger", "#dc2626"),
+        "stroke-width": 1.5, "stroke-dasharray": "5 3"
+      }));
+      if (ref.label) {
+        var refText = el("text", {
+          x: W - padR, y: Math.max(9, refY - 4), "text-anchor": "end",
+          "font-size": 9.5, "font-weight": 700,
+          fill: ref.color || css("--cp-danger", "#dc2626")
+        });
+        refText.textContent = ref.label;
+        node.appendChild(refText);
+      }
+    }
+
+    host.appendChild(node);
+  }
+
+  /* Line / area chart for a single trend series. */
+  function line(target, labels, values, options) {
+    options = options || {};
+    var host = typeof target === "string" ? document.getElementById(target) : target;
+    if (!host) return;
+    host.innerHTML = "";
+
+    var W = 480, H = 140, padL = 8, padR = 8, padT = 14, padB = 20;
+    var node = svg(W, H);
+    var range = extent([{ values: values }], options.zeroBaseline === true);
+    var plotH = H - padT - padB;
+    var plotW = W - padL - padR;
+    var step = values.length > 1 ? plotW / (values.length - 1) : 0;
+    var color = options.color || css("--cp-accent", "#1e3a8a");
+
+    var points = values.map(function (value, i) {
+      return {
+        x: padL + step * i,
+        y: padT + plotH - (value - range.min) / (range.max - range.min) * plotH,
+        v: value
+      };
+    }).filter(function (p) { return isFinite(p.y); });
+
+    if (!points.length) { host.appendChild(node); return; }
+
+    var path = points.map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
+    var area = path + " L " + points[points.length - 1].x + " " + (padT + plotH) +
+      " L " + points[0].x + " " + (padT + plotH) + " Z";
+
+    node.appendChild(el("path", { d: area, fill: color, opacity: 0.12 }));
+    node.appendChild(el("path", {
+      d: path, fill: "none", stroke: color, "stroke-width": 2.4,
+      "stroke-linecap": "round", "stroke-linejoin": "round"
+    }));
+
+    points.forEach(function (p, i) {
+      var dot = el("circle", { cx: p.x, cy: p.y, r: 3.4, fill: color });
+      dot.appendChild(el("title", {})).textContent =
+        (labels[i] || "") + ": " + (options.format ? options.format(p.v) : p.v);
+      node.appendChild(dot);
+      axisLabel(node, labels[i] || "", p.x, H - 6, i, points.length,
+        css("--cp-text-soft", "#6c7d95"));
+    });
+
+    host.appendChild(node);
+  }
+
+  /* Horizontal stacked bar for composition (e.g. income mix). */
+  function stacked(target, segments, options) {
+    options = options || {};
+    var host = typeof target === "string" ? document.getElementById(target) : target;
+    if (!host) return;
+    host.innerHTML = "";
+    var total = segments.reduce(function (sum, s) { return sum + Math.max(0, s.value || 0); }, 0);
+    if (!total) { host.innerHTML = '<div class="empty">No data to chart.</div>'; return; }
+
+    var W = 480, H = 34;
+    var node = svg(W, H);
+    node.style.height = "34px";
+    var x = 0;
+    segments.forEach(function (s) {
+      var width = Math.max(0, s.value || 0) / total * W;
+      if (width <= 0) return;
+      var rect = el("rect", { x: x, y: 6, width: width, height: 22, fill: s.color, rx: 3 });
+      rect.appendChild(el("title", {})).textContent =
+        s.label + ": " + (options.format ? options.format(s.value) : s.value) +
+        " (" + (s.value / total * 100).toFixed(1) + "%)";
+      node.appendChild(rect);
+      x += width;
+    });
+    host.appendChild(node);
+  }
+
+  /* Semi-circular gauge used for RAROC vs hurdle and service health. */
+  function gauge(target, value, max, options) {
+    options = options || {};
+    var host = typeof target === "string" ? document.getElementById(target) : target;
+    if (!host) return;
+    host.innerHTML = "";
+
+    var W = 240, H = 132, cx = 120, cy = 112, r = 92;
+    var node = svg(W, H);
+    node.style.height = "132px";
+
+    function arc(fromPct, toPct, color, width) {
+      var a0 = Math.PI * (1 + Math.min(1, Math.max(0, fromPct)));
+      var a1 = Math.PI * (1 + Math.min(1, Math.max(0, toPct)));
+      var large = (a1 - a0) > Math.PI ? 1 : 0;
+      var d = "M " + (cx + r * Math.cos(a0)) + " " + (cy + r * Math.sin(a0)) +
+        " A " + r + " " + r + " 0 " + large + " 1 " +
+        (cx + r * Math.cos(a1)) + " " + (cy + r * Math.sin(a1));
+      node.appendChild(el("path", {
+        d: d, fill: "none", stroke: color, "stroke-width": width || 14, "stroke-linecap": "round"
+      }));
+    }
+
+    var fraction = max ? Math.min(1, Math.max(0, value / max)) : 0;
+    arc(0, 1, css("--cp-surface-soft", "#f2f7fc"), 14);
+    if (fraction > 0.012) {
+      arc(0, fraction, options.color || css("--cp-accent", "#1e3a8a"), 14);
+    }
+
+    if (typeof options.marker === "number" && max) {
+      var mf = Math.min(1, Math.max(0, options.marker / max));
+      var angle = Math.PI * (1 + mf);
+      node.appendChild(el("line", {
+        x1: cx + (r - 12) * Math.cos(angle), y1: cy + (r - 12) * Math.sin(angle),
+        x2: cx + (r + 12) * Math.cos(angle), y2: cy + (r + 12) * Math.sin(angle),
+        stroke: css("--cp-text", "#172033"), "stroke-width": 2.4, "stroke-linecap": "round"
+      }));
+      if (options.markerLabel) {
+        var ml = el("text", {
+          x: cx + (r + 18) * Math.cos(angle), y: cy + (r + 18) * Math.sin(angle) + 3,
+          "text-anchor": mf > 0.5 ? "start" : "end", "font-size": 9, "font-weight": 700,
+          fill: css("--cp-text-soft", "#6c7d95")
+        });
+        ml.textContent = options.markerLabel;
+        node.appendChild(ml);
+      }
+    }
+
+    if (options.scale !== false) {
+      [[cx - r, "start", options.minLabel || "0"],
+       [cx + r, "end", options.maxLabel || String(Math.round(max * 10) / 10)]].forEach(function (item) {
+        var tick = el("text", {
+          x: item[0], y: cy + 14, "text-anchor": item[1], "font-size": 9, "font-weight": 600,
+          fill: css("--cp-text-soft", "#6c7d95")
+        });
+        tick.textContent = item[2];
+        node.appendChild(tick);
+      });
+    }
+
+    var main = el("text", {
+      x: cx, y: cy - 16, "text-anchor": "middle", "font-size": 30, "font-weight": 700,
+      fill: css("--cp-text", "#172033")
+    });
+    main.textContent = options.label || String(value);
+    node.appendChild(main);
+
+    if (options.caption) {
+      var caption = el("text", {
+        x: cx, y: cy + 6, "text-anchor": "middle", "font-size": 11, "font-weight": 600,
+        fill: css("--cp-text-soft", "#6c7d95")
+      });
+      caption.textContent = options.caption;
+      node.appendChild(caption);
+    }
+    host.appendChild(node);
+  }
+
+  var SERIES = ["#1e3a8a", "#2f6fb5", "#5aa0dd", "#0e7490", "#7c3aed", "#64748b"];
+
+  /* Categorical colour for chart series i, resolved from the shared theme tokens. */
+  function series(index) {
+    var i = ((index % SERIES.length) + SERIES.length) % SERIES.length;
+    return css("--cp-series-" + (i + 1), SERIES[i]);
+  }
+
+  return { bars: bars, line: line, stacked: stacked, gauge: gauge, css: css, series: series };
+}());
+
+</script>
+<script>
+/* Covenants & Credit tab.
+ * Complements the existing Limits & Utilizations tab rather than duplicating it: this screen
+ * is about credit standing, headroom, security and covenant compliance.
+ */
+(function () {
+  "use strict";
+
+  var CUR = "AED";
+  var OPERATOR = { 100000000: "\u2264", 100000001: "\u2265", 100000002: "=" };
+  var STATUS = {
+    100000000: { text: "Compliant", tone: "ok" },
+    100000001: { text: "Watch", tone: "warn" },
+    100000002: { text: "Breached", tone: "bad" }
+  };
+  var FACILITY_TYPE = {
+    100000000: "Term Loan", 100000001: "Revolving Credit Facility",
+    100000002: "Letter of Credit", 100000003: "Letter of Guarantee", 100000004: "Other"
+  };
+
+  function show(message) {
+    var el = document.getElementById("state");
+    if (message === null) {
+      el.hidden = true;
+      document.getElementById("content").hidden = false;
+      return;
+    }
+    el.hidden = false;
+    el.textContent = message;
+    document.getElementById("content").hidden = true;
+  }
+
+  function m(value) { return APCtx.num(value) === null ? "–" : APCtx.compact(value, CUR); }
+
+  function kpi(label, value, meta, tone) {
+    return '<div class="card kpi ' + (tone || "") + '">' +
+      '<div class="kpi-label">' + label + "</div>" +
+      '<div class="kpi-value' + (String(value).length > 12 ? " sm" : "") + '">' + value + "</div>" +
+      '<div class="kpi-meta">' + (meta || "&nbsp;") + "</div></div>";
+  }
+
+  /* Seeded demo rows are named "ILLUSTRATIVE DEMO | <Customer> | <Real name>".
+     Show only the meaningful trailing segment; leave any other naming untouched. */
+  function cleanName(value) {
+    var text = String(value || "").trim();
+    if (!/^ILLUSTRATIVE DEMO/i.test(text)) return text;
+    var parts = text.split("|");
+    return parts[parts.length - 1].trim();
+  }
+
+  /* Compact axis label: drop filler words so "Letters of Credit" and
+     "Letters of Guarantee" stay distinguishable at chart scale. */
+  function shortLabel(value) {
+    var words = String(value || "").split(/\s+/).filter(function (word) {
+      return word && !/^(of|and|the|for|&|-|–)$/i.test(word);
+    });
+    return words.slice(0, 2).join(" ") || String(value || "");
+  }
+
+  /* Derive the compliance status from the threshold when it has not been stored explicitly,
+     so the screen still works for covenants created outside the demo seed. */
+  function deriveStatus(covenant) {
+    if (covenant.fsi_covenantstatus && STATUS[covenant.fsi_covenantstatus]) {
+      return STATUS[covenant.fsi_covenantstatus];
+    }
+    var required = APCtx.num(covenant.cr640_committedvalue);
+    var current = APCtx.num(covenant.cr640_currentvalue);
+    if (required === null || current === null) return { text: "Not tested", tone: "mute" };
+    var operator = covenant.fsi_operator;
+    var pass = operator === 100000001 ? current >= required
+      : operator === 100000002 ? current === required
+      : current <= required;
+    if (!pass) return STATUS[100000002];
+    var margin = required ? Math.abs(current - required) / Math.abs(required) * 100 : 100;
+    return margin < 8 ? STATUS[100000001] : STATUS[100000000];
+  }
+
+  function headroom(covenant) {
+    var required = APCtx.num(covenant.cr640_committedvalue);
+    var current = APCtx.num(covenant.cr640_currentvalue);
+    if (required === null || current === null || !required) {
+      return '<span class="muted">–</span>';
+    }
+    var operator = covenant.fsi_operator;
+    var slack = operator === 100000001 ? current - required : required - current;
+    var pct = Math.abs(slack) / Math.abs(required) * 100;
+    var tone = slack < 0 ? "bad" : pct < 8 ? "warn" : "ok";
+    var width = Math.min(100, pct);
+    return '<div class="bar-cell"><div class="bar ' + tone + '">' +
+      '<span style="width:' + width + '%"></span></div>' +
+      '<span class="val">' + (slack < 0 ? "-" : "+") + pct.toFixed(0) + "%</span></div>";
+  }
+
+  function formatValue(value, unit) {
+    var n = APCtx.num(value);
+    if (n === null) return "–";
+    if (unit === "%") return n.toFixed(1) + "%";
+    if (unit === "x") return n.toFixed(2) + "x";
+    var currencyUnit = /^(\w+)\s*m$/i.exec(unit || "");
+    if (currencyUnit) {
+      // Stored in millions of the named currency.
+      return APCtx.compact(n * 1e6, currencyUnit[1]);
+    }
+    return n.toLocaleString();
+  }
+
+  // ---- render ---------------------------------------------------------------
+  function renderRatings(account) {
+    document.getElementById("ratingRow").innerHTML =
+      kpi("Internal credit rating", APCtx.escapeHtml(account.fsi_internal_rating || "–"),
+        "FAB internal scale", "good") +
+      kpi("External rating", APCtx.escapeHtml(account.fsi_external_rating || "–"),
+        [account.fsi_moodysrating && "Moody's " + account.fsi_moodysrating,
+         account.fsi_sprating && "S&P " + account.fsi_sprating,
+         account.fsi_fitchrating && "Fitch " + account.fsi_fitchrating]
+          .filter(Boolean).join(" \u00b7 ") || "&nbsp;") +
+      kpi("DSCR", APCtx.num(account.fsi_dscr) === null ? "–" : APCtx.ratio(account.fsi_dscr),
+        "Debt service coverage",
+        APCtx.num(account.fsi_dscr) !== null && account.fsi_dscr >= 1.5 ? "good" : "warn") +
+      kpi("Leverage ratio",
+        APCtx.num(account.fsi_leverageratio) === null ? "–" : APCtx.ratio(account.fsi_leverageratio),
+        "Debt to total capital");
+  }
+
+  function renderExposure(account, facilities) {
+    var limit = APCtx.num(account.fsi_totallimit) ||
+      facilities.reduce(function (t, f) { return t + (APCtx.num(f.fsi_limit_amount) || 0); }, 0);
+    var used = APCtx.num(account.fsi_totalutilization) ||
+      facilities.reduce(function (t, f) { return t + (APCtx.num(f.fsi_drawn_amount) || 0); }, 0);
+    var available = APCtx.num(account.fsi_availablelimit);
+    if (available === null) available = limit - used;
+    var pct = limit ? used / limit * 100 : null;
+
+    document.getElementById("exposureRow").innerHTML =
+      kpi("Total FAB exposure", m(APCtx.num(account.fsi_total_fab_exposure) || limit),
+        "Approved limits " + m(limit)) +
+      kpi("Utilisation", m(used),
+        pct === null ? "&nbsp;" : APCtx.pct(pct) + " of approved limits",
+        pct === null ? "" : pct >= 90 ? "bad" : pct >= 80 ? "warn" : "good") +
+      kpi("Available headroom", m(available),
+        limit ? APCtx.pct(available / limit * 100) + " undrawn" : "&nbsp;", "good") +
+      kpi("Funded / non-funded",
+        m(account.fsi_totalfundedutilization) + " / " + m(account.fsi_totalnonfundedutilization),
+        "Split of current utilisation");
+
+    var withLimits = facilities.filter(function (f) { return APCtx.num(f.fsi_limit_amount); });
+    if (withLimits.length) {
+      APChart.bars("chartExposure",
+        withLimits.map(function (f) { return shortLabel(cleanName(f.fsi_name)); }),
+        [
+          { label: "Limit", values: withLimits.map(function (f) { return APCtx.num(f.fsi_limit_amount); }),
+            color: APChart.css("--cp-border-strong", "#8ba3bf") },
+          { label: "Drawn", values: withLimits.map(function (f) { return APCtx.num(f.fsi_drawn_amount); }),
+            color: APChart.series(0) }
+        ], { format: m });
+    } else {
+      document.getElementById("chartExposure").innerHTML =
+        '<div class="empty">No facility limits recorded.</div>';
+    }
+  }
+
+  function renderCovenants(covenants) {
+    var counts = { ok: 0, warn: 0, bad: 0, mute: 0 };
+    var rows = covenants.map(function (c) {
+      var status = deriveStatus(c);
+      counts[status.tone] = (counts[status.tone] || 0) + 1;
+      var unit = c.fsi_unit || "";
+      var operator = OPERATOR[c.fsi_operator] || "";
+      return "<tr>" +
+        '<td class="strong">' + APCtx.escapeHtml(cleanName(c.cr640_subject)) + "</td>" +
+        "<td>" + APCtx.escapeHtml(
+          c["cr640_covenanttype@OData.Community.Display.V1.FormattedValue"] || "–") + "</td>" +
+        '<td class="num nowrap">' + operator + " " + formatValue(c.cr640_committedvalue, unit) + "</td>" +
+        '<td class="num strong">' + formatValue(c.cr640_currentvalue, unit) + "</td>" +
+        "<td>" + headroom(c) + "</td>" +
+        '<td class="nowrap">' + APCtx.dateText(c.fsi_lasttesteddate || c.cr640_firstreportingdate) + "</td>" +
+        '<td class="nowrap">' + APCtx.dateText(c.cr640_expirydate) + "</td>" +
+        '<td><span class="pill ' + status.tone + '">' + status.text + "</span></td>" +
+        "</tr>";
+    }).join("");
+
+    document.getElementById("covBody").innerHTML = rows ||
+      '<tr><td colspan="8"><div class="empty">No covenants are recorded for this customer.</div></td></tr>';
+    document.getElementById("covSub").textContent =
+      covenants.length + " covenant" + (covenants.length === 1 ? "" : "s") + " monitored";
+    document.getElementById("covPills").innerHTML =
+      '<span class="pill ok">' + (counts.ok || 0) + " compliant</span>" +
+      '<span class="pill warn">' + (counts.warn || 0) + " watch</span>" +
+      '<span class="pill bad">' + (counts.bad || 0) + " breached</span>";
+  }
+
+  function renderSignals(account) {
+    var signals = [
+      ["Relationship score", account.fsi_relationshipscore,
+        function (v) { return v + " / 100"; }, function (v) { return v >= 80 ? "ok" : v >= 60 ? "warn" : "bad"; }],
+      ["Single obligor headroom", account.fsi_sol_headroom_pct,
+        function (v) { return APCtx.pct(v); }, function (v) { return v >= 30 ? "ok" : v >= 15 ? "warn" : "bad"; }],
+      ["RAROC", account.fsi_raroc_pct,
+        function (v) { return APCtx.pct(v); }, function (v) { return v >= 15 ? "ok" : "warn"; }],
+      ["Net debt", account.fsi_net_debt, m, function () { return "mute"; }],
+      ["EBITDA (YTD)", account.fsi_ebitda_ytd, m, function () { return "mute"; }],
+      ["AML risk", account.fsi_amlrisk, function (v) { return v; },
+        function (v) { return /low/i.test(v) ? "ok" : /high/i.test(v) ? "bad" : "warn"; }],
+      ["KYC status", account.fsi_kycstatus, function (v) { return v; },
+        function (v) { return /complete|current|valid/i.test(v) ? "ok" : "warn"; }],
+      ["NPL status", account.fsi_npl_status, function (v) { return v; },
+        function (v) { return /no|nil|none|performing/i.test(v) ? "ok" : "bad"; }],
+      ["ESG score", account.fsi_esgscore, function (v) { return v; }, function () { return "info"; }]
+    ].filter(function (s) { return s[1] !== null && s[1] !== undefined && s[1] !== ""; });
+
+    document.getElementById("signals").innerHTML = signals.length
+      ? '<table class="data">' + signals.map(function (s) {
+          return "<tr><td>" + s[0] + '</td><td class="num">' +
+            '<span class="pill ' + s[3](s[1]) + '">' + APCtx.escapeHtml(s[2](s[1])) + "</span></td></tr>";
+        }).join("") + "</table>"
+      : '<div class="empty">No credit signals recorded.</div>';
+  }
+
+  function renderCollateral(collateral, account) {
+    document.getElementById("collateralCount").textContent = collateral.length;
+    var host = document.getElementById("collateralBody");
+    if (!collateral.length) {
+      host.innerHTML = '<div class="empty">No collateral records are held against this customer. ' +
+        "Facilities are extended on an unsecured / negative-pledge basis" +
+        (account.fsi_internal_rating ? " consistent with the " + APCtx.escapeHtml(account.fsi_internal_rating) +
+          " internal rating." : ".") + "</div>";
+      return;
+    }
+    host.innerHTML = '<div class="table-wrap"><table class="data"><thead><tr>' +
+      '<th>Security</th><th>Type</th><th class="num">Value</th><th>Status</th>' +
+      "</tr></thead><tbody>" + collateral.map(function (c) {
+        return "<tr><td class=\"strong\">" + APCtx.escapeHtml(c.msfsi_name || "–") + "</td>" +
+          "<td>" + APCtx.escapeHtml(
+            c["msfsi_collateraltype@OData.Community.Display.V1.FormattedValue"] || "–") + "</td>" +
+          '<td class="num">' + m(c.msfsi_value) + "</td>" +
+          '<td><span class="pill ok">Registered</span></td></tr>';
+      }).join("") + "</tbody></table></div>";
+  }
+
+  function renderFacilities(facilities) {
+    document.getElementById("facCount").textContent = facilities.length;
+    document.getElementById("facBody").innerHTML = facilities.length
+      ? facilities.map(function (f) {
+          var limit = APCtx.num(f.fsi_limit_amount) || 0;
+          var drawn = APCtx.num(f.fsi_drawn_amount) || 0;
+          var pct = APCtx.num(f.fsi_utilisation_pct);
+          if (pct === null && limit) pct = drawn / limit * 100;
+          var covenant = f.fsi_covenant_status || "Not tracked";
+          var tone = /compliant|ok/i.test(covenant) ? "ok"
+            : /breach/i.test(covenant) ? "bad" : /watch/i.test(covenant) ? "warn" : "mute";
+          return "<tr>" +
+            '<td class="strong">' + APCtx.escapeHtml(cleanName(f.fsi_name)) +
+              '<div class="tiny muted">' + (FACILITY_TYPE[f.fsi_facility_type] || "") + "</div></td>" +
+            '<td class="num">' + (limit ? m(limit) : "n/a") + "</td>" +
+            '<td class="num">' + (drawn ? m(drawn) : "–") + "</td>" +
+            "<td>" + (pct === null ? '<span class="muted">–</span>' :
+              '<div class="bar-cell"><div class="bar ' +
+              (pct >= 95 ? "bad" : pct >= 80 ? "warn" : "ok") + '"><span style="width:' +
+              Math.min(100, pct) + '%"></span></div><span class="val">' + pct.toFixed(0) + "%</span></div>") + "</td>" +
+            '<td class="nowrap">' + APCtx.dateText(f.fsi_maturity_date) + "</td>" +
+            '<td><span class="pill ' + tone + '">' + APCtx.escapeHtml(covenant) + "</span></td>" +
+            "</tr>";
+        }).join("")
+      : '<tr><td colspan="6"><div class="empty">No facilities recorded.</div></td></tr>';
+  }
+
+  // ---- load -----------------------------------------------------------------
+  APCtx.resolve().then(function (scope) {
+    document.getElementById("pgTitle").textContent =
+      (scope.accountName || "Customer") + " \u2014 Covenants & Credit";
+
+    var account = APCtx.record(scope, "accounts", scope.accountId,
+      "$select=name,fsi_internal_rating,fsi_external_rating,fsi_moodysrating,fsi_sprating," +
+      "fsi_fitchrating,fsi_dscr,fsi_leverageratio,fsi_total_fab_exposure,fsi_totallimit," +
+      "fsi_totalutilization,fsi_availablelimit,fsi_totalfundedutilization," +
+      "fsi_totalnonfundedutilization,fsi_relationshipscore,fsi_sol_headroom_pct,fsi_raroc_pct," +
+      "fsi_net_debt,fsi_ebitda_ytd,fsi_amlrisk,fsi_kycstatus,fsi_npl_status,fsi_esgscore");
+
+    var covenants = APCtx.query(scope, "cr640_covenants",
+      "$select=cr640_covenantid,cr640_subject,cr640_covenanttype,cr640_committedvalue," +
+      "cr640_currentvalue,cr640_firstreportingdate,cr640_expirydate,cr640_duedays," +
+      "fsi_covenantstatus,fsi_operator,fsi_lasttesteddate,fsi_unit" +
+      "&$filter=_cr640_account_value eq " + scope.accountId + "&$orderby=cr640_subject asc");
+
+    var facilities = APCtx.query(scope, "fsi_facilities",
+      "$select=fsi_facilityid,fsi_name,fsi_facility_type,fsi_limit_amount,fsi_drawn_amount," +
+      "fsi_utilisation_pct,fsi_maturity_date,fsi_covenant_status" +
+      "&$filter=_fsi_account_value eq " + scope.accountId);
+
+    var collateral = APCtx.query(scope, "msfsi_collaterals",
+      "$select=msfsi_collateralid,msfsi_name,msfsi_collateraltype,msfsi_value&$top=25");
+
+    return Promise.all([account, covenants, facilities, collateral]).then(function (results) {
+      var acct = results[0];
+      if (!acct) { show("The customer account record could not be read."); return; }
+      renderRatings(acct);
+      renderExposure(acct, results[2]);
+      renderCovenants(results[1]);
+      renderSignals(acct);
+      renderCollateral(results[3], acct);
+      renderFacilities(results[2]);
+      show(null);
+    });
+  }).catch(function (error) {
+    console.error("[CovenantsCredit]", error);
+    show(error && error.message ? error.message : "Unable to load covenants and credit.");
+  });
+}());
+
+</script>
+</body>
+</html>

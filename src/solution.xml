@@ -1,0 +1,235 @@
+<ImportExportXml version="9.2.26083.162" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26083.162" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26083.00162">
+  <SolutionManifest>
+    <UniqueName>CorporateAccountPlanning</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Corporate Banking - Account Planning" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Corporate Banking Account Plan: a 19-tab strategic account planning experience built on Dataverse with HTML web resources. Packaging solution - no functional changes." languagecode="1033" />
+    </Descriptions>
+    <Version>1.0.0.0</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>fsi</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="FSI" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description description="FSI Client 360 publisher" languagecode="1033" />
+      </Descriptions>
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>fsi</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>10000</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+        <Address>
+          <AddressNumber>2</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="1" schemaName="account" behavior="1" />
+      <RootComponent type="1" schemaName="contact" behavior="1" />
+      <RootComponent type="1" schemaName="cr640_covenant" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_accountplanning" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_accountplanprocess" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_borrowerentity" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_companyfinancial" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_coverageteammember" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_crosssellproduct" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_deposit" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_facility" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_informationrequest" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_informationrequesttemplate" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_limitsandutilization" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_relationshipeconomics" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_shareofwallet" behavior="0" />
+      <RootComponent type="1" schemaName="fsi_stakeholdercoverage" behavior="0" />
+      <RootComponent type="1" schemaName="opportunity" behavior="1" />
+      <RootComponent type="9" schemaName="fsi_tenor" behavior="0" />
+      <RootComponent type="29" id="{6110b1da-d4fc-f011-8406-7ced8d126732}" behavior="0" />
+      <RootComponent type="29" id="{6887a634-5bb0-f111-aaac-3833c5c081a5}" behavior="0" />
+      <RootComponent type="61" schemaName="cr640_loadReportIframe" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_AccountPlanSummaryHostv1.js" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_AccountPlanSummaryv2" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APClientFinancials" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APCovenantsCredit" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APCoverageTeamCollabV2" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APGroupHierarchy" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APProductsHoldings" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APRelationshipEconomics" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APServiceComplaints" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_GlobalTeamInbox" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_GlobalTeamInputs" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_InformationRequestForm" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_LimitUtilizationLive" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_Pricing" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_RequestInformation" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_RiskRegister" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_SalesPipeline" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_shareofwallet" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_StakeholderHostv1.js" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_StakeholdermgmtV2" behavior="0" />
+      <RootComponent type="62" schemaName="fsi_AccountPlanning" behavior="0" />
+      <RootComponent type="66" schemaName="fsi_FSI.PipelineDealTracker" behavior="0" />
+      <RootComponent type="80" schemaName="fsi_AccountPlanning" behavior="0" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="1" schemaName="incident" displayName="Case" solution="msdynce_Service (9.0.5.56)">
+          <package appName="msdynce_Service" version="9.0.26081.1004">msdynce_ServiceAnchor (9.0.26081.1004)</package>
+        </Required>
+        <Dependent type="1" schemaName="fsi_limitsandutilization" displayName="Limits and Utilization" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="lead" displayName="Lead" solution="msdynce_LeadManagement (9.0.4.0066)">
+          <package appName="msdynce_LeadManagement" version="9.0.26083.10001">msdynce_LeadManagementAnchor (9.0.26083.10001)</package>
+        </Required>
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="opportunity" displayName="Opportunity" solution="msdynce_Sales (9.0.4.0076)">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="1" schemaName="opportunity" displayName="Opportunity" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="26" schemaName="Recent Opportunities" displayName="Recent Opportunities" parentSchemaName="opportunity" parentDisplayName="Opportunity" solution="msdynce_Sales (9.0.4.0076)" id="{9c3f7ee8-eca7-e211-9fb6-00155dd0ea05}">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="26" schemaName="All Opportunities" displayName="All Opportunities" parentSchemaName="opportunity" parentDisplayName="Opportunity" solution="msdynce_Sales (9.0.4.0076)" id="{c6f6fc1b-1b3e-e711-80e1-00155d871bb4}">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Management" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{11f80815-6d73-e511-8103-c4346bb5981c}" />
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Performance Dashboard" solution="msdynce_Sales (9.0.4.0076)" id="{25b754f5-7563-df11-ae90-00155d2e3002}">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Overview Dashboard" solution="msdynce_Sales (9.0.4.0076)" id="{3b5d39a7-b216-e711-80d8-00155d896f83}">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Rep Social" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{b83be9b8-3470-4158-a5f4-481d5aacc57c}" />
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Management Social" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{e59ba2a3-afac-4c0a-af37-0b6c4e817318}" />
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="60" displayName="Sales Performance Overview Dashboard" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{f47ab525-45ba-48c7-aeaa-82b1b074aa4b}" />
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="61" schemaName="msdyn_/Images/AppModule_Default_Icon.png" displayName="msdyn_/Images/AppModule_Default_Icon.png" solution="AppModuleWebResources (2.5)" />
+        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="66" schemaName="MscrmControls.AcceleratedSales.CadenceWidgetControl" displayName="MscrmControls.AcceleratedSales.CadenceWidgetControl" solution="msdyn_acceleratedsales (9.1.26081.10002)">
+          <package appName="Dynamics 365 Sales Insights" version="9.0.21031.11010">SalesInsightsAddOn (9.0.21031.11010)</package>
+          <package appName="msdynce_SalesInsights" version="9.0.26083.10005">msdynce_SalesInsightsAnchor (9.0.26083.10005)</package>
+          <package appName="msdyn_AcceleratedSales" version="9.1.26081.10002">msdyn_AcceleratedSalesAnchor (9.1.26081.10002)</package>
+        </Required>
+        <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="66" schemaName="MscrmControls.Sales.AppExtensions.KanBanView" displayName="MscrmControls.Sales.AppExtensions.KanBanView" solution="msdynce_SalesPatch202001 (9.0.26083.10006)">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="66" schemaName="MscrmControls.Sales.DealManagerWorkspace.DealManagerWorkspace" displayName="MscrmControls.Sales.DealManagerWorkspace.DealManagerWorkspace" solution="msdynce_DealManager (9.0.260804.10015)">
+          <package appName="msdynce_SalesInsights" version="9.0.26083.10005">msdynce_SalesInsightsAnchor (9.0.26083.10005)</package>
+        </Required>
+        <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="AppChannel" solution="msdyn_AppFrameworkInfraExtensions (1.0.0.19)" id.uniquename="AppChannel">
+          <package appName="PowerAppsAppFramework Package" version="1.0.0.25">PowerAppsAppFramework_Anchor (1.0.0.25)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=fsi_AccountPlanning,settingdefinitionid.uniquename=AppChannel" id.parentappmoduleid.uniquename="fsi_AccountPlanning" id.settingdefinitionid.uniquename="AppChannel" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="appcopilotenabled" solution="msdyn_AppCopilotAppInfraSettings (9.2.2026074.260721068)" id.uniquename="appcopilotenabled">
+          <package appName="PowerAppsAppCopilotApp Package" version="9.2.0.1">PowerAppsAppCopilotApp_Anchor (9.2.0.1)</package>
+          <package appName="PowerAppsAppCopilotApp Package" version="1.0.0.2">msdyn_SuggestedAction (1.0.0.2)</package>
+          <package appName="PowerAppsAppCopilotApp Package" version="9.2.0.5">msdyn_M365CopilotAppInfraSettings (9.2.0.5)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=fsi_AccountPlanning,settingdefinitionid.uniquename=appcopilotenabled" id.parentappmoduleid.uniquename="fsi_AccountPlanning" id.settingdefinitionid.uniquename="appcopilotenabled" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="SettingDefinition" displayName="msdyn_DefaultAgentEnvVarSchemaName" solution="msdyn_M365CopilotAppInfraSettings (9.2.0.5)" id.uniquename="msdyn_DefaultAgentEnvVarSchemaName">
+          <package appName="PowerAppsAppCopilotApp Package" version="9.2.0.5">msdyn_M365CopilotAppInfraSettings (9.2.0.5)</package>
+        </Required>
+        <Dependent type="AppSetting" displayName="parentappmoduleid.uniquename=fsi_AccountPlanning,settingdefinitionid.uniquename=msdyn_DefaultAgentEnvVarSchemaName" id.parentappmoduleid.uniquename="fsi_AccountPlanning" id.settingdefinitionid.uniquename="msdyn_DefaultAgentEnvVarSchemaName" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>

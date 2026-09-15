@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Information Request</title>
+<style>/* FAB Global Team Requests — shared design system */
+*, *::before, *::after { box-sizing: border-box; }
+:root{
+  --ink:#0f172a; --ink2:#334155; --muted:#64748b; --muted2:#94a3b8;
+  --line:#e2e8f0; --line2:#cbd5e1; --bg:#f8fafc; --card:#ffffff;
+  --brand:#1e40af; --brand2:#2563eb; --brand-soft:#eff6ff;
+  --ok:#059669; --ok-soft:#ecfdf5; --warn:#d97706; --warn-soft:#fffbeb;
+  --danger:#dc2626; --danger-soft:#fef2f2; --info:#0891b2; --info-soft:#ecfeff;
+  --purple:#7c3aed; --purple-soft:#f5f3ff;
+  --r:14px; --r-sm:10px; --r-lg:18px;
+  --sh:0 1px 2px rgba(15,23,42,.06), 0 8px 24px rgba(15,23,42,.06);
+  --sh-lg:0 10px 40px rgba(15,23,42,.14);
+}
+body{ margin:0; font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+      color:var(--ink); background:var(--bg); font-size:13px; line-height:1.5; }
+.wrap{ padding:18px 20px 28px; max-width:1500px; margin:0 auto; }
+h1,h2,h3,h4{ margin:0; font-weight:650; letter-spacing:-.01em; }
+
+/* ---------- surface ---------- */
+.card{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--sh); }
+.card-pad{ padding:18px 20px; }
+.section-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+.section-title{ font-size:15px; font-weight:700; display:flex; align-items:center; gap:9px; }
+.section-title .dot{ width:8px; height:8px; border-radius:99px; background:var(--brand2); flex:none; }
+.section-sub{ font-size:12px; color:var(--muted); margin-top:3px; }
+
+/* ---------- KPI ---------- */
+.kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:18px; }
+.kpi{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px;
+      box-shadow:var(--sh); position:relative; overflow:hidden; }
+.kpi::after{ content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent,var(--brand2)); }
+.kpi .k-lbl{ font-size:11px; font-weight:650; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.kpi .k-val{ font-size:28px; font-weight:700; line-height:1.15; margin-top:6px; letter-spacing:-.02em; }
+.kpi .k-sub{ font-size:11px; color:var(--muted2); margin-top:2px; }
+
+/* ---------- badges ---------- */
+.badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:650;
+        padding:3px 9px; border-radius:99px; border:1px solid transparent; white-space:nowrap; }
+.badge .bdot{ width:6px; height:6px; border-radius:99px; background:currentColor; flex:none; }
+.b-draft{ background:#f1f5f9; color:#475569; border-color:#e2e8f0; }
+.b-sent{ background:var(--brand-soft); color:var(--brand); border-color:#bfdbfe; }
+.b-prog{ background:var(--warn-soft); color:#b45309; border-color:#fde68a; }
+.b-subm{ background:var(--ok-soft); color:#047857; border-color:#a7f3d0; }
+.b-closed{ background:#f1f5f9; color:#64748b; border-color:#e2e8f0; }
+.b-over{ background:var(--danger-soft); color:var(--danger); border-color:#fecaca; }
+.b-soft{ background:var(--info-soft); color:#0e7490; border-color:#a5f3fc; }
+.b-req{ background:var(--danger-soft); color:var(--danger); border-color:#fecaca; }
+
+/* ---------- buttons ---------- */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; font-family:inherit;
+      font-size:12.5px; font-weight:650; padding:8px 15px; border-radius:var(--r-sm); cursor:pointer;
+      border:1px solid var(--line2); background:#fff; color:var(--ink2); transition:.14s; white-space:nowrap; }
+.btn:hover{ background:#f8fafc; border-color:var(--muted2); }
+.btn:active{ transform:translateY(1px); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+.btn-primary{ background:var(--brand); border-color:var(--brand); color:#fff; box-shadow:0 1px 2px rgba(30,64,175,.3); }
+.btn-primary:hover{ background:#1d4ed8; border-color:#1d4ed8; }
+.btn-ok{ background:var(--ok); border-color:var(--ok); color:#fff; }
+.btn-ok:hover{ background:#047857; border-color:#047857; }
+.btn-ghost{ background:transparent; border-color:transparent; color:var(--brand); }
+.btn-ghost:hover{ background:var(--brand-soft); border-color:transparent; }
+.btn-danger{ background:#fff; border-color:#fecaca; color:var(--danger); }
+.btn-danger:hover{ background:var(--danger-soft); }
+.btn-sm{ font-size:11.5px; padding:5px 11px; }
+.btn-lg{ font-size:13.5px; padding:11px 22px; }
+.btn-ai{ background:linear-gradient(135deg,#7c3aed,#2563eb); border-color:transparent; color:#fff;
+         box-shadow:0 2px 10px rgba(124,58,237,.34); }
+.btn-ai:hover{ filter:brightness(1.07); }
+
+/* ---------- table ---------- */
+.tbl{ width:100%; border-collapse:separate; border-spacing:0; font-size:12.5px; }
+.tbl th{ text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+         color:var(--muted); padding:9px 12px; border-bottom:1px solid var(--line); background:#fbfcfe; white-space:nowrap; }
+.tbl td{ padding:11px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+.tbl tbody tr:hover{ background:#f8fbff; }
+.tbl tbody tr{ cursor:pointer; }
+.tbl .t-title{ font-weight:650; color:var(--brand); }
+.tbl .t-title:hover{ text-decoration:underline; }
+
+/* ---------- gallery cards ---------- */
+.gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:14px; }
+.tcard{ background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:16px;
+        cursor:pointer; transition:.16s; position:relative; overflow:hidden; display:flex; flex-direction:column; gap:9px; }
+.tcard::before{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--accent,var(--brand2)); }
+.tcard:hover{ transform:translateY(-3px); box-shadow:var(--sh-lg); border-color:var(--line2); }
+.tcard.sel{ border-color:var(--brand2); box-shadow:0 0 0 3px var(--brand-soft); }
+.tcard .ticon{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+               background:var(--accent-soft,#eff6ff); color:var(--accent,var(--brand2)); flex:none; }
+.tcard .tname{ font-size:13.5px; font-weight:700; line-height:1.3; }
+.tcard .tdesc{ font-size:11.5px; color:var(--muted); line-height:1.45; flex:1; }
+.tcard .tmeta{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:10.5px; color:var(--muted2); }
+
+/* choice chips */
+.chips{ display:flex; gap:7px; flex-wrap:wrap; }
+.chip{ font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:99px; border:1px solid var(--line2);
+       background:#fff; color:var(--ink2); cursor:pointer; transition:.14s; }
+.chip:hover{ border-color:var(--brand2); color:var(--brand); }
+.chip.on{ background:var(--brand); border-color:var(--brand); color:#fff; }
+
+/* ---------- forms ---------- */
+.fgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px 18px; }
+.f-full{ grid-column:1/-1; }
+.fld label.flbl{ display:block; font-size:12px; font-weight:650; color:var(--ink2); margin-bottom:5px; }
+.fld .fhelp{ font-size:11px; color:var(--muted); margin-top:4px; line-height:1.4; }
+.fld .ferr{ font-size:11px; color:var(--danger); margin-top:4px; font-weight:600; display:none; }
+.fld.invalid .ferr{ display:block; }
+.fld.invalid input,.fld.invalid textarea,.fld.invalid select{ border-color:#fca5a5; background:#fffbfb; }
+.req-star{ color:var(--danger); margin-left:3px; }
+input[type=text],input[type=number],input[type=date],textarea,select{
+  width:100%; font-family:inherit; font-size:12.5px; color:var(--ink); background:#fff;
+  border:1px solid var(--line2); border-radius:var(--r-sm); padding:8px 11px; transition:.14s; }
+input:focus,textarea:focus,select:focus{ outline:none; border-color:var(--brand2); box-shadow:0 0 0 3px var(--brand-soft); }
+input:disabled,textarea:disabled,select:disabled{ background:#f8fafc; color:var(--ink2); cursor:default; }
+textarea{ resize:vertical; min-height:74px; line-height:1.55; }
+.inp-affix{ position:relative; }
+.inp-affix .affix{ position:absolute; top:50%; transform:translateY(-50%); font-size:11.5px;
+                   font-weight:650; color:var(--muted); pointer-events:none; }
+.inp-affix.pre .affix{ left:11px; } .inp-affix.pre input{ padding-left:42px; }
+.inp-affix.post .affix{ right:11px; } .inp-affix.post input{ padding-right:30px; }
+
+/* toggle */
+.tgl{ display:inline-flex; align-items:center; gap:9px; cursor:pointer; user-select:none; }
+.tgl input{ display:none; }
+.tgl .track{ width:40px; height:22px; border-radius:99px; background:#cbd5e1; position:relative; transition:.18s; flex:none; }
+.tgl .track::after{ content:""; position:absolute; top:2px; left:2px; width:18px; height:18px;
+                    border-radius:99px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:.18s; }
+.tgl input:checked + .track{ background:var(--ok); }
+.tgl input:checked + .track::after{ transform:translateX(18px); }
+.tgl .tlbl{ font-size:12.5px; font-weight:600; color:var(--ink2); }
+
+/* multiselect */
+.msel{ display:flex; flex-wrap:wrap; gap:7px; }
+.msel .ms{ font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:99px;
+           border:1px solid var(--line2); background:#fff; color:var(--ink2); cursor:pointer; transition:.14s; }
+.msel .ms:hover{ border-color:var(--brand2); }
+.msel .ms.on{ background:var(--brand-soft); border-color:var(--brand2); color:var(--brand); }
+.msel .ms.on::before{ content:"✓ "; font-weight:800; }
+
+/* questionnaire section */
+.qsec{ border:1px solid var(--line); border-radius:var(--r); margin-bottom:14px; background:#fff; overflow:hidden; }
+.qsec > .qhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+                padding:12px 16px; background:linear-gradient(180deg,#fbfcfe,#f6f8fc); border-bottom:1px solid var(--line); }
+.qsec .qnum{ width:22px; height:22px; border-radius:7px; background:var(--brand); color:#fff;
+             font-size:11px; font-weight:700; display:grid; place-items:center; flex:none; }
+.qsec .qtitle{ font-size:13px; font-weight:700; display:flex; align-items:center; gap:9px; }
+.qsec .qbody{ padding:16px; }
+.qsec .qdesc{ font-size:11.5px; color:var(--muted); padding:0 16px 0; margin-top:10px; }
+
+/* ---------- header / hero ---------- */
+.hero{ background:linear-gradient(135deg,#0f2a6b 0%,#1e40af 55%,#2563eb 100%); color:#fff;
+       border-radius:var(--r-lg); padding:20px 24px; margin-bottom:18px; box-shadow:var(--sh); }
+.hero h1{ font-size:19px; font-weight:700; letter-spacing:-.02em; }
+.hero .hsub{ font-size:12.5px; opacity:.85; margin-top:5px; }
+.hero .hmeta{ display:flex; gap:22px; flex-wrap:wrap; margin-top:16px; }
+.hero .hm .hm-l{ font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; opacity:.7; font-weight:650; }
+.hero .hm .hm-v{ font-size:13px; font-weight:650; margin-top:3px; }
+
+/* ---------- misc ---------- */
+.empty{ text-align:center; padding:46px 20px; color:var(--muted); }
+.empty .e-ico{ font-size:34px; opacity:.35; margin-bottom:10px; }
+.empty .e-t{ font-size:13.5px; font-weight:650; color:var(--ink2); }
+.empty .e-s{ font-size:12px; margin-top:5px; }
+.spin{ width:16px; height:16px; border:2px solid rgba(255,255,255,.35); border-top-color:#fff;
+       border-radius:99px; animation:sp .7s linear infinite; display:inline-block; }
+.spin.dark{ border-color:rgba(37,99,235,.25); border-top-color:var(--brand2); }
+@keyframes sp{ to{ transform:rotate(360deg);} }
+.toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(90px);
+        background:var(--ink); color:#fff; font-size:12.5px; font-weight:600; padding:11px 20px;
+        border-radius:99px; box-shadow:var(--sh-lg); z-index:9999; transition:.28s; opacity:0; }
+.toast.on{ transform:translateX(-50%) translateY(0); opacity:1; }
+.toast.err{ background:var(--danger); }
+.toast.ok{ background:var(--ok); }
+.divider{ height:1px; background:var(--line); margin:16px 0; }
+.row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.grow{ flex:1; }
+.muted{ color:var(--muted); }
+.mini{ font-size:11px; }
+.ai-note{ background:linear-gradient(135deg,var(--purple-soft),var(--brand-soft)); border:1px solid #ddd6fe;
+          border-radius:var(--r); padding:14px 16px; }
+.ai-note .ai-h{ font-size:12px; font-weight:700; color:var(--purple); display:flex; align-items:center; gap:7px; }
+.ai-sum{ background:linear-gradient(135deg,#faf5ff,#eff6ff); border:1px solid #e9d5ff; border-radius:var(--r);
+         padding:16px 18px; font-size:13px; line-height:1.65; color:var(--ink2); white-space:pre-wrap; }
+.scroll{ overflow:auto; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+  .wrap{ padding:16px 20px 88px; max-width:1200px; }
+  .bar{ position:fixed; left:0; right:0; bottom:0; background:rgba(255,255,255,.94); backdrop-filter:blur(8px);
+        border-top:1px solid var(--line); padding:11px 22px; display:flex; align-items:center; gap:10px; z-index:50; }
+  .hidden{ display:none !important; }
+  .lockbar{ background:var(--ok-soft); border:1px solid #a7f3d0; color:#047857; border-radius:var(--r);
+            padding:11px 15px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .modal{ position:fixed; inset:0; background:rgba(15,23,42,.45); display:grid; place-items:center; z-index:200; padding:20px; }
+  .modal .mbox{ background:#fff; border-radius:var(--r-lg); box-shadow:var(--sh-lg); width:100%; max-width:520px; padding:22px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="root">
+  <div class="empty"><div class="e-ico"><span class="spin dark"></span></div><div class="e-t">Loading request…</div></div>
+</div>
+<div class="bar hidden" id="bar"></div>
+
+<script>/* FAB Global Team Requests — shared runtime (Dataverse access + questionnaire renderer) */
+(function (G) {
+  "use strict";
+
+  /* ============================ Xrm / Dataverse ============================ */
+  function xrm() {
+    try { if (window.Xrm && window.Xrm.Utility) return window.Xrm; } catch (e) {}
+    try { if (parent && parent.Xrm && parent.Xrm.Utility) return parent.Xrm; } catch (e) {}
+    try { if (parent && parent.parent && parent.parent.Xrm) return parent.parent.Xrm; } catch (e) {}
+    return null;
+  }
+  function clientUrl() {
+    var X = xrm();
+    try { return X.Utility.getGlobalContext().getClientUrl(); } catch (e) {}
+    return window.location.origin;
+  }
+  var API = function () { return clientUrl() + "/api/data/v9.2/"; };
+
+  function dvFetch(path, opts) {
+    opts = opts || {};
+    var url = /^https?:/i.test(path) ? path : API() + path;
+    var h = {
+      "Accept": "application/json",
+      "OData-MaxVersion": "4.0",
+      "OData-Version": "4.0",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+    var method = opts.method || "GET";
+    if (opts.prefer) h["Prefer"] = opts.prefer;
+    else if (method === "GET") h["Prefer"] = 'odata.include-annotations="*"';
+    if (opts.headers) for (var k in opts.headers) h[k] = opts.headers[k];
+    return fetch(url, {
+      method: method,
+      headers: h,
+      credentials: "same-origin",
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.text().then(function (t) {
+          var msg = t;
+          try { msg = (JSON.parse(t).error || {}).message || t; } catch (e) {}
+          var err = new Error(msg || ("HTTP " + r.status));
+          err.status = r.status;
+          throw err;
+        });
+      }
+      var id = r.headers.get("OData-EntityId") || "";
+      if (r.status === 204) return { _entityId: idFrom(id) };
+      return r.text().then(function (t) {
+        var j = t ? JSON.parse(t) : {};
+        if (id) j._entityId = idFrom(id);
+        return j;
+      });
+    });
+  }
+  function idFrom(h) { var m = /\(([0-9a-f-]{36})\)/i.exec(h || ""); return m ? m[1] : null; }
+
+  var DV = {
+    fetch: dvFetch,
+    retrieveMultiple: function (set, query) {
+      return dvFetch(set + (query || "")).then(function (r) { return r.value || []; });
+    },
+    retrieve: function (set, id, query) { return dvFetch(set + "(" + id + ")" + (query || "")); },
+    create: function (set, data) {
+      return dvFetch(set, { method: "POST", body: data }).then(function (r) { return r._entityId; });
+    },
+    update: function (set, id, data) {
+      return dvFetch(set + "(" + id + ")", { method: "PATCH", body: data });
+    },
+    whoAmI: function () { return dvFetch("WhoAmI"); },
+    esc: function (s) { return String(s == null ? "" : s).replace(/'/g, "''"); }
+  };
+
+  /* ============================ utils ============================ */
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function el(html) { var d = document.createElement("div"); d.innerHTML = html.trim(); return d.firstElementChild; }
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  function fmtDate(v) {
+    if (!v) return "—";
+    var d = new Date(v); if (isNaN(d)) return "—";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  function fmtDateTime(v) {
+    if (!v) return "—";
+    var d = new Date(v); if (isNaN(d)) return "—";
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) +
+      " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
+  function toISODate(v) {
+    if (!v) return null;
+    var d = new Date(v); if (isNaN(d)) return null;
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function fmtMoney(n) {
+    if (n === null || n === undefined || n === "" || isNaN(n)) return "—";
+    var v = Number(n);
+    if (Math.abs(v) >= 1e9) return (v / 1e9).toFixed(2).replace(/\.00$/, "") + "bn";
+    if (Math.abs(v) >= 1e6) return (v / 1e6).toFixed(2).replace(/\.00$/, "") + "m";
+    if (Math.abs(v) >= 1e3) return (v / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+    return String(v);
+  }
+  function daysUntil(v) {
+    if (!v) return null;
+    var d = new Date(v); if (isNaN(d)) return null;
+    var t = new Date(); t.setHours(0, 0, 0, 0); d.setHours(0, 0, 0, 0);
+    return Math.round((d - t) / 86400000);
+  }
+  function uid(p) { return (p || "f") + "_" + Math.random().toString(36).slice(2, 9); }
+
+  function toast(msg, kind, ms) {
+    var t = $("#gtiToast");
+    if (!t) { t = el('<div id="gtiToast" class="toast"></div>'); document.body.appendChild(t); }
+    t.className = "toast " + (kind || "");
+    t.textContent = msg;
+    requestAnimationFrame(function () { t.classList.add("on"); });
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.classList.remove("on"); }, ms || 3200);
+  }
+
+  /* ============================ choice maps ============================ */
+  var CATEGORY = {
+    10000: "Country Coverage", 10001: "Sector Coverage", 10002: "Global Markets",
+    10003: "Transaction Banking", 10004: "Lending", 10005: "Credit / Risk",
+    10006: "Trade Finance", 10007: "DCM / ECM", 10008: "Relationship Management", 10009: "Other"
+  };
+  var TEAMTYPE = {};
+  Object.keys(CATEGORY).forEach(function (k) { TEAMTYPE[Number(k) + 100] = CATEGORY[k]; });
+
+  var STATUS = { 10200: "Draft", 10201: "Sent", 10202: "In Progress", 10203: "Submitted", 10204: "Closed" };
+  var STATUS_V = { Draft: 10200, Sent: 10201, "In Progress": 10202, Submitted: 10203, Closed: 10204 };
+  var STATUS_CLS = { 10200: "b-draft", 10201: "b-sent", 10202: "b-prog", 10203: "b-subm", 10204: "b-closed" };
+
+  /* team name -> Dataverse team record name (created in this environment) */
+  var TEAM_FOR_TYPE = {
+    "Country Coverage": "Country Coverage",
+    "Sector Coverage": "Sector Coverage",
+    "Global Markets": "Global Markets",
+    "Transaction Banking": "Transaction Banking",
+    "Lending": "Country Coverage",
+    "Credit / Risk": "Credit & Risk",
+    "Trade Finance": "Trade Finance",
+    "DCM / ECM": "DCM / ECM",
+    "Relationship Management": "Sector Coverage",
+    "Other": "Sector Coverage"
+  };
+
+  function statusBadge(v) {
+    var lbl = STATUS[v] || "Draft";
+    return '<span class="badge ' + (STATUS_CLS[v] || "b-draft") + '"><span class="bdot"></span>' + esc(lbl) + "</span>";
+  }
+
+  /* ============================ icons ============================ */
+  var ICONS = {
+    globe: '<path d="M12 2a10 10 0 100 20 10 10 0 000-20zM2 12h20M12 2c3 3.5 3 16.5 0 20M12 2c-3 3.5-3 16.5 0 20"/>',
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',
+    banknote: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>',
+    trending: '<path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/>',
+    wallet: '<path d="M3 7a2 2 0 012-2h13a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M16 12h3"/>',
+    ship: '<path d="M3 17l2-6h14l2 6"/><path d="M12 11V4M5 11V8h14v3"/><path d="M2 20c2 0 2 1.5 4 1.5S10 20 12 20s2 1.5 4 1.5S20 20 22 20"/>',
+    shield: '<path d="M12 2l8 3.5v6c0 5-3.5 9-8 10.5C7.5 20.5 4 16.5 4 11.5v-6z"/>',
+    chart: '<path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="7"/><rect x="10.5" y="6" width="3.5" height="12"/><rect x="16" y="13" width="3.5" height="5"/>',
+    sitemap: '<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v5M5 16v-2h14v2"/>',
+    users: '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.3 2.9-5.5 6.5-5.5s6.5 2.2 6.5 5.5"/><path d="M16 5.5a3.2 3.2 0 010 6"/><path d="M18 14.8c2 .7 3.5 2.4 3.5 5.2"/>',
+    swords: '<path d="M4 4l9 9M20 4l-9 9"/><path d="M13 13l4 4-2 2-4-4M11 13l-4 4 2 2 4-4"/>',
+    funnel: '<path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>',
+    sparkle: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+    blank: '<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/>',
+    inbox: '<path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M4.5 5.5h15l1.5 7.5v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5z"/>',
+    check: '<path d="M20 6L9 17l-5-5"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+    alert: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5h.01"/>',
+    back: '<path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',
+    save: '<path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+    grip: '<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/>'
+  };
+  function icon(name, size, sw) {
+    var p = ICONS[name] || ICONS.blank;
+    return '<svg width="' + (size || 18) + '" height="' + (size || 18) + '" viewBox="0 0 24 24" fill="none" ' +
+      'stroke="currentColor" stroke-width="' + (sw || 1.7) + '" stroke-linecap="round" stroke-linejoin="round">' + p + "</svg>";
+  }
+
+  /* ============================ questionnaire schema ============================ */
+  var FIELD_TYPES = [
+    { v: "text", l: "Single line text" },
+    { v: "multiline", l: "Multi-line text" },
+    { v: "number", l: "Number" },
+    { v: "currency", l: "Currency" },
+    { v: "percentage", l: "Percentage" },
+    { v: "date", l: "Date" },
+    { v: "boolean", l: "Yes / No" },
+    { v: "choice", l: "Choice (single)" },
+    { v: "multiselect", l: "Multi-select" }
+  ];
+  var TYPE_ALIAS = {
+    string: "text", singleline: "text", textarea: "multiline", memo: "multiline", longtext: "multiline",
+    money: "currency", decimal: "number", int: "number", integer: "number", float: "number",
+    percent: "percentage", "yes/no": "boolean", yesno: "boolean", bool: "boolean", toggle: "boolean",
+    datetime: "date", select: "choice", dropdown: "choice", option: "choice", optionset: "choice",
+    picklist: "choice", multichoice: "multiselect", multiselectchoice: "multiselect", checkboxes: "multiselect"
+  };
+
+  /** Normalise/repair an arbitrary form-JSON object into the supported schema. */
+  function normalizeForm(raw, fallbackTitle) {
+    var f = raw;
+    if (typeof f === "string") { try { f = JSON.parse(f); } catch (e) { f = null; } }
+    if (!f || typeof f !== "object") f = {};
+    var out = {
+      title: String(f.title || fallbackTitle || "Information Request").slice(0, 200),
+      description: String(f.description || ""),
+      schemaVersion: "1.0",
+      sections: []
+    };
+    var secs = Array.isArray(f.sections) ? f.sections : [];
+    if (!secs.length && Array.isArray(f.fields)) secs = [{ title: "Details", fields: f.fields }];
+    var seen = {};
+    secs.forEach(function (s, si) {
+      if (!s || typeof s !== "object") return;
+      var sec = { title: String(s.title || ("Section " + (si + 1))), fields: [] };
+      if (s.description) sec.description = String(s.description);
+      (Array.isArray(s.fields) ? s.fields : []).forEach(function (fl, fi) {
+        if (!fl || typeof fl !== "object") return;
+        var t = String(fl.type || "text").toLowerCase().trim();
+        t = TYPE_ALIAS[t] || t;
+        if (!FIELD_TYPES.some(function (x) { return x.v === t; })) t = "text";
+        var id = String(fl.id || fl.name || "").replace(/[^A-Za-z0-9_]/g, "");
+        if (!id) id = "f" + si + "_" + fi;
+        while (seen[id]) id = id + "_";
+        seen[id] = 1;
+        var nf = {
+          id: id,
+          label: String(fl.label || fl.title || id),
+          type: t,
+          required: !!fl.required
+        };
+        if (fl.help || fl.helpText || fl.description) nf.help = String(fl.help || fl.helpText || fl.description);
+        if (t === "choice" || t === "multiselect") {
+          var o = fl.options || fl.choices || [];
+          if (!Array.isArray(o)) o = [];
+          nf.options = o.map(function (x) {
+            return typeof x === "object" && x ? String(x.label || x.value || x.text || "") : String(x);
+          }).filter(function (x) { return x !== ""; });
+          if (!nf.options.length) nf.options = ["Option 1", "Option 2"];
+        }
+        sec.fields.push(nf);
+      });
+      if (sec.fields.length) out.sections.push(sec);
+    });
+    if (!out.sections.length) out.sections = [{ title: "Details", fields: [{ id: "notes", label: "Notes", type: "multiline", required: false }] }];
+    return out;
+  }
+
+  function countFields(form) {
+    return (form.sections || []).reduce(function (a, s) { return a + (s.fields || []).length; }, 0);
+  }
+
+  /* ============================ renderer ============================ */
+  /**
+   * Renders a questionnaire from Form JSON into a container.
+   * opts: { form, values, readOnly, container, compact }
+   */
+  function Renderer(opts) {
+    this.form = normalizeForm(opts.form);
+    this.values = opts.values || {};
+    this.readOnly = !!opts.readOnly;
+    this.host = opts.container;
+    this.compact = !!opts.compact;
+    this._fields = {};
+    this.render();
+  }
+
+  Renderer.prototype.render = function () {
+    var self = this, h = "";
+    this.form.sections.forEach(function (s, si) {
+      h += '<div class="qsec"><div class="qhead"><div class="qtitle">' +
+        '<span class="qnum">' + (si + 1) + "</span>" + esc(s.title) + "</div>" +
+        '<span class="mini muted">' + s.fields.length + " question" + (s.fields.length === 1 ? "" : "s") + "</span></div>";
+      if (s.description) h += '<div class="qdesc">' + esc(s.description) + "</div>";
+      h += '<div class="qbody"><div class="fgrid">';
+      s.fields.forEach(function (f) { h += self.fieldHtml(f); });
+      h += "</div></div></div>";
+    });
+    this.host.innerHTML = h;
+    this.bind();
+  };
+
+  Renderer.prototype.fieldHtml = function (f) {
+    var id = "q_" + f.id, v = this.values[f.id];
+    var wide = (f.type === "multiline" || f.type === "multiselect");
+    var ro = this.readOnly ? " disabled" : "";
+    var body = "";
+
+    if (f.type === "multiline") {
+      body = '<textarea id="' + id + '" rows="3"' + ro + '>' + esc(v == null ? "" : v) + "</textarea>";
+    } else if (f.type === "number") {
+      body = '<input type="number" step="any" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + ">";
+    } else if (f.type === "currency") {
+      body = '<div class="inp-affix pre"><span class="affix">AED</span>' +
+        '<input type="number" step="any" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + "></div>";
+    } else if (f.type === "percentage") {
+      body = '<div class="inp-affix post"><span class="affix">%</span>' +
+        '<input type="number" step="any" min="0" max="100" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + "></div>";
+    } else if (f.type === "date") {
+      body = '<input type="date" id="' + id + '" value="' + esc(toISODate(v) || "") + '"' + ro + ">";
+    } else if (f.type === "boolean") {
+      body = '<label class="tgl"><input type="checkbox" id="' + id + '"' + (v === true || v === "true" ? " checked" : "") + ro +
+        '><span class="track"></span><span class="tlbl">' + (v === true || v === "true" ? "Yes" : "No") + "</span></label>";
+    } else if (f.type === "choice") {
+      body = '<select id="' + id + '"' + ro + '><option value="">— Select —</option>' +
+        (f.options || []).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (String(v) === String(o) ? " selected" : "") + ">" + esc(o) + "</option>";
+        }).join("") + "</select>";
+    } else if (f.type === "multiselect") {
+      var arr = Array.isArray(v) ? v.map(String) : (v ? String(v).split(/\s*[;,]\s*/) : []);
+      body = '<div class="msel" id="' + id + '" data-ro="' + (this.readOnly ? 1 : 0) + '">' +
+        (f.options || []).map(function (o) {
+          return '<span class="ms' + (arr.indexOf(String(o)) >= 0 ? " on" : "") + '" data-v="' + esc(o) + '">' + esc(o) + "</span>";
+        }).join("") + "</div>";
+    } else {
+      body = '<input type="text" id="' + id + '" value="' + esc(v == null ? "" : v) + '"' + ro + ">";
+    }
+
+    return '<div class="fld' + (wide ? " f-full" : "") + '" data-fid="' + esc(f.id) + '" data-ftype="' + f.type + '">' +
+      '<label class="flbl" for="' + id + '">' + esc(f.label) +
+      (f.required ? '<span class="req-star">*</span>' : "") + "</label>" + body +
+      (f.help ? '<div class="fhelp">' + esc(f.help) + "</div>" : "") +
+      '<div class="ferr">This field is required.</div></div>';
+  };
+
+  Renderer.prototype.bind = function () {
+    var self = this;
+    if (this.readOnly) {
+      $$(".msel", this.host).forEach(function (m) { m.style.pointerEvents = "none"; m.style.opacity = ".85"; });
+      return;
+    }
+    $$(".msel .ms", this.host).forEach(function (s) {
+      s.addEventListener("click", function () { s.classList.toggle("on"); self.clearErr(s); });
+    });
+    $$(".tgl input", this.host).forEach(function (c) {
+      c.addEventListener("change", function () {
+        var l = c.parentElement.querySelector(".tlbl"); if (l) l.textContent = c.checked ? "Yes" : "No";
+      });
+    });
+    $$("input,textarea,select", this.host).forEach(function (i) {
+      i.addEventListener("input", function () { self.clearErr(i); });
+      i.addEventListener("change", function () { self.clearErr(i); });
+    });
+  };
+  Renderer.prototype.clearErr = function (node) {
+    var f = node.closest(".fld"); if (f) f.classList.remove("invalid");
+  };
+
+  Renderer.prototype.getValues = function () {
+    var out = {}, self = this;
+    this.form.sections.forEach(function (s) {
+      s.fields.forEach(function (f) {
+        var id = "q_" + f.id, n = document.getElementById(id);
+        if (!n) return;
+        if (f.type === "multiselect") {
+          out[f.id] = $$(".ms.on", n).map(function (x) { return x.getAttribute("data-v"); });
+        } else if (f.type === "boolean") {
+          out[f.id] = !!n.checked;
+        } else if (f.type === "number" || f.type === "currency" || f.type === "percentage") {
+          out[f.id] = n.value === "" ? null : Number(n.value);
+        } else {
+          out[f.id] = n.value === "" ? null : n.value;
+        }
+      });
+    });
+    return out;
+  };
+
+  Renderer.prototype.validate = function () {
+    var vals = this.getValues(), bad = [], self = this;
+    $$(".fld", this.host).forEach(function (n) { n.classList.remove("invalid"); });
+    this.form.sections.forEach(function (s) {
+      s.fields.forEach(function (f) {
+        if (!f.required) return;
+        var v = vals[f.id];
+        var empty = (v === null || v === undefined || v === "" ||
+          (Array.isArray(v) && !v.length) || (f.type === "boolean" && false));
+        if (f.type === "boolean") empty = false;
+        if (empty) {
+          bad.push(f.label);
+          var n = self.host.querySelector('.fld[data-fid="' + f.id + '"]');
+          if (n) n.classList.add("invalid");
+        }
+      });
+    });
+    if (bad.length) {
+      var first = self.host.querySelector(".fld.invalid");
+      if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return { ok: !bad.length, missing: bad, values: vals };
+  };
+
+  /** Human-readable rendering of a completed response (used for AI + read-only summary) */
+  function responseToText(form, values) {
+    var out = [];
+    normalizeForm(form).sections.forEach(function (s) {
+      var lines = [];
+      s.fields.forEach(function (f) {
+        var v = values ? values[f.id] : null;
+        if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) return;
+        if (Array.isArray(v)) v = v.join(", ");
+        if (f.type === "boolean") v = v ? "Yes" : "No";
+        if (f.type === "currency") v = "AED " + v;
+        if (f.type === "percentage") v = v + "%";
+        if (f.type === "date") v = fmtDate(v);
+        lines.push("- " + f.label + ": " + v);
+      });
+      if (lines.length) out.push("## " + s.title + "\n" + lines.join("\n"));
+    });
+    return out.join("\n\n");
+  }
+
+  /* ============================ navigation ============================ */
+  function openRequest(id) {
+    var X = xrm();
+    if (!X) { return; }
+    X.Navigation.openForm({ entityName: "fsi_informationrequest", entityId: id });
+  }
+  function openWebResourceDialog(name, data, opts) {
+    var X = xrm();
+    opts = opts || {};
+    return X.Navigation.navigateTo(
+      { pageType: "webresource", webresourceName: name, data: typeof data === "string" ? data : JSON.stringify(data || {}) },
+      { target: 2, position: 1, width: opts.width || { value: 1080, unit: "px" }, height: opts.height || { value: 820, unit: "px" }, title: opts.title || "Request Information" }
+    );
+  }
+  /** Read the "data" parameter passed into a web resource dialog / form. */
+  function pageData() {
+    var q = new URLSearchParams(window.location.search);
+    var d = q.get("data") || q.get("Data") || "";
+    if (!d) return {};
+    try { return JSON.parse(decodeURIComponent(d)); } catch (e) {}
+    try { return JSON.parse(d); } catch (e) {}
+    return {};
+  }
+
+  /* ============================ AI service ============================ */
+  /**
+   * AI calls go through an HTTP-triggered Power Automate flow whose URL is stored
+   * in a Dataverse configuration record (never hardcoded in the web resource).
+   * Config record: fsi_informationrequesttemplate where fsi_name = '__CONFIG__'
+   * and fsi_formjson = { "aiEndpoint": "https://prod-xx.../invoke?..." }
+   */
+  var _cfg = null;
+  function getConfig() {
+    if (_cfg) return Promise.resolve(_cfg);
+    return DV.retrieveMultiple("fsi_informationrequesttemplates",
+      "?$select=fsi_formjson&$filter=fsi_name eq '__CONFIG__'&$top=1")
+      .then(function (r) {
+        var c = {};
+        if (r.length && r[0].fsi_formjson) { try { c = JSON.parse(r[0].fsi_formjson); } catch (e) {} }
+        _cfg = c; return c;
+      }).catch(function () { _cfg = {}; return _cfg; });
+  }
+
+  function aiCall(action, payload) {
+    return getConfig().then(function (c) {
+      if (!c.aiEndpoint) {
+        var e = new Error("AI service is not configured for this environment.");
+        e.code = "NO_AI"; throw e;
+      }
+      return fetch(c.aiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.assign({ action: action }, payload || {}))
+      }).then(function (r) {
+        if (!r.ok) return r.text().then(function (t) { throw new Error("AI service error: " + r.status + " " + t.slice(0, 300)); });
+        return r.json();
+      });
+    });
+  }
+  function parseAiJson(res) {
+    var raw = res;
+    if (res && typeof res === "object") raw = res.result || res.output || res.content || res.text || res;
+    if (typeof raw === "object") return raw;
+    var s = String(raw || "").trim();
+    s = s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+    var a = s.indexOf("{"), b = s.lastIndexOf("}");
+    if (a >= 0 && b > a) s = s.slice(a, b + 1);
+    return JSON.parse(s);
+  }
+
+  /* ============================ export ============================ */
+  G.GTI = {
+    xrm: xrm, clientUrl: clientUrl, DV: DV,
+    esc: esc, el: el, $: $, $$: $$, uid: uid, toast: toast, icon: icon, ICONS: ICONS,
+    fmtDate: fmtDate, fmtDateTime: fmtDateTime, fmtMoney: fmtMoney, toISODate: toISODate, daysUntil: daysUntil,
+    CATEGORY: CATEGORY, TEAMTYPE: TEAMTYPE, STATUS: STATUS, STATUS_V: STATUS_V, STATUS_CLS: STATUS_CLS,
+    TEAM_FOR_TYPE: TEAM_FOR_TYPE, statusBadge: statusBadge,
+    FIELD_TYPES: FIELD_TYPES, normalizeForm: normalizeForm, countFields: countFields,
+    Renderer: Renderer, responseToText: responseToText,
+    openRequest: openRequest, openWebResourceDialog: openWebResourceDialog, pageData: pageData,
+    getConfig: getConfig, aiCall: aiCall, parseAiJson: parseAiJson
+  };
+})(window);
+</script>
+<script>
+(function(){
+  "use strict";
+  var G = window.GTI, $ = G.$, $$ = G.$$, esc = G.esc;
+  var reqId = null, rec = null, form = null, values = {}, renderer = null, me = null, canEdit = false, isOwner = false;
+
+  function resolveId(){
+    var q = new URLSearchParams(location.search);
+    var d = q.get("data");
+    if (d) { var m = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i.exec(decodeURIComponent(d)); if (m) return m[1]; }
+    if (q.get("id")) return String(q.get("id")).replace(/[{}]/g,"");
+    try {
+      var id = parent.Xrm.Page.data.entity.getId();
+      if (id) return id.replace(/[{}]/g,"");
+    } catch(e){}
+    return null;
+  }
+
+  var SEL = "?$select=fsi_name,fsi_requestdescription,fsi_requesttype,fsi_status,fsi_duedate,fsi_submittedon,"
+          + "fsi_generatedformjson,fsi_responsejson,fsi_aisummary,fsi_requestingteam,createdon,"
+          + "_fsi_account_value,_fsi_accountplan_value,_fsi_requestedfromuser_value,_fsi_requestedfromteam_value,"
+          + "_fsi_submittedby_value,_fsi_sourcetemplate_value,_createdby_value,_ownerid_value";
+
+  function load(){
+    return Promise.all([ G.DV.retrieve("fsi_informationrequests", reqId, SEL), G.DV.whoAmI() ])
+      .then(function(r){
+        rec = r[0]; me = r[1];
+        form = G.normalizeForm(rec.fsi_generatedformjson, rec.fsi_name);
+        values = {};
+        if (rec.fsi_responsejson) { try { values = JSON.parse(rec.fsi_responsejson) || {}; } catch(e){} }
+        var st = rec.fsi_status;
+        var isRequested = rec["_fsi_requestedfromuser_value"] === me.UserId;
+        isOwner = rec["_createdby_value"] === me.UserId || rec["_ownerid_value"] === me.UserId;
+        /* contributors may edit while Sent or In Progress; drafts editable by the requestor */
+        canEdit = (st === 10201 || st === 10202) || (st === 10200 && isOwner);
+        return checkTeam(isRequested);
+      });
+  }
+  function checkTeam(isRequested){
+    if (isRequested || !rec["_fsi_requestedfromteam_value"]) return;
+    return G.DV.retrieveMultiple("teammemberships",
+      "?$select=systemuserid&$filter=teamid eq " + rec["_fsi_requestedfromteam_value"] + " and systemuserid eq " + me.UserId + "&$top=1")
+      .then(function(){}).catch(function(){});
+  }
+
+  /* ---------------- render ---------------- */
+  function paint(){
+    var st = rec.fsi_status;
+    var from = rec["_fsi_requestedfromteam_value@OData.Community.Display.V1.FormattedValue"]
+            || rec["_fsi_requestedfromuser_value@OData.Community.Display.V1.FormattedValue"] || "—";
+    var by = rec["_createdby_value@OData.Community.Display.V1.FormattedValue"] || "—";
+    var acc = rec["_fsi_account_value@OData.Community.Display.V1.FormattedValue"] || "—";
+    var plan = rec["_fsi_accountplan_value@OData.Community.Display.V1.FormattedValue"] || "—";
+    var d = G.daysUntil(rec.fsi_duedate);
+    var dueTxt = G.fmtDate(rec.fsi_duedate);
+    if (rec.fsi_duedate && st !== 10203 && st !== 10204) {
+      if (d < 0) dueTxt += "  ·  " + Math.abs(d) + " days overdue";
+      else if (d <= 5) dueTxt += "  ·  " + d + " days left";
+    }
+
+    var h = '<div class="hero">' +
+      '<div class="row" style="align-items:flex-start">' +
+        '<div class="grow"><h1>' + esc(rec.fsi_name || "Information Request") + '</h1>' +
+        '<div class="hsub">' + esc(G.CATEGORY[rec.fsi_requesttype] || "Information Request") +
+          (rec.fsi_requestingteam ? " · requested by " + esc(rec.fsi_requestingteam) : "") + '</div></div>' +
+        '<div>' + G.statusBadge(st) + '</div>' +
+      '</div>' +
+      '<div class="hmeta">' +
+        hm("Account", acc) + hm("Account Plan", plan) + hm("Requested From", from) +
+        hm("Requested By", by) + hm("Due Date", dueTxt) +
+        (rec.fsi_submittedon ? hm("Submitted On", G.fmtDateTime(rec.fsi_submittedon)) : "") +
+      '</div></div>';
+
+    if (rec.fsi_requestdescription) {
+      h += '<div class="card card-pad" style="margin-bottom:14px">' +
+        '<div class="section-title" style="font-size:13px;margin-bottom:7px"><span class="dot"></span>Request Description</div>' +
+        '<div style="font-size:12.5px;color:var(--ink2);line-height:1.6;white-space:pre-wrap">' + esc(rec.fsi_requestdescription) + '</div></div>';
+    }
+
+    if (rec.fsi_aisummary) {
+      h += '<div class="card card-pad" style="margin-bottom:14px">' +
+        '<div class="section-head" style="margin-bottom:10px"><div class="section-title" style="font-size:13px">' +
+        '<span class="dot" style="background:var(--purple)"></span>AI Summary' +
+        '<span class="badge b-soft" style="margin-left:6px">For the account plan owner</span></div></div>' +
+        '<div class="ai-sum">' + esc(rec.fsi_aisummary) + '</div></div>';
+    }
+
+    if (st === 10203 || st === 10204) {
+      h += '<div class="lockbar">' + G.icon("check",16) +
+        'This response has been submitted and is read-only.' +
+        (isOwner ? ' <span class="grow"></span><button class="btn btn-sm" id="btnReopen">Reopen for editing</button>' : '') + '</div>';
+    }
+
+    h += '<div class="section-head"><div class="section-title" style="font-size:14px"><span class="dot"></span>' +
+      esc(form.title || "Questionnaire") +
+      '<span class="badge b-draft">' + G.countFields(form) + ' questions</span></div>' +
+      '<span class="mini muted" id="saveStamp"></span></div>';
+    if (form.description) h += '<div class="section-sub" style="margin:-8px 0 12px">' + esc(form.description) + '</div>';
+    h += '<div id="qHost"></div>';
+
+    $("#root").innerHTML = h;
+    renderer = new G.Renderer({ form: form, values: values, container: $("#qHost"), readOnly: !canEdit });
+
+    if ($("#btnReopen")) $("#btnReopen").addEventListener("click", reopen);
+    paintBar();
+  }
+  function hm(l,v){ return '<div class="hm"><div class="hm-l">' + esc(l) + '</div><div class="hm-v">' + esc(v) + '</div></div>'; }
+
+  function paintBar(){
+    var b = $("#bar"); b.classList.remove("hidden");
+    var st = rec.fsi_status;
+    var left = '<span class="mini muted">' + (canEdit ? "Your answers are saved to this request." : "Read-only") + '</span>';
+    var right = "";
+    if (canEdit) {
+      right = '<button class="btn" id="btnDraft">' + G.icon("save",14) + ' Save Draft</button>' +
+              '<button class="btn btn-ok btn-lg" id="btnSubmit">' + G.icon("check",15) + ' Submit</button>';
+    }
+    if (isOwner) {
+      right = '<button class="btn" id="btnTpl">' + G.icon("copy",14) + ' Save as Template</button>' + right;
+    }
+    b.innerHTML = left + '<span class="grow"></span>' + right;
+    if ($("#btnDraft"))  $("#btnDraft").addEventListener("click", function(){ saveDraft(this); });
+    if ($("#btnSubmit")) $("#btnSubmit").addEventListener("click", function(){ submit(this); });
+    if ($("#btnTpl"))    $("#btnTpl").addEventListener("click", saveAsTemplate);
+  }
+
+  /* ---------------- save draft ---------------- */
+  function saveDraft(btn){
+    var vals = renderer.getValues();
+    var patch = { "fsi_responsejson": JSON.stringify(vals) };
+    if (rec.fsi_status === 10201) patch["fsi_status"] = 10202;   /* Sent -> In Progress */
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin dark"></span> Saving…';
+    G.DV.update("fsi_informationrequests", reqId, patch)
+      .then(function(){
+        values = vals;
+        if (patch.fsi_status) rec.fsi_status = patch.fsi_status;
+        $("#saveStamp").textContent = "Draft saved " + G.fmtDateTime(new Date());
+        G.toast("Draft saved", "ok");
+        refreshHeaderBadge();
+      })
+      .catch(function(e){ G.toast(e.message || "Could not save the draft.", "err", 6000); })
+      .then(function(){ btn.disabled = false; btn.innerHTML = old; });
+  }
+  function refreshHeaderBadge(){
+    var b = $("#root .hero .badge");
+    if (b) b.outerHTML = G.statusBadge(rec.fsi_status);
+  }
+
+  /* ---------------- submit ---------------- */
+  function submit(btn){
+    var v = renderer.validate();
+    if (!v.ok) {
+      G.toast(v.missing.length + " required question" + (v.missing.length===1?"":"s") + " still need an answer.", "err", 5000);
+      return;
+    }
+    var old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Submitting…';
+    var patch = {
+      "fsi_responsejson": JSON.stringify(v.values),
+      "fsi_status": 10203,
+      "fsi_submittedon": new Date().toISOString(),
+      "fsi_SubmittedBy@odata.bind": "/systemusers(" + me.UserId + ")"
+    };
+    G.DV.update("fsi_informationrequests", reqId, patch)
+      .then(function(){
+        values = v.values; rec.fsi_status = 10203; rec.fsi_submittedon = patch.fsi_submittedon;
+        canEdit = false;
+        G.toast("Response submitted", "ok");
+        btn.innerHTML = '<span class="spin"></span> Generating AI summary…';
+        return generateSummary(v.values);
+      })
+      .then(function(){ return load(); })
+      .then(function(){ paint(); notifyOwner(); })
+      .catch(function(e){ G.toast(e.message || "Could not submit the response.", "err", 6000); })
+      .then(function(){ btn.disabled = false; btn.innerHTML = old; });
+  }
+
+  /* ---------------- AI summary ---------------- */
+  function generateSummary(vals){
+    var text = G.responseToText(form, vals);
+    return G.aiCall("summarize", {
+      form: form, responseText: text, response: vals,
+      requestTitle: rec.fsi_name || "",
+      requestType: G.CATEGORY[rec.fsi_requesttype] || "",
+      account: rec["_fsi_account_value@OData.Community.Display.V1.FormattedValue"] || "",
+      accountPlan: rec["_fsi_accountplan_value@OData.Community.Display.V1.FormattedValue"] || ""
+    }).then(function(res){
+      var s = res;
+      if (res && typeof res === "object") s = res.summary || res.result || res.output || res.text || "";
+      if (typeof s === "object") s = s.summary || JSON.stringify(s);
+      s = String(s || "").trim();
+      if (!s) return;
+      return G.DV.update("fsi_informationrequests", reqId, { "fsi_aisummary": s.slice(0, 7900) });
+    }).catch(function(e){
+      if (e.code === "NO_AI") {
+        /* deterministic fallback so the demo flow always produces a summary */
+        var s = fallbackSummary(vals);
+        return G.DV.update("fsi_informationrequests", reqId, { "fsi_aisummary": s.slice(0, 7900) }).catch(function(){});
+      }
+      G.toast("Response saved, but the AI summary could not be generated.", "", 5000);
+    });
+  }
+
+  function fallbackSummary(vals){
+    var acc = rec["_fsi_account_value@OData.Community.Display.V1.FormattedValue"] || "The client";
+    var lines = [], money = [], actions = [];
+    form.sections.forEach(function(s){
+      s.fields.forEach(function(f){
+        var v = vals[f.id];
+        if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) return;
+        if (Array.isArray(v)) v = v.join(", ");
+        if (f.type === "currency") { money.push(f.label + " of AED " + Number(v).toLocaleString()); return; }
+        if (f.type === "boolean") v = v ? "Yes" : "No";
+        if (f.type === "date") v = G.fmtDate(v);
+        if (/action|next step|recommend/i.test(f.label)) { actions.push(String(v)); return; }
+        if (String(v).length > 25) lines.push(f.label + ": " + v);
+      });
+    });
+    var out = acc + " — " + (G.CATEGORY[rec.fsi_requesttype] || "assessment") + " response.\n\n";
+    if (lines.length) out += lines.slice(0,4).join("\n") + "\n\n";
+    if (money.length) out += "Quantified: " + money.slice(0,4).join("; ") + ".\n\n";
+    if (actions.length) out += "Recommended actions: " + actions.join(" ") + "";
+    return out.trim();
+  }
+
+  /* ---------------- reopen ---------------- */
+  function reopen(){
+    G.DV.update("fsi_informationrequests", reqId, { "fsi_status": 10202 })
+      .then(load).then(paint)
+      .then(function(){ G.toast("Request reopened for editing", "ok"); })
+      .catch(function(e){ G.toast(e.message || "Could not reopen the request.", "err"); });
+  }
+
+  /* ---------------- notify owner ---------------- */
+  function notifyOwner(){
+    var owner = rec["_createdby_value"];
+    if (!owner || owner === me.UserId) return;
+    var url = G.clientUrl() + "/main.aspx?etn=fsi_informationrequest&id=" + reqId + "&pagetype=entityrecord";
+    G.DV.create("appnotifications", {
+      "title": "Response submitted: " + (rec.fsi_name || "Information Request"),
+      "body": (rec["_fsi_requestedfromteam_value@OData.Community.Display.V1.FormattedValue"]
+             || rec["_fsi_requestedfromuser_value@OData.Community.Display.V1.FormattedValue"] || "A team")
+             + " has submitted a response for "
+             + (rec["_fsi_account_value@OData.Community.Display.V1.FormattedValue"] || "your account plan") + ".\n\n"
+             + "Open the request: " + url,
+      "ttlinseconds": 60 * 60 * 24 * 30,
+      "icontype": 100000000,
+      "ownerid@odata.bind": "/systemusers(" + owner + ")",
+      "data": JSON.stringify({ actions:[{ title:"Open request", data:{ url:url, navigationTarget:"newWindow" } }] })
+    }).catch(function(){});
+  }
+
+  /* ---------------- save as template ---------------- */
+  function saveAsTemplate(){
+    var cats = Object.keys(G.CATEGORY).map(function(k){
+      return '<option value="' + k + '">' + esc(G.CATEGORY[k]) + '</option>'; }).join("");
+    var m = G.el('<div class="modal"><div class="mbox">' +
+      '<div class="section-title" style="font-size:15px;margin-bottom:4px"><span class="dot"></span>Save as Template</div>' +
+      '<div class="section-sub" style="margin-bottom:16px">Make this questionnaire reusable for future information requests.</div>' +
+      '<div class="fgrid">' +
+        '<div class="fld f-full"><label class="flbl">Template Name<span class="req-star">*</span></label>' +
+          '<input type="text" id="tplName" value="' + esc(rec.fsi_name || form.title || "") + '" maxlength="200"></div>' +
+        '<div class="fld f-full"><label class="flbl">Description</label>' +
+          '<textarea id="tplDesc" rows="2">' + esc(form.description || rec.fsi_requestdescription || "") + '</textarea></div>' +
+        '<div class="fld"><label class="flbl">Category</label><select id="tplCat">' + cats + '</select></div>' +
+        '<div class="fld"><label class="flbl">Target Team Type</label><select id="tplTeam">' + cats + '</select></div>' +
+      '</div><div class="divider"></div>' +
+      '<div class="row"><span class="grow"></span><button class="btn" id="tplCancel">Cancel</button>' +
+      '<button class="btn btn-primary" id="tplSave">Save Template</button></div></div></div>');
+    document.body.appendChild(m);
+    var t = String(rec.fsi_requesttype || 10009);
+    $("#tplCat", m).value = t; $("#tplTeam", m).value = t;
+    $("#tplCancel", m).addEventListener("click", function(){ m.remove(); });
+    m.addEventListener("click", function(e){ if (e.target === m) m.remove(); });
+    $("#tplSave", m).addEventListener("click", function(){
+      var name = $("#tplName", m).value.trim();
+      if (!name) { G.toast("Enter a template name.", "err"); return; }
+      var btn = this, old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Saving…';
+      var f = JSON.parse(JSON.stringify(form)); f.title = name;
+      G.DV.create("fsi_informationrequesttemplates", {
+        "fsi_name": name,
+        "fsi_description": $("#tplDesc", m).value.trim() || null,
+        "fsi_category": Number($("#tplCat", m).value),
+        "fsi_targetteamtype": Number($("#tplTeam", m).value) + 100,
+        "fsi_formjson": JSON.stringify(f),
+        "fsi_active": true, "fsi_version": "1.0",
+        "fsi_icon": "blank", "fsi_accentcolor": "#2563eb"
+      }).then(function(){ m.remove(); G.toast("Saved to the template gallery", "ok"); })
+        .catch(function(e){ G.toast(e.message || "Could not save the template.", "err", 6000);
+                            btn.disabled = false; btn.innerHTML = old; });
+    });
+  }
+
+  /* ---------------- boot ---------------- */
+  reqId = resolveId();
+  if (!reqId) {
+    $("#root").innerHTML = '<div class="empty"><div class="e-ico">' + G.icon("alert",38,1.4) +
+      '</div><div class="e-t">Save this request to continue</div>' +
+      '<div class="e-s">The questionnaire appears once the information request record has been saved.</div></div>';
+  } else {
+    load().then(paint).catch(function(e){
+      $("#root").innerHTML = '<div class="empty"><div class="e-ico">' + G.icon("alert",38,1.4) +
+        '</div><div class="e-t">Could not load this request</div><div class="e-s">' + esc(e.message || "") + '</div></div>';
+    });
+  }
+})();
+</script>
+</body>
+</html>

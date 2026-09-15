@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="fsi_AoaiTenantId">
+  <description default="Entra tenant id the flow authenticates against.">
+    <label description="Entra tenant id the flow authenticates against." languagecode="1033" />
+  </description>
+  <displayname default="fsi_AoaiTenantId">
+    <label description="fsi_AoaiTenantId" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

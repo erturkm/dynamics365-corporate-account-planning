@@ -1,0 +1,13 @@
+<environmentvariabledefinition schemaname="fsi_AoaiClientSecret">
+  <description default="Client secret for the above app registration. Leave blank to disable AI summaries; prefer a Key Vault backed secret in production.">
+    <label description="Client secret for the above app registration. Leave blank to disable AI summaries; prefer a Key Vault backed secret in production." languagecode="1033" />
+  </description>
+  <displayname default="fsi_AoaiClientSecret">
+    <label description="fsi_AoaiClientSecret" languagecode="1033" />
+  </displayname>
+  <introducedversion>1.0</introducedversion>
+  <iscustomizable>1</iscustomizable>
+  <isrequired>0</isrequired>
+  <secretstore>0</secretstore>
+  <type>100000000</type>
+</environmentvariabledefinition>

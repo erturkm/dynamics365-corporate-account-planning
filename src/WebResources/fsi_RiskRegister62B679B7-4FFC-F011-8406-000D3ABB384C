@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Account Planning — Risk Register</title>
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --card:#ffffff;
+      --shadow: 0 10px 22px rgba(15,23,42,.08);
+      --shadow2: 0 6px 14px rgba(15,23,42,.08);
+      --radius: 16px;
+
+      --low:#16a34a;
+      --med:#f59e0b;
+      --high:#ef4444;
+      --crit:#7c3aed;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+    }
+
+    .wrap{ max-width: 1280px; margin: 0 auto; padding: 12px 14px 18px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap: 12px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-h{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .card-h .title{
+      display:flex; flex-direction:column; gap:2px; min-width:0;
+    }
+    .card-h .title b{ font-size: 13px; }
+    .card-h .title span{ font-size: 12px; color: var(--muted); }
+    .card-b{ padding: 12px 14px; }
+
+    label{ display:block; font-size:12px; color: var(--muted); margin: 10px 0 6px; }
+    input[type="text"], textarea, select{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 10px;
+      font-size: 12px;
+      outline:none;
+      background:#fff;
+    }
+    textarea{ min-height: 96px; resize: vertical; }
+
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 9px 12px;
+      cursor:pointer;
+      font-size: 12px;
+      box-shadow: var(--shadow2);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn-ghost{
+      border:1px solid var(--border);
+      background:#fff;
+      box-shadow:none;
+      opacity:.9;
+    }
+
+    .pill{
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      box-shadow: var(--shadow2);
+      display:flex; align-items:center; gap:8px;
+      background:#fff;
+    }
+    .pill input{
+      border:none; outline:none; flex:1; font-size:12px; background:transparent; color:var(--text);
+    }
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background:#fff;
+    }
+    thead th{
+      text-align:left;
+      font-size:12px;
+      color: var(--muted);
+      font-weight:700;
+      padding: 10px 10px;
+      border-bottom:1px solid var(--border);
+      background: #fafafa;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding: 10px 10px;
+      border-bottom:1px solid var(--border);
+      font-size: 12px;
+      vertical-align: top;
+    }
+    tbody tr:last-child td{ border-bottom:none; }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border:1px solid var(--border);
+      background:#fff;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background:#9ca3af;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.65);
+    }
+    .dot.low{ background: var(--low); }
+    .dot.medium{ background: var(--med); }
+    .dot.high{ background: var(--high); }
+    .dot.critical{ background: var(--crit); }
+
+    .muted{ color: var(--muted); }
+    .right{ text-align:right; }
+
+    .row-actions{
+      display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+    }
+    .iconbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 12px;
+      padding: 7px 10px;
+      cursor:pointer;
+      font-size:12px;
+      box-shadow: var(--shadow2);
+    }
+
+    .empty{
+      padding: 14px;
+      border:1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--muted);
+      background: #fafafa;
+    }
+
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="grid">
+
+      <!-- Left: Add/Edit -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b id="formTitle">Add risk</b>
+            <span>First Solar — account planning</span>
+          </div>
+          <button class="btn btn-ghost" id="btnNew" title="Clear form">New</button>
+        </div>
+
+        <div class="card-b">
+          <label for="riskTitle">Risk</label>
+          <input id="riskTitle" type="text" placeholder="e.g., Delays in large outbound transfers impacting cash flow" />
+
+          <div class="row">
+            <div>
+              <label for="riskCriticality">Criticality</label>
+              <select id="riskCriticality">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label for="riskStatus">Status</label>
+              <select id="riskStatus">
+                <option value="open">Open</option>
+                <option value="mitigating">Mitigating</option>
+                <option value="accepted">Accepted</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="riskImpact">Business impact (short)</label>
+          <textarea id="riskImpact" placeholder="1–2 lines on impact (credit, liquidity, operational, reputational)..."></textarea>
+
+          <label for="riskPlan">Recovery / mitigation plan</label>
+          <textarea id="riskPlan" placeholder="Actions, owner, fallback, and timeline..."></textarea>
+
+          <div class="row">
+            <div>
+              <label for="riskOwner">Owner (optional)</label>
+              <input id="riskOwner" type="text" placeholder="RM / Risk / Ops" />
+            </div>
+            <div>
+              <label for="riskDue">Review date (optional)</label>
+              <input id="riskDue" type="text" placeholder="YYYY-MM-DD" />
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-top: 12px; flex-wrap:wrap;">
+            <button class="btn" id="btnSave">Save</button>
+            <button class="btn btn-ghost" id="btnCancel" style="display:none;">Cancel</button>
+            <button class="btn btn-ghost" id="btnClearSession" title="Clear risks in this browser session">Clear session</button>
+          </div>
+
+          <div class="muted" style="margin-top:10px; font-size:12px;">
+            Stored in <b>sessionStorage</b> (clears when the browser session ends).
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Register -->
+      <div class="card">
+        <div class="card-h">
+          <div class="title">
+            <b>Risk register</b>
+            <span>Search and filter</span>
+          </div>
+          <div class="pill" title="Search risks">
+            🔎 <input id="searchBox" placeholder="Search..." />
+          </div>
+        </div>
+
+        <div class="card-b">
+          <div class="row" style="margin-bottom:10px;">
+            <div>
+              <label style="margin-top:0;">Criticality</label>
+              <select id="filterCriticality">
+                <option value="all">All</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label style="margin-top:0;">Status</label>
+              <select id="filterStatus">
+                <option value="all">All</option>
+                <option value="open">Open</option>
+                <option value="mitigating">Mitigating</option>
+                <option value="accepted">Accepted</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:34%;">Risk</th>
+                  <th style="width:14%;">Criticality</th>
+                  <th style="width:12%;">Status</th>
+                  <th style="width:30%;">Recovery plan</th>
+                  <th style="width:10%;" class="right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="riskTbody">
+                <tr><td colspan="5" class="muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const STORE_KEY = "fab_firstsolar_risks_v1";
+    let risks = [];
+    let editingId = null;
+
+    const el = (id) => document.getElementById(id);
+
+    const formTitle = el("formTitle");
+    const btnNew = el("btnNew");
+    const btnSave = el("btnSave");
+    const btnCancel = el("btnCancel");
+    const btnClearSession = el("btnClearSession");
+
+    const riskTitle = el("riskTitle");
+    const riskCriticality = el("riskCriticality");
+    const riskStatus = el("riskStatus");
+    const riskImpact = el("riskImpact");
+    const riskPlan = el("riskPlan");
+    const riskOwner = el("riskOwner");
+    const riskDue = el("riskDue");
+
+    const searchBox = el("searchBox");
+    const filterCriticality = el("filterCriticality");
+    const filterStatus = el("filterStatus");
+    const riskTbody = el("riskTbody");
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function uid(){
+      return "r_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
+    function dotClass(c){
+      if (c === "critical") return "critical";
+      if (c === "high") return "high";
+      if (c === "medium") return "medium";
+      return "low";
+    }
+
+    function criticalityLabel(c){
+      const map = { low:"Low", medium:"Medium", high:"High", critical:"Critical" };
+      return map[c] || "—";
+    }
+
+    function statusLabel(s){
+      const map = { open:"Open", mitigating:"Mitigating", accepted:"Accepted", closed:"Closed" };
+      return map[s] || "—";
+    }
+
+    function loadFromSession(){
+      try{
+        const raw = sessionStorage.getItem(STORE_KEY);
+        risks = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(risks)) risks = [];
+      }catch{
+        risks = [];
+      }
+
+      // If empty, seed sample risks immediately (per your request)
+      if (!risks.length){
+        risks = seedSampleRisks();
+        saveToSession(); // persists and renders
+      }
+    }
+
+    function saveToSession(){
+      try{
+        sessionStorage.setItem(STORE_KEY, JSON.stringify(risks));
+      }catch{}
+      renderTable();
+    }
+
+    function seedSampleRisks(){
+      const now = Date.now();
+      return [
+        {
+          id: uid(),
+          title: "Delayed outbound transfer (AED 500K) to key supplier causing settlement uncertainty",
+          criticality: "high",
+          status: "open",
+          impact: "Liquidity + operational risk: potential supplier disruption and reduced confidence in payment processing.",
+          plan: "Ops to trace SWIFT status and escalate to correspondent bank. Provide interim assurance letter to supplier; set daily check until cleared; agree fallback route for future payments.",
+          owner: "RM + Ops",
+          due: "2026-02-02",
+          updatedAt: now
+        },
+        {
+          id: uid(),
+          title: "New Abu Dhabi factory expansion may increase working capital needs beyond AED 5M",
+          criticality: "medium",
+          status: "open",
+          impact: "Credit + funding risk: underestimating facility requirements could stress cash cycle during ramp-up.",
+          plan: "Re-validate cash conversion cycle assumptions; request capex timeline; propose staged limit with review triggers; align covenants and reporting pack.",
+          owner: "RM",
+          due: "2026-02-10",
+          updatedAt: now - 1000
+        },
+        {
+          id: uid(),
+          title: "Concentration risk: reliance on a limited set of counterparties for large payments",
+          criticality: "medium",
+          status: "mitigating",
+          impact: "Operational + reputational risk if delays repeat; may impact supplier relationships and project execution.",
+          plan: "Map top counterparties; set preferred payment corridors; agree SLA monitoring; implement pre-advice for large transfers; monthly review with Ops.",
+          owner: "Ops",
+          due: "2026-02-20",
+          updatedAt: now - 2000
+        },
+        {
+          id: uid(),
+          title: "FX exposure on imported equipment and materials for factory build",
+          criticality: "high",
+          status: "open",
+          impact: "Market risk: adverse FX moves can increase project cost and pressure margins.",
+          plan: "Offer hedging options (forwards/collars) aligned to procurement schedule; define hedge policy; set exposure threshold alerts.",
+          owner: "GM / Treasury",
+          due: "2026-02-08",
+          updatedAt: now - 3000
+        },
+        {
+          id: uid(),
+          title: "KYC/AML refresh required due to expansion and new entities/sister company linkages",
+          criticality: "critical",
+          status: "open",
+          impact: "Compliance risk: incomplete refresh may delay facility approval and transactions.",
+          plan: "Trigger KYC refresh checklist; obtain updated UBO/structure documents incl. sister company; screen counterparties; set approval path for exceptions.",
+          owner: "Compliance",
+          due: "2026-02-05",
+          updatedAt: now - 4000
+        }
+      ];
+    }
+
+    function resetForm(){
+      editingId = null;
+      formTitle.textContent = "Add risk";
+      btnCancel.style.display = "none";
+      btnSave.textContent = "Save";
+
+      riskTitle.value = "";
+      riskCriticality.value = "low";
+      riskStatus.value = "open";
+      riskImpact.value = "";
+      riskPlan.value = "";
+      riskOwner.value = "";
+      riskDue.value = "";
+      riskTitle.focus();
+    }
+
+    function validate(){
+      const t = (riskTitle.value || "").trim();
+      if (!t){
+        alert("Please enter the Risk field.");
+        riskTitle.focus();
+        return false;
+      }
+      return true;
+    }
+
+    function upsertRisk(){
+      if (!validate()) return;
+
+      const payload = {
+        id: editingId || uid(),
+        title: (riskTitle.value || "").trim(),
+        criticality: riskCriticality.value,
+        status: riskStatus.value,
+        impact: (riskImpact.value || "").trim(),
+        plan: (riskPlan.value || "").trim(),
+        owner: (riskOwner.value || "").trim(),
+        due: (riskDue.value || "").trim(),
+        updatedAt: Date.now()
+      };
+
+      if (editingId){
+        const idx = risks.findIndex(r => r.id === editingId);
+        if (idx >= 0) risks[idx] = payload;
+        else risks.unshift(payload);
+      } else {
+        risks.unshift(payload);
+      }
+
+      saveToSession();
+      resetForm();
+    }
+
+    function getFiltered(){
+      const q = (searchBox.value || "").trim().toLowerCase();
+      const crit = filterCriticality.value;
+      const st = filterStatus.value;
+
+      let arr = [...risks];
+
+      if (crit !== "all") arr = arr.filter(r => r.criticality === crit);
+      if (st !== "all") arr = arr.filter(r => r.status === st);
+
+      if (q){
+        arr = arr.filter(r => {
+          const hay = (r.title + " " + (r.impact||"") + " " + (r.plan||"")).toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      const score = (c) => (c === "critical" ? 4 : c === "high" ? 3 : c === "medium" ? 2 : 1);
+      arr.sort((a,b)=> {
+        const s = score(b.criticality) - score(a.criticality);
+        if (s !== 0) return s;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
+
+      return arr;
+    }
+
+    function renderTable(){
+      const arr = getFiltered();
+
+      if (!arr.length){
+        riskTbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="empty">No risks found.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      riskTbody.innerHTML = arr.map(r => {
+        const title = escapeHtml(r.title || "(no title)");
+        const impact = escapeHtml(r.impact || "");
+        const plan = escapeHtml(r.plan || "");
+
+        const crit = r.criticality || "low";
+        const st = r.status || "open";
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:800; margin-bottom:4px;">${title}</div>
+              <div class="muted" style="line-height:1.35;">
+                ${impact ? impact : "<span class='muted'>—</span>"}
+              </div>
+              <div class="muted" style="margin-top:6px; font-size:12px;">
+                ${(r.owner||"").trim() ? `Owner: <b style="color:#0f172a;">${escapeHtml(r.owner)}</b>` : "Owner: —"}
+                ${(r.due||"").trim() ? ` &nbsp;•&nbsp; Review: <b style="color:#0f172a;">${escapeHtml(r.due)}</b>` : ""}
+              </div>
+            </td>
+
+            <td>
+              <span class="tag">
+                <span class="dot ${dotClass(crit)}"></span>
+                ${escapeHtml(criticalityLabel(crit))}
+              </span>
+            </td>
+
+            <td>
+              <span class="tag">${escapeHtml(statusLabel(st))}</span>
+            </td>
+
+            <td>
+              ${plan ? `<div style="line-height:1.35;">${plan}</div>` : `<span class="muted">—</span>`}
+            </td>
+
+            <td class="right">
+              <div class="row-actions">
+                <button class="iconbtn" onclick="editRisk('${r.id}')">Edit</button>
+                <button class="iconbtn" onclick="deleteRisk('${r.id}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Expose table actions
+    window.editRisk = function(id){
+      const r = risks.find(x => x.id === id);
+      if (!r) return;
+
+      editingId = id;
+      formTitle.textContent = "Edit risk";
+      btnCancel.style.display = "inline-flex";
+      btnSave.textContent = "Update";
+
+      riskTitle.value = r.title || "";
+      riskCriticality.value = r.criticality || "low";
+      riskStatus.value = r.status || "open";
+      riskImpact.value = r.impact || "";
+      riskPlan.value = r.plan || "";
+      riskOwner.value = r.owner || "";
+      riskDue.value = r.due || "";
+
+      riskTitle.focus();
+    };
+
+    window.deleteRisk = function(id){
+      const r = risks.find(x => x.id === id);
+      if (!r) return;
+
+      const ok = confirm(`Delete this risk?\n\n${r.title || ""}`);
+      if (!ok) return;
+
+      risks = risks.filter(x => x.id !== id);
+      saveToSession();
+      if (editingId === id) resetForm();
+    };
+
+    // Wire up
+    btnSave.addEventListener("click", upsertRisk);
+    btnNew.addEventListener("click", resetForm);
+    btnCancel.addEventListener("click", resetForm);
+
+    searchBox.addEventListener("input", renderTable);
+    filterCriticality.addEventListener("change", renderTable);
+    filterStatus.addEventListener("change", renderTable);
+
+    btnClearSession.addEventListener("click", () => {
+      const ok = confirm("Clear ALL risks from this browser session?");
+      if (!ok) return;
+      risks = seedSampleRisks(); // optionally re-seed instead of empty (business-friendly)
+      saveToSession();
+      resetForm();
+    });
+
+    // Init
+    loadFromSession();
+    renderTable();
+    resetForm();
+  </script>
+</body>
+</html>

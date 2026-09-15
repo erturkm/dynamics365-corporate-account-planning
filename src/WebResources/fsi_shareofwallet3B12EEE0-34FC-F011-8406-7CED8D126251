@@ -1,0 +1,700 @@
+<!-- Share of Wallet — Modern Corporate View (Read ALL fsi_shareofwallet rows, edit & save) -->
+<div style="font-family:Segoe UI, Arial, sans-serif; background:#ffffff; color:#111827; padding:0; margin:0;">
+  <div style="width:95%; margin:0 auto; padding:18px 18px 26px;">
+
+    <!-- Controls -->
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-bottom:14px;">
+      <div style="border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; background:#ffffff; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+        <span style="font-size:12px; color:#6b7280;">As of</span>
+        <span id="asOfLabel" style="font-size:12px; font-weight:700; margin-left:6px;">—</span>
+      </div>
+
+      <button id="btnReload" type="button"
+        style="border:1px solid #e5e7eb; background:#ffffff; color:#111827; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+        Reload
+      </button>
+
+      <button id="btnReset" type="button"
+        style="border:1px solid #e5e7eb; background:#ffffff; color:#111827; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+        Reset
+      </button>
+
+      <button id="btnSave" type="button"
+        style="border:1px solid #dbeafe; background:#eff6ff; color:#1d4ed8; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 18px rgba(17,24,39,.06);">
+        Save targets
+      </button>
+    </div>
+
+    <!-- KPI strip -->
+    <div style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; margin-bottom:14px;">
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Total Wallet Size</div>
+        <div id="kpiWalletSize" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Across all rows</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Current Volume</div>
+        <div id="kpiCurrentVol" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Sum of volume</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Target Volume</div>
+        <div id="kpiTargetVol" style="font-size:18px; font-weight:900; margin-top:4px;">—</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Sum of volume target</div>
+      </div>
+      <div style="border:1px solid #e5e7eb; border-radius:14px; background:#ffffff; box-shadow:0 12px 26px rgba(17,24,39,.08); padding:12px;">
+        <div style="font-size:12px; color:#6b7280;">Share of Wallet</div>
+        <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+          <div id="kpiSOW" style="font-size:18px; font-weight:900;">—</div>
+          <div id="kpiDelta" style="font-size:12px; font-weight:800;">—</div>
+        </div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">Blended vs blended target</div>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div style="border:1px solid #e5e7eb; border-radius:16px; background:#ffffff; box-shadow:0 14px 30px rgba(17,24,39,.08); overflow:hidden;">
+      <div style="padding:12px 14px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:10px; height:10px; border-radius:999px; background:#2563eb;"></div>
+          <div style="font-size:13px; font-weight:900;">Share of Wallet — Current vs Target</div>
+        </div>
+        <div id="saveStatus" style="font-size:12px; color:#6b7280;">Loading from Dataverse…</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:220px 150px 160px 180px 260px 160px 180px; gap:0; padding:10px 14px; background:#fafafa; border-bottom:1px solid #eef2f7;">
+        <div style="font-size:12px; font-weight:800; color:#334155;">Line of Business</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Wallet Size</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Volume</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Volume Target</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Wallet Share (Now / Target)</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Revenue</div>
+        <div style="font-size:12px; font-weight:800; color:#334155;">Revenue Target</div>
+      </div>
+
+      <!-- Rows rendered dynamically -->
+      <div style="padding:6px 0;" id="sowRows"></div>
+
+      <div style="padding:10px 14px; background:#fafafa; border-top:1px solid #eef2f7; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="font-size:12px; color:#6b7280;">
+          <span style="font-weight:800; color:#111827;">Editable columns:</span>
+          <span style="margin-left:6px;">Volume Target, Wallet Share % Target, Revenue Target</span>
+        </div>
+        <div style="font-size:12px; color:#6b7280;">
+          <span style="font-weight:800;">Reads/Writes:</span> Dataverse (Web API)
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  // =========================
+  // CONFIG — update if your names differ
+  // =========================
+  const ENTITY_SET = "fsi_shareofwallets";  // set name (plural)
+  const COL = {
+    id: "fsi_shareofwalletid",
+    lob: "fsi_lineofbusiness",
+    sort: "fsi_sortorder",
+    asof: "fsi_asofdate",
+    wallet: "fsi_walletsize",
+    volume: "fsi_volume",
+    volumeTarget: "fsi_volumetarget",
+    ws: "fsi_walletshare",
+    wsTarget: "fsi_walletsharetarget",
+    revenue: "fsi_revenue",
+    revenueTarget: "fsi_revenuetarget"
+  };
+
+  // ===== DOM helpers
+  const $ = (id) => document.getElementById(id);
+
+  const setStatus = (msg, ok) => {
+    const el = $("saveStatus");
+    if (!el) return;
+    el.textContent = msg;
+    if (ok === true) el.style.color = "#166534";
+    else if (ok === false) el.style.color = "#b91c1c";
+    else el.style.color = "#6b7280";
+  };
+
+  // ===== numeric helpers
+  const toNumber = (v) => {
+    if (v == null) return 0;
+    const s = String(v).replace(/[^0-9.\-]/g,'');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+  const fmtMoney = (n) => {
+    const num = Math.round((n || 0) * 100) / 100;
+    return "$ " + num.toLocaleString(undefined, {maximumFractionDigits: 2, minimumFractionDigits: 0});
+  };
+  const fmtPct = (n) => (Math.round((n || 0) * 100) / 100).toFixed(2) + "%";
+
+  const computeVariancePts = (currentPct, targetPct) => {
+    const v = (currentPct - targetPct);
+    const abs = Math.round(Math.abs(v) * 100) / 100;
+    const sign = v >= 0 ? "+" : "-";
+    return `${sign}${abs.toFixed(2)} pts`;
+  };
+
+  const styleVariancePill = (pillEl, currentPct, targetPct) => {
+    const v = currentPct - targetPct;
+    const good = v >= 0;
+    pillEl.textContent = computeVariancePts(currentPct, targetPct);
+    if (good) {
+      pillEl.style.border = "1px solid #dcfce7";
+      pillEl.style.background = "#f0fdf4";
+      pillEl.style.color = "#166534";
+    } else {
+      pillEl.style.border = "1px solid #fee2e2";
+      pillEl.style.background = "#fff1f2";
+      pillEl.style.color = "#991b1b";
+    }
+  };
+
+  const escapeHtml = (s) => String(s ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+  // ===== Web API helpers (uses current session cookies)
+  const getClientUrl = () => {
+    const xrm = window.parent.Xrm;
+    if (!xrm || !xrm.Utility || !xrm.Utility.getGlobalContext) {
+      throw new Error("Xrm context not found. Host this HTML as a web resource inside the model-driven app.");
+    }
+    const url = new URL(xrm.Utility.getGlobalContext().getClientUrl());
+    if (url.origin !== window.location.origin || url.protocol !== "https:") {
+      throw new Error("Unexpected Dataverse origin.");
+    }
+    return url.href.replace(/\/$/, "");
+  };
+
+  const fetchJson = async (url) => {
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+        "If-None-Match": "null",
+        "Prefer": 'odata.include-annotations="Microsoft.Dynamics.CRM.lookuplogicalname"'
+      },
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`${res.status} ${t}`);
+    }
+    return res.json();
+  };
+
+  const guid = value => {
+    const id = String(value || "").replace(/^\{(.*)\}$/, "$1").toLowerCase();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id) &&
+      id !== "00000000-0000-0000-0000-000000000000" ? id : null;
+  };
+  const validEtag = value => typeof value === "string" && /^W\/"\d+"$/.test(value);
+  const context = () => {
+    // The existing supported bridge is Summary-only; do not alter its host/form.
+    const form = window.parent.Xrm && window.parent.Xrm.Page;
+    const entity = form && form.data && form.data.entity;
+    const attribute = form && form.getAttribute && form.getAttribute("fsi_customer");
+    const lookup = attribute && attribute.getValue();
+    const planId = entity && guid(entity.getId());
+    const accountId = lookup && lookup.length === 1 && guid(lookup[0].id);
+    if (!entity || entity.getEntityName() !== "fsi_accountplanning" || !planId ||
+        (form.ui && form.ui.getFormType && form.ui.getFormType() === 1) ||
+        !accountId || String(lookup[0].entityType).toLowerCase() !== "account" ||
+        typeof attribute.getIsDirty !== "function" || attribute.getIsDirty()) {
+      throw new Error("Save the Account Planning record with an Account customer, then reload.");
+    }
+    return { form, attribute, planId, accountId, clientUrl: getClientUrl() };
+  };
+  const sameContext = (a, b) => a && b && a.form === b.form &&
+    a.attribute === b.attribute && a.planId === b.planId &&
+    a.accountId === b.accountId && a.clientUrl === b.clientUrl;
+
+  const parseBatch = (type, text) => {
+    const match = /^multipart\/mixed\s*;\s*boundary=(?:"([\w.-]+)"|([\w.-]+))\s*$/i.exec(type || "");
+    if (!match) throw new Error("Unrecognized batch response; reload to verify the outcome.");
+    const parts = ("\n" + text.replace(/\r\n/g, "\n")).split("\n--" + (match[1] || match[2]));
+    if (parts.shift().trim() || parts.pop().trim() !== "--" || !parts.length) {
+      throw new Error("Incomplete batch response; reload to verify the outcome.");
+    }
+    return parts.flatMap(part => {
+      if (!part.startsWith("\n")) throw new Error("Malformed batch response.");
+      const split = part.indexOf("\n\n");
+      if (split < 0) throw new Error("Missing batch response headers.");
+      const headers = {};
+      part.slice(1, split).split("\n").forEach(line => {
+        const colon = line.indexOf(":");
+        if (colon < 1) throw new Error("Malformed batch response header.");
+        const key = line.slice(0, colon).toLowerCase();
+        if (Object.hasOwn(headers, key)) throw new Error("Duplicate batch response header.");
+        headers[key] = line.slice(colon + 1).trim();
+      });
+      const body = part.slice(split + 2);
+      if (/^multipart\/mixed/i.test(headers["content-type"] || "")) {
+        return parseBatch(headers["content-type"], body);
+      }
+      const status = /^HTTP\/1\.[01] (\d{3})[^\n]*\n/.exec(body);
+      if (headers["content-type"] !== "application/http" || !status) {
+        throw new Error("Missing batch operation status.");
+      }
+      return [{ id: headers["content-id"], status: Number(status[1]), detail: body }];
+    });
+  };
+
+  // ===== state
+  let currentRecords = [];
+  let originalTargetsById = {};
+  let loaded = null;
+  let generation = 0;
+  let saving = false;
+  let disposed = false;
+  let observed = null;
+  let unbind = () => {};
+
+  const controls = () => {
+    $("btnSave").disabled = saving || !loaded;
+    $("btnReset").disabled = saving || !loaded;
+    $("btnReload").disabled = saving;
+    document.querySelectorAll(".sow-row input").forEach(input => { input.disabled = saving; });
+  };
+  const clearData = () => {
+    loaded = null;
+    currentRecords = [];
+    originalTargetsById = {};
+    $("sowRows").innerHTML = "";
+    ["asOfLabel", "kpiWalletSize", "kpiCurrentVol", "kpiTargetVol", "kpiSOW", "kpiDelta"]
+      .forEach(id => { $(id).textContent = "—"; });
+    controls();
+  };
+  const assertActive = (scope, token) => {
+    if (disposed || token !== generation || !sameContext(scope, context())) {
+      throw new Error("Account plan/customer changed. Reload before saving.");
+    }
+  };
+  const readPlan = async (scope, token, expectedEtag) => {
+    assertActive(scope, token);
+    const plan = await fetchJson(`${scope.clientUrl}/api/data/v9.2/fsi_accountplannings(${scope.planId})?$select=_fsi_customer_value`);
+    assertActive(scope, token);
+    if (guid(plan.fsi_accountplanningid) !== scope.planId ||
+        guid(plan._fsi_customer_value) !== scope.accountId ||
+        plan["_fsi_customer_value@Microsoft.Dynamics.CRM.lookuplogicalname"] !== "account" ||
+        !validEtag(plan["@odata.etag"]) ||
+        (expectedEtag && plan["@odata.etag"] !== expectedEtag)) {
+      throw new Error("The persisted account plan changed. Save the form and reload.");
+    }
+    return plan["@odata.etag"];
+  };
+  const validateRecord = (record, scope) => {
+    const kind = record["_fsi_account_value@Microsoft.Dynamics.CRM.lookuplogicalname"];
+    if (!guid(record[COL.id]) || guid(record._fsi_account_value) !== scope.accountId ||
+        (kind && kind !== "account") || !validEtag(record["@odata.etag"])) {
+      throw new Error("Unexpected wallet row/account or missing ETag. Reload required.");
+    }
+  };
+
+  // ===== render
+  const renderRows = (records) => {
+    const container = $("sowRows");
+    container.innerHTML = "";
+
+    records.sort((a,b) => (toNumber(a[COL.sort]) - toNumber(b[COL.sort])) || String(a[COL.lob]||"").localeCompare(String(b[COL.lob]||"")));
+
+    records.forEach((r, idx) => {
+      const id = r[COL.id];
+      const lob = r[COL.lob] || "—";
+      const wallet = toNumber(r[COL.wallet]);
+      const volume = toNumber(r[COL.volume]);
+      const volTarget = toNumber(r[COL.volumeTarget]);
+      const ws = toNumber(r[COL.ws]);
+      const wsTarget = clamp(toNumber(r[COL.wsTarget]), 0, 100);
+      const revenue = toNumber(r[COL.revenue]);
+      const revTarget = toNumber(r[COL.revenueTarget]);
+
+      const row = document.createElement("div");
+      row.className = "sow-row";
+      row.setAttribute("data-id", id);
+      row.setAttribute("data-ws", ws);
+
+      row.style.background = (idx % 2 === 1) ? "#fcfcfd" : "#ffffff";
+      row.style.display = "grid";
+      row.style.gridTemplateColumns = "220px 150px 160px 180px 260px 160px 180px";
+      row.style.padding = "12px 14px";
+      row.style.alignItems = "center";
+      row.style.borderBottom = "1px solid #f1f5f9";
+
+      row.innerHTML = `
+        <div style="font-weight:800; color:#0f172a;">${escapeHtml(lob)}</div>
+        <div style="font-variant-numeric:tabular-nums;">${fmtMoney(wallet)}</div>
+        <div style="font-variant-numeric:tabular-nums;">${fmtMoney(volume)}</div>
+
+        <div>
+          <input class="vol-target" type="text" value="${fmtMoney(volTarget)}"
+            style="width:100%; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:800; color:#111827; outline:none; box-shadow:0 8px 18px rgba(17,24,39,.06);"
+            placeholder="$ 0" />
+          <div style="font-size:11px; color:#94a3b8; margin-top:6px;">Editable</div>
+        </div>
+
+        <div>
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="font-size:12px; color:#475569; font-variant-numeric:tabular-nums;">
+              <span style="font-weight:900; color:#0f172a;">${fmtPct(ws)}</span>
+              <span style="color:#94a3b8;"> / </span>
+              <input class="ws-target" type="number" min="0" max="100" step="0.01" value="${wsTarget}"
+                style="width:86px; border:1px solid #e5e7eb; border-radius:10px; padding:6px 8px; font-size:12px; font-weight:900; text-align:right; outline:none; box-shadow:0 8px 18px rgba(17,24,39,.06);" />
+              <span style="font-weight:800; color:#64748b; margin-left:4px;">%</span>
+            </div>
+            <span class="variance-pill"
+              style="font-size:11px; font-weight:900; padding:4px 8px; border-radius:999px; border:1px solid #fee2e2; background:#fff1f2; color:#991b1b;"></span>
+          </div>
+
+          <div style="height:10px; border-radius:999px; background:#eef2f7; overflow:hidden; margin-top:6px;">
+            <div class="bar-current" style="height:100%; width:${clamp(ws,0,100)}%; background:linear-gradient(90deg,#2563eb,#22c55e); border-radius:999px;"></div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+            <div class="target-label" style="font-size:11px; color:#94a3b8;">Target marker: ${wsTarget}%</div>
+          </div>
+        </div>
+
+        <div style="font-variant-numeric:tabular-nums;">${fmtMoney(revenue)}</div>
+
+        <div>
+          <input class="rev-target" type="text" value="${fmtMoney(revTarget)}"
+            style="width:100%; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:12px; padding:8px 10px; font-size:12px; font-weight:800; color:#111827; outline:none; box-shadow:0 8px 18px rgba(17,24,39,.06);"
+            placeholder="$ 0" />
+          <div style="font-size:11px; color:#94a3b8; margin-top:6px;">Editable</div>
+        </div>
+      `;
+
+      container.appendChild(row);
+
+      // initial variance pill
+      styleVariancePill(row.querySelector(".variance-pill"), ws, wsTarget);
+
+      // events
+      row.querySelector(".ws-target").addEventListener("input", () => {
+        const newTarget = clamp(toNumber(row.querySelector(".ws-target").value), 0, 100);
+        row.querySelector(".ws-target").value = newTarget;
+        styleVariancePill(row.querySelector(".variance-pill"), ws, newTarget);
+        row.querySelector(".target-label").textContent = `Target marker: ${newTarget}%`;
+        setStatus("Unsaved changes…", null);
+      });
+
+      ["vol-target","rev-target"].forEach(cls => {
+        const input = row.querySelector("." + cls);
+        input.addEventListener("blur", () => {
+          input.value = fmtMoney(toNumber(input.value));
+          setStatus("Unsaved changes…", null);
+        });
+        input.addEventListener("input", () => setStatus("Unsaved changes…", null));
+      });
+    });
+  };
+
+  const recalcKpis = (records) => {
+    const sum = (field) => records.reduce((a,r)=> a + toNumber(r[field]), 0);
+
+    const totalWallet = sum(COL.wallet);
+    const totalVol = sum(COL.volume);
+    const totalVolTarget = sum(COL.volumeTarget);
+
+    const sow = totalWallet > 0 ? (totalVol / totalWallet) * 100 : 0;
+    const sowTarget = totalWallet > 0 ? (totalVolTarget / totalWallet) * 100 : 0;
+
+    $("kpiWalletSize").textContent = fmtMoney(totalWallet);
+    $("kpiCurrentVol").textContent = fmtMoney(totalVol);
+    $("kpiTargetVol").textContent = fmtMoney(totalVolTarget);
+
+    $("kpiSOW").textContent = fmtPct(sow);
+    const delta = sow - sowTarget;
+    const deltaEl = $("kpiDelta");
+    deltaEl.textContent = (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(1) + " pts";
+    deltaEl.style.color = delta >= 0 ? "#166534" : "#ef4444";
+  };
+
+  // ===== Load only the persisted current plan's selected Account
+  const loadAll = async () => {
+    if (saving || disposed) return;
+    const token = ++generation;
+    clearData();
+    setStatus("Loading from Dataverse…", null);
+    try {
+      const scope = context();
+      observe(scope);
+      const planEtag = await readPlan(scope, token);
+      const select = [
+        COL.id, COL.lob, COL.sort, COL.asof,
+        COL.wallet, COL.volume, COL.volumeTarget,
+        COL.ws, COL.wsTarget, COL.revenue, COL.revenueTarget, "_fsi_account_value"
+      ].join(",");
+      const filter = `_fsi_account_value eq ${scope.accountId}`;
+      const orderby = `${COL.sort} asc, ${COL.lob} asc`;
+      const first = new URL(`${scope.clientUrl}/api/data/v9.2/${ENTITY_SET}`);
+      first.searchParams.set("$select", select);
+      first.searchParams.set("$orderby", orderby);
+      first.searchParams.set("$filter", filter);
+      let url = first.href;
+      const all = [];
+      const ids = new Set();
+      const pages = new Set();
+      while (url) {
+        assertActive(scope, token);
+        const next = new URL(url, first);
+        const allowed = new Set(["$select", "$orderby", "$filter", "$skiptoken"]);
+        if (next.origin !== first.origin || next.pathname !== first.pathname ||
+            next.username || next.password || next.hash ||
+            [...next.searchParams.keys()].some(key => !allowed.has(key) || next.searchParams.getAll(key).length !== 1) ||
+            ["$select", "$orderby", "$filter"].some(key => next.searchParams.get(key) !== first.searchParams.get(key)) ||
+            pages.has(next.href) || pages.size >= 1000) {
+          throw new Error("Unsafe or repeated wallet pagination link.");
+        }
+        pages.add(next.href);
+        const json = await fetchJson(next.href);
+        assertActive(scope, token);
+        if (!Array.isArray(json.value)) throw new Error("Invalid wallet response.");
+        for (const record of json.value) {
+          validateRecord(record, scope);
+          const id = guid(record[COL.id]);
+          if (ids.has(id)) throw new Error("Duplicate wallet row.");
+          ids.add(id);
+          all.push({ ...record, [COL.id]: id });
+        }
+        const link = json["@odata.nextLink"];
+        if (link != null && (typeof link !== "string" || !link)) throw new Error("Invalid pagination link.");
+        url = link || "";
+      }
+      await readPlan(scope, token, planEtag);
+      assertActive(scope, token);
+      currentRecords = all;
+      if (!currentRecords.length) {
+        $("sowRows").innerHTML = `<div style="padding:14px; color:#b91c1c; font-size:12px;">
+        No rows found in ${ENTITY_SET}.
+      </div>`;
+        setStatus("No data found.", false);
+        return;
+      }
+      const dates = currentRecords.map(r => r[COL.asof]).filter(Boolean).sort();
+      $("asOfLabel").textContent = dates.length ? dates[dates.length - 1] : "—";
+      currentRecords.forEach(r => {
+        originalTargetsById[r[COL.id]] = {
+          volumeTarget: toNumber(r[COL.volumeTarget]),
+          wsTarget: clamp(toNumber(r[COL.wsTarget]), 0, 100),
+          revenueTarget: toNumber(r[COL.revenueTarget])
+        };
+      });
+      renderRows(currentRecords);
+      recalcKpis(currentRecords);
+      // Compare against displayed values, not rounded/clamped underlying targets.
+      const rows = new Map();
+      document.querySelectorAll(".sow-row").forEach(node => {
+        rows.set(node.getAttribute("data-id"), { node, displayed: readTargets(node) });
+      });
+      loaded = { scope, token, planEtag, rows,
+        records: new Map(currentRecords.map(record => [record[COL.id], record])) };
+      controls();
+      setStatus("Loaded ✔", true);
+    } catch (error) {
+      if (token === generation && !disposed) {
+        clearData();
+        setStatus(error.message || String(error), false);
+      }
+      return false;
+    }
+    return true;
+  };
+
+  // ===== Save ONLY targets back to Dataverse
+  const readTargets = row => ({
+    [COL.volumeTarget]: toNumber(row.querySelector(".vol-target").value),
+    [COL.wsTarget]: clamp(toNumber(row.querySelector(".ws-target").value), 0, 100),
+    [COL.revenueTarget]: toNumber(row.querySelector(".rev-target").value)
+  });
+  const collectChanges = state => {
+    const out = [];
+    const seen = new Set();
+    document.querySelectorAll(".sow-row").forEach(row => {
+      const id = row.getAttribute("data-id");
+      const original = state.rows.get(id);
+      const record = state.records.get(id);
+      if (!original || !record || original.node !== row || seen.has(id)) {
+        throw new Error("Wallet rows no longer match the loaded account. Reload required.");
+      }
+      seen.add(id);
+      validateRecord(record, state.scope);
+      const edited = readTargets(row);
+      const body = {};
+      Object.keys(edited).forEach(field => {
+        if (!Number.isFinite(edited[field])) throw new Error("Invalid target value.");
+        if (edited[field] !== original.displayed[field] && edited[field] !== record[field]) {
+          body[field] = edited[field];
+        }
+      });
+      if (Object.keys(body).length) out.push({ id, body, etag: record["@odata.etag"] });
+    });
+    if (seen.size !== state.records.size) throw new Error("Wallet rows are missing. Reload required.");
+    return out;
+  };
+
+  const saveTargets = async () => {
+    if (saving || disposed) return;
+    const state = loaded;
+    let dispatched = false;
+    let committed = false;
+    saving = true;
+    controls();
+    try {
+      if (!state) throw new Error("Load the current account before saving.");
+      const { scope, token } = state;
+      assertActive(scope, token);
+      const changes = collectChanges(state);
+      if (!changes.length) {
+        setStatus("Nothing to save.", false);
+        return;
+      }
+      if (changes.length > 1000) throw new Error("Too many changes for one atomic save.");
+      setStatus(`Saving ${changes.length} row(s)…`, null);
+      await readPlan(scope, token, state.planEtag);
+      for (const change of changes) {
+        assertActive(scope, token);
+        const row = await fetchJson(`${scope.clientUrl}/api/data/v9.2/${ENTITY_SET}(${change.id})?$select=${COL.id},_fsi_account_value`);
+        assertActive(scope, token);
+        validateRecord(row, scope);
+        if (guid(row[COL.id]) !== change.id || row["@odata.etag"] !== change.etag) {
+          throw new Error("A wallet row changed since loading. Reload before saving.");
+        }
+      }
+      // Plan reads cannot participate in a Dataverse changeset; check again immediately before dispatch.
+      await readPlan(scope, token, state.planEtag);
+      const suffix = window.crypto.randomUUID().replace(/-/g, "");
+      const batch = "batch_" + suffix;
+      const changeSet = "changeset_" + suffix;
+      const lines = [`--${batch}`, `Content-Type: multipart/mixed; boundary=${changeSet}`, ""];
+      changes.forEach((change, index) => {
+        lines.push(`--${changeSet}`, "Content-Type: application/http",
+          "Content-Transfer-Encoding: binary", `Content-ID: ${index + 1}`, "",
+          `PATCH ${scope.clientUrl}/api/data/v9.2/${ENTITY_SET}(${change.id}) HTTP/1.1`,
+          "Content-Type: application/json; charset=utf-8", "Accept: application/json",
+          "Prefer: return=minimal", `If-Match: ${change.etag}`, "",
+          JSON.stringify(change.body));
+      });
+      lines.push(`--${changeSet}--`, `--${batch}--`, "");
+      assertActive(scope, token);
+      dispatched = true;
+      const response = await fetch(`${scope.clientUrl}/api/data/v9.2/$batch`, {
+        method: "POST", credentials: "same-origin",
+        headers: { "OData-Version": "4.0", "OData-MaxVersion": "4.0",
+          "Content-Type": `multipart/mixed; boundary=${batch}`, "Accept": "application/json" },
+        body: lines.join("\r\n")
+      });
+      const text = await response.text();
+      if (!response.ok) throw new Error(`${response.status} ${text}`);
+      const results = parseBatch(response.headers.get("Content-Type"), text);
+      const failed = results.find(result => result.status !== 204);
+      if (failed) throw new Error(`Batch operation ${failed.status}: ${failed.detail}`);
+      const ids = new Set(results.map(result => result.id));
+      if (results.length !== changes.length || ids.size !== changes.length ||
+          changes.some((_, index) => !ids.has(String(index + 1)))) {
+        throw new Error("Unconfirmed batch operation results.");
+      }
+      committed = true;
+      assertActive(scope, token);
+    } catch (error) {
+      ++generation;
+      clearData();
+      const outcome = committed ? "Save completed for the previously loaded account; context changed. " :
+        dispatched ? "Save response requires review; reload before retrying. " : "";
+      setStatus(outcome + (error.message || String(error)), false);
+      return;
+    } finally {
+      saving = false;
+      controls();
+    }
+    clearData();
+    const refreshToken = generation + 1;
+    const refreshed = await loadAll();
+    if (disposed || generation !== refreshToken) return;
+    if (refreshed) setStatus("Saved ✔ (Dataverse)", true);
+    else if (!disposed) setStatus("Save completed; refresh unavailable. Reload required. " + $("saveStatus").textContent, false);
+  };
+
+  // ===== Reset (back to values loaded from Dataverse)
+  const reset = () => {
+    if (saving || !loaded || disposed) return;
+    try { assertActive(loaded.scope, loaded.token); }
+    catch (error) { ++generation; clearData(); setStatus(error.message, false); return; }
+    document.querySelectorAll(".sow-row").forEach(row => {
+      const id = row.getAttribute("data-id");
+      const orig = originalTargetsById[id];
+      if (!orig) return;
+
+      row.querySelector(".vol-target").value = fmtMoney(orig.volumeTarget);
+      row.querySelector(".ws-target").value = orig.wsTarget;
+      row.querySelector(".rev-target").value = fmtMoney(orig.revenueTarget);
+
+      const wsNow = toNumber(row.getAttribute("data-ws"));
+      styleVariancePill(row.querySelector(".variance-pill"), wsNow, orig.wsTarget);
+      row.querySelector(".target-label").textContent = `Target marker: ${orig.wsTarget}%`;
+    });
+    setStatus("Reset ✔", true);
+  };
+
+  // ===== Wire up
+  $("btnSave").addEventListener("click", () => saveTargets().catch(e => setStatus(e.message || String(e), false)));
+  $("btnReset").addEventListener("click", reset);
+  $("btnReload").addEventListener("click", () => loadAll().catch(e => setStatus(e.message || String(e), false)));
+
+  const contextChanged = () => {
+    if (disposed) return;
+    ++generation;
+    clearData();
+    setStatus("Account plan/customer changed. Reload required.", false);
+    if (!saving) void loadAll();
+  };
+  const observe = scope => {
+    if (sameContext(observed, scope)) return;
+    unbind();
+    observed = scope;
+    const remove = [];
+    const wire = (object, add, del) => {
+      if (typeof object[add] === "function" && typeof object[del] === "function") {
+        object[add](contextChanged);
+        remove.push(() => object[del](contextChanged));
+      }
+    };
+    wire(scope.attribute, "addOnChange", "removeOnChange");
+    wire(scope.form.data, "addOnLoad", "removeOnLoad");
+    unbind = () => remove.forEach(fn => { try { fn(); } catch (_) {} });
+  };
+  const watcher = window.setInterval(() => {
+    if (disposed) return;
+    let next = null;
+    try { next = context(); } catch (_) {}
+    if (next ? !sameContext(observed, next) : observed !== null) {
+      unbind();
+      observed = null;
+      if (next) observe(next);
+      contextChanged();
+    }
+  }, 500);
+  window.addEventListener("pagehide", () => {
+    disposed = true;
+    ++generation;
+    unbind();
+    window.clearInterval(watcher);
+    clearData();
+  });
+
+  // Initial load
+  loadAll().catch(e => setStatus(e.message || String(e), false));
+})();
+</script>

@@ -1,0 +1,216 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "fsi_AoaiEndpoint (fsi_AoaiEndpoint)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "fsi_AoaiEndpoint"
+          }
+        },
+        "fsi_AoaiTenantId (fsi_AoaiTenantId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "fsi_AoaiTenantId"
+          }
+        },
+        "fsi_AoaiClientId (fsi_AoaiClientId)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "fsi_AoaiClientId"
+          }
+        },
+        "fsi_AoaiClientSecret (fsi_AoaiClientSecret)": {
+          "defaultValue": "",
+          "type": "String",
+          "metadata": {
+            "schemaName": "fsi_AoaiClientSecret"
+          }
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "instruction": {
+                  "type": "string"
+                },
+                "account": {
+                  "type": "string"
+                },
+                "accountPlan": {
+                  "type": "string"
+                },
+                "requestTitle": {
+                  "type": "string"
+                },
+                "requestType": {
+                  "type": "string"
+                },
+                "responseText": {
+                  "type": "string"
+                },
+                "form": {},
+                "response": {}
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "Init_system": {
+          "type": "InitializeVariable",
+          "runAfter": {},
+          "inputs": {
+            "variables": [
+              {
+                "name": "systemPrompt",
+                "type": "string",
+                "value": "You are a corporate banking account-planning assistant at FAB (First Abu Dhabi Bank). An account plan owner describes information they need from another internal team. Produce a structured request. Respond with raw JSON only in this shape: {\"title\": short request title, \"targetTeamType\": one of [\"Country Coverage\",\"Sector Coverage\",\"Global Markets\",\"Transaction Banking\",\"Lending\",\"Credit / Risk\",\"Trade Finance\",\"DCM / ECM\",\"Relationship Management\",\"Other\"], \"requestDescription\": 1-2 sentences of context for the contributing team, \"form\": <questionnaire object>}. The questionnaire JSON schema is EXACTLY:\n{\n  \"title\": string,\n  \"description\": string,\n  \"schemaVersion\": \"1.0\",\n  \"sections\": [\n    { \"title\": string,\n      \"fields\": [\n        { \"id\": string (camelCase, letters/digits/underscore only, unique across the whole form),\n          \"label\": string,\n          \"type\": one of \"text\",\"multiline\",\"number\",\"currency\",\"percentage\",\"date\",\"boolean\",\"choice\",\"multiselect\",\n          \"required\": boolean,\n          \"help\": string (optional),\n          \"options\": [string] (REQUIRED only when type is \"choice\" or \"multiselect\") } ] } ]\n}\nRules: never invent other field types or properties. Keep 3-5 sections and 8-16 questions.\nAlways finish with a section that captures the opportunity for the bank and a required\n\"Recommended Next Action\" style question. Currency amounts use type \"currency\".\nReturn raw JSON only - no markdown fences, no commentary."
+              }
+            ]
+          }
+        },
+        "Select_prompt": {
+          "type": "Switch",
+          "runAfter": {
+            "Init_system": [
+              "Succeeded"
+            ]
+          },
+          "expression": "@toLower(coalesce(triggerBody()?['action'],'generate'))",
+          "default": {
+            "actions": {}
+          },
+          "cases": {
+            "Summarize": {
+              "case": "summarize",
+              "actions": {
+                "Set_summarize": {
+                  "type": "SetVariable",
+                  "runAfter": {},
+                  "inputs": {
+                    "name": "systemPrompt",
+                    "value": "You are a corporate banking account-planning assistant at FAB (First Abu Dhabi Bank). A specialist team has completed an information request. Write a concise executive summary for the account plan owner of 3-6 sentences in plain prose. Focus on actionable account-planning intelligence: quantified exposures and amounts, the competitive position, the FAB revenue opportunity, and the recommended next action. Do not repeat every answer, do not use bullet points, headings or markdown. Write in the third person about the client. Output plain text only."
+                  }
+                }
+              }
+            },
+            "Customize": {
+              "case": "customize",
+              "actions": {
+                "Set_customize": {
+                  "type": "SetVariable",
+                  "runAfter": {},
+                  "inputs": {
+                    "name": "systemPrompt",
+                    "value": "You are a corporate banking account-planning assistant at FAB (First Abu Dhabi Bank). You adapt an existing questionnaire to a specific client situation. Keep the questions that still make sense, reword them for the client context, add client-specific questions, and remove irrelevant ones. Respond with raw JSON only: {\"form\": <questionnaire object>}. The questionnaire JSON schema is EXACTLY:\n{\n  \"title\": string,\n  \"description\": string,\n  \"schemaVersion\": \"1.0\",\n  \"sections\": [\n    { \"title\": string,\n      \"fields\": [\n        { \"id\": string (camelCase, letters/digits/underscore only, unique across the whole form),\n          \"label\": string,\n          \"type\": one of \"text\",\"multiline\",\"number\",\"currency\",\"percentage\",\"date\",\"boolean\",\"choice\",\"multiselect\",\n          \"required\": boolean,\n          \"help\": string (optional),\n          \"options\": [string] (REQUIRED only when type is \"choice\" or \"multiselect\") } ] } ]\n}\nRules: never invent other field types or properties. Keep 3-5 sections and 8-16 questions.\nAlways finish with a section that captures the opportunity for the bank and a required\n\"Recommended Next Action\" style question. Currency amounts use type \"currency\".\nReturn raw JSON only - no markdown fences, no commentary."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "User_prompt": {
+          "type": "Compose",
+          "inputs": "@{concat('Client / account: ', coalesce(triggerBody()?['account'],'not specified'), '\nAccount plan: ', coalesce(triggerBody()?['accountPlan'],'not specified'), if(equals(toLower(coalesce(triggerBody()?['action'],'generate')),'summarize'), concat('\nRequest title: ', coalesce(triggerBody()?['requestTitle'],''), '\nRequest type: ', coalesce(triggerBody()?['requestType'],''), '\n\nThe contributing team submitted the following response:\n\n', coalesce(triggerBody()?['responseText'], string(triggerBody()?['response']))), concat('\nInstruction from the account plan owner: ', coalesce(triggerBody()?['instruction'],''), if(empty(coalesce(triggerBody()?['form'],'')), '', concat('\n\nExisting questionnaire to adapt:\n', string(triggerBody()?['form']))))))}",
+          "runAfter": {
+            "Select_prompt": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Call_Azure_OpenAI": {
+          "type": "Http",
+          "inputs": {
+            "method": "POST",
+            "uri": "@parameters('fsi_AoaiEndpoint (fsi_AoaiEndpoint)')",
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "authentication": {
+              "type": "ActiveDirectoryOAuth",
+              "tenant": "@parameters('fsi_AoaiTenantId (fsi_AoaiTenantId)')",
+              "audience": "https://cognitiveservices.azure.com",
+              "clientId": "@parameters('fsi_AoaiClientId (fsi_AoaiClientId)')",
+              "secret": "@parameters('fsi_AoaiClientSecret (fsi_AoaiClientSecret)')"
+            },
+            "body": {
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "@{variables('systemPrompt')}"
+                },
+                {
+                  "role": "user",
+                  "content": "@{outputs('User_prompt')}"
+                }
+              ],
+              "temperature": 0.3,
+              "max_tokens": 4000
+            }
+          },
+          "runAfter": {
+            "User_prompt": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Respond": {
+          "type": "Response",
+          "kind": "Http",
+          "inputs": {
+            "statusCode": 200,
+            "headers": {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            },
+            "body": {
+              "result": "@{body('Call_Azure_OpenAI')?['choices'][0]?['message']?['content']}"
+            }
+          },
+          "runAfter": {
+            "Call_Azure_OpenAI": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Respond_error": {
+          "type": "Response",
+          "kind": "Http",
+          "inputs": {
+            "statusCode": 500,
+            "headers": {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            },
+            "body": {
+              "error": "@{string(body('Call_Azure_OpenAI'))}"
+            }
+          },
+          "runAfter": {
+            "Call_Azure_OpenAI": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
