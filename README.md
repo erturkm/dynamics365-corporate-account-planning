@@ -37,6 +37,52 @@ The Account Plan is a single record surfaced through a **19-tab form**, where mo
 
 ---
 
+## Screens
+
+All screenshots are of the running solution using the bundled demo dataset.
+
+### Account Plan Summary
+Relationship direction, revenue and EBITDA, limit utilisation, wallet share and next actions.
+
+![Account Plan Summary](docs/images/01-summary.png)
+
+### Group Hierarchy & UBO
+Pan/zoom legal-entity tree driven from Dataverse — ownership percentages, ultimate beneficial owner, country, entity type, and FAB-client vs non-client status. Click any entity for a detail card.
+
+![Group Hierarchy and UBO](docs/images/02-group-hierarchy-ubo.png)
+
+### Client Financials
+Three-year financial view — revenue, EBITDA, margin, leverage and cash-flow trends with YoY movement.
+
+![Client Financials](docs/images/03-client-financials.png)
+
+### Products & Holdings
+Current product estate with the client: accounts, deposits, lending, trade finance and cash management, plus cross-sell whitespace.
+
+![Products and Holdings](docs/images/04-products-holdings.png)
+
+### Covenants & Credit
+Covenant register with headroom, test dates and breach status, alongside facility and collateral detail.
+
+![Covenants and Credit](docs/images/05-covenants-credit.png)
+
+### Service & Complaints
+Service quality and complaint history for the relationship.
+
+![Service and Complaints](docs/images/06-service-complaints.png)
+
+### Relationship Economics
+Revenue, cost, capital consumption and returns by product line.
+
+![Relationship Economics](docs/images/07-relationship-economics.png)
+
+### Coverage Team Collaboration
+Departmental readiness and structured information requests across the global coverage team.
+
+![Coverage Team Collaboration](docs/images/08-coverage-team-collab.png)
+
+---
+
 ## Prerequisites
 
 The target environment must have these installed **before** import:
@@ -61,6 +107,8 @@ To enable it, install the Financial Services accelerator from Microsoft:
 ---
 
 ## Installation
+
+> **Verified:** the managed zip in this repository has been import-tested end to end into a clean Dynamics 365 trial environment — it completed with no errors, and all 14 tables, 7 tab web resources, the model-driven app and all 19 form tabs were confirmed present afterwards.
 
 1. Download `solution/CorporateAccountPlanning_managed.zip` (recommended) or the unmanaged zip for further development.
 2. In [Power Apps](https://make.powerapps.com) → **Solutions** → **Import solution**.
@@ -99,11 +147,39 @@ No credentials of any kind are included in this repository.
 
 ---
 
+## Demo data
+
+The solution ships **schema only** — no records. To populate a demo dataset, use the
+one-click seeder in `tools/demo-data-seeder.html`.
+
+It creates a fictional corporate group ("ADNOC" — illustrative demo data, not the real
+company) spanning the account, the account plan and 13 related tables: group hierarchy,
+financials, facilities, deposits, covenants, stakeholders, coverage team, and more.
+
+**To use it**, upload it as an HTML web resource (for example `fsi_APDemoDataSeeder`),
+publish, and open it from **Settings → Customisations → Web Resources**. It offers:
+
+| Action | Behaviour |
+|---|---|
+| **Seed demo data** | Creates anything missing. Safe to re-run — existing records are skipped, not duplicated. |
+| **Check status** | Read-only. Reports what is already present, scoped to the demo account. |
+| **Remove demo data** | Deletes only the records it seeded, for that account. |
+
+It runs entirely in the browser against the Web API using the signed-in user's
+privileges, and needs no connections, flows or external services.
+
+> Records are matched by name and scoped to the demo account, so the seeder will not
+> touch data belonging to other customers in the environment.
+
+---
+
 ## Repository layout
 
 ```
-solution/    Importable managed and unmanaged solution zips
-src/         Unpacked solution source for diffing and source control
+solution/     Importable managed and unmanaged solution zips
+src/          Unpacked solution source for diffing and source control
+tools/        Standalone demo data seeder (HTML web resource)
+docs/images/  Screenshots
 ```
 
 ---

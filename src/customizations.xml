@@ -37262,7 +37262,7 @@
             <Titles>
               <Title LCID="1033" Title="Workspace" />
             </Titles>
-            <SubArea Id="subarea_bfd80ec5" DescriptionResourceId="Dashboards_Description" Icon="/_imgs/imagestrips/transparent_spacer.gif" Url="/workplace/home_dashboards.aspx" DefaultDashboard="11f80815-6d73-e511-8103-c4346bb5981c" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" ToolTipResourseId="DashboardTooltip">
+            <SubArea Id="subarea_bfd80ec5" DescriptionResourceId="Dashboards_Description" Icon="/_imgs/imagestrips/transparent_spacer.gif" Url="/workplace/home_dashboards.aspx" DefaultDashboard="3b5d39a7-b216-e711-80d8-00155d896f83" Client="All,Outlook,OutlookLaptopClient,OutlookWorkstationClient,Web" AvailableOffline="true" PassParams="false" Sku="All,OnPremise,Live,SPLA" ToolTipResourseId="DashboardTooltip">
               <Titles>
                 <Title LCID="1033" Title="Sales Management" />
               </Titles>
@@ -37323,10 +37323,6 @@
         <AppModuleComponent type="1" schemaName="entity" />
         <AppModuleComponent type="60" id="{25b754f5-7563-df11-ae90-00155d2e3002}" />
         <AppModuleComponent type="60" id="{3b5d39a7-b216-e711-80d8-00155d896f83}" />
-        <AppModuleComponent type="60" id="{e59ba2a3-afac-4c0a-af37-0b6c4e817318}" />
-        <AppModuleComponent type="60" id="{b83be9b8-3470-4158-a5f4-481d5aacc57c}" />
-        <AppModuleComponent type="60" id="{f47ab525-45ba-48c7-aeaa-82b1b074aa4b}" />
-        <AppModuleComponent type="60" id="{11f80815-6d73-e511-8103-c4346bb5981c}" />
         <AppModuleComponent type="62" schemaName="fsi_AccountPlanning" />
       </AppModuleComponents>
       <AppModuleRoleMaps>

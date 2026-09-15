@@ -159,10 +159,6 @@
         <Dependent type="60" displayName="Information" parentDisplayName="Account Planning" id="{c4862d9a-0bf4-49cc-b7c1-ba591145b56f}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="60" displayName="Sales Management" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{11f80815-6d73-e511-8103-c4346bb5981c}" />
-        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
-      </MissingDependency>
-      <MissingDependency>
         <Required type="60" displayName="Sales Performance Dashboard" solution="msdynce_Sales (9.0.4.0076)" id="{25b754f5-7563-df11-ae90-00155d2e3002}">
           <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
         </Required>
@@ -172,18 +168,6 @@
         <Required type="60" displayName="Sales Overview Dashboard" solution="msdynce_Sales (9.0.4.0076)" id="{3b5d39a7-b216-e711-80d8-00155d896f83}">
           <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
         </Required>
-        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="60" displayName="Sales Rep Social" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{b83be9b8-3470-4158-a5f4-481d5aacc57c}" />
-        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="60" displayName="Sales Management Social" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{e59ba2a3-afac-4c0a-af37-0b6c4e817318}" />
-        <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
-      </MissingDependency>
-      <MissingDependency>
-        <Required type="60" displayName="Sales Performance Overview Dashboard" solution="FreeTrialBaseSolution2 (2.2.1.5)" id="{f47ab525-45ba-48c7-aeaa-82b1b074aa4b}" />
         <Dependent type="80" schemaName="fsi_AccountPlanning" displayName="Account Planning" />
       </MissingDependency>
       <MissingDependency>
