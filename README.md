@@ -1,10 +1,37 @@
 # Corporate Banking – Account Planning for Dynamics 365
 
+![Status: demo](https://img.shields.io/badge/status-demo%20asset-orange)
+![Not production hardened](https://img.shields.io/badge/production%20hardened-no-red)
+![Support: none](https://img.shields.io/badge/support-none%20%7C%20no%20SLA-lightgrey)
+![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)
+
 A model-driven **Account Planning** solution for corporate / wholesale banking, built on Dataverse and Dynamics 365 Sales.
 
 The Account Plan is a single record surfaced through a **19-tab form**, where most tabs are custom HTML web resources rather than standard Dataverse grids — giving a dashboard-style experience closer to a modern banking front-office application.
 
-> This solution was built as a demonstration asset. Sample screens use fictional corporate group data and demo email domains.
+> ### ⚠️ Demonstration asset — not production software
+>
+> This repository is a **demo / proof-of-concept** published as a community sample. It is
+> **not** a product, and it is **not production hardened**.
+>
+> - **No warranty of any kind.** Provided "as is" under the MIT Licence.
+> - **No support, no SLA, no maintenance commitment.** Issues and pull requests may not be
+>   answered. There is no support contract available for it.
+> - **Not from Microsoft.** This is not an official Microsoft product and is not endorsed,
+>   reviewed or supported by Microsoft or by any bank.
+> - **Not security, privacy or compliance reviewed.** It has had no penetration testing,
+>   threat modelling, accessibility audit or regulatory review. Field-level security, data
+>   loss prevention, auditing and retention are **not** configured.
+> - **Not performance tested.** Screens query Dataverse directly from the browser and are
+>   built for demo-sized data, not production volumes.
+> - **All data is fictional.** Company names, financials, ratings, people and email domains
+>   are illustrative and invented. Nothing here is real customer data, and no figure should
+>   be relied on. "ADNOC" is used as a recognisable placeholder name only, and nothing in
+>   this repository originates from or represents that company.
+>
+> **Before any production use**, treat this as a starting point to be re-implemented: conduct
+> your own security, privacy, accessibility and regulatory review, and test in a
+> non-production environment first. You assume all risk for any use you make of it.
 
 ---
 
@@ -44,42 +71,42 @@ All screenshots are of the running solution using the bundled demo dataset.
 ### Account Plan Summary
 Relationship direction, revenue and EBITDA, limit utilisation, wallet share and next actions.
 
-![Account Plan Summary](docs/images/01-summary.png)
+![Account Plan Summary](docs/images/01-summary-v2.png)
 
 ### Group Hierarchy & UBO
 Pan/zoom legal-entity tree driven from Dataverse — ownership percentages, ultimate beneficial owner, country, entity type, and FAB-client vs non-client status. Click any entity for a detail card.
 
-![Group Hierarchy and UBO](docs/images/02-group-hierarchy-ubo.png)
+![Group Hierarchy and UBO](docs/images/02-group-hierarchy-ubo-v2.png)
 
 ### Client Financials
 Three-year financial view — revenue, EBITDA, margin, leverage and cash-flow trends with YoY movement.
 
-![Client Financials](docs/images/03-client-financials.png)
+![Client Financials](docs/images/03-client-financials-v2.png)
 
 ### Products & Holdings
 Current product estate with the client: accounts, deposits, lending, trade finance and cash management, plus cross-sell whitespace.
 
-![Products and Holdings](docs/images/04-products-holdings.png)
+![Products and Holdings](docs/images/04-products-holdings-v2.png)
 
 ### Covenants & Credit
 Covenant register with headroom, test dates and breach status, alongside facility and collateral detail.
 
-![Covenants and Credit](docs/images/05-covenants-credit.png)
+![Covenants and Credit](docs/images/05-covenants-credit-v2.png)
 
 ### Service & Complaints
 Service quality and complaint history for the relationship.
 
-![Service and Complaints](docs/images/06-service-complaints.png)
+![Service and Complaints](docs/images/06-service-complaints-v2.png)
 
 ### Relationship Economics
 Revenue, cost, capital consumption and returns by product line.
 
-![Relationship Economics](docs/images/07-relationship-economics.png)
+![Relationship Economics](docs/images/07-relationship-economics-v2.png)
 
 ### Coverage Team Collaboration
 Departmental readiness and structured information requests across the global coverage team.
 
-![Coverage Team Collaboration](docs/images/08-coverage-team-collab.png)
+![Coverage Team Collaboration](docs/images/08-coverage-team-collab-v2.png)
 
 ---
 
@@ -206,8 +233,19 @@ docs/images/  Screenshots
 
 ---
 
-## Licence
+## Licence and disclaimer
 
 Released under the [MIT Licence](LICENSE).
 
-This is a community sample and is not an official Microsoft product. It is provided as-is, without warranty. Review and test it in a non-production environment before any production use.
+This is a **demonstration asset and community sample**, not a product. It is **not an
+official Microsoft product**, is not endorsed or supported by Microsoft or by any bank, and
+is **not production hardened**.
+
+It is provided **"as is", without warranty of any kind**, express or implied, including but
+not limited to the warranties of merchantability, fitness for a particular purpose and
+non-infringement. **No support, maintenance or service-level commitment of any kind is
+offered, and no support contract is available.** In no event shall the authors or copyright
+holders be liable for any claim, damages or other liability arising from its use.
+
+You are responsible for your own security, privacy, accessibility and regulatory review
+before any production use. Review and test it in a non-production environment first.
