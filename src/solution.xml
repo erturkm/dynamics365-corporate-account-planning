@@ -7,7 +7,7 @@
     <Descriptions>
       <Description description="Corporate Banking Account Plan: a 19-tab strategic account planning experience built on Dataverse with HTML web resources. Packaging solution - no functional changes." languagecode="1033" />
     </Descriptions>
-    <Version>1.0.0.0</Version>
+    <Version>1.2.0.0</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>fsi</UniqueName>
@@ -83,6 +83,7 @@
     <RootComponents>
       <RootComponent type="1" schemaName="account" behavior="1" />
       <RootComponent type="1" schemaName="contact" behavior="1" />
+      <RootComponent type="1" schemaName="con_coverageteamnote" behavior="0" />
       <RootComponent type="1" schemaName="cr640_covenant" behavior="0" />
       <RootComponent type="1" schemaName="fsi_accountplanning" behavior="0" />
       <RootComponent type="1" schemaName="fsi_accountplanprocess" behavior="0" />
@@ -98,6 +99,8 @@
       <RootComponent type="1" schemaName="fsi_relationshipeconomics" behavior="0" />
       <RootComponent type="1" schemaName="fsi_shareofwallet" behavior="0" />
       <RootComponent type="1" schemaName="fsi_stakeholdercoverage" behavior="0" />
+      <RootComponent type="1" schemaName="lseg_agentresultv2" behavior="0" />
+      <RootComponent type="1" schemaName="lseg_analysisrunv2" behavior="0" />
       <RootComponent type="1" schemaName="opportunity" behavior="1" />
       <RootComponent type="9" schemaName="fsi_tenor" behavior="0" />
       <RootComponent type="29" id="{6110b1da-d4fc-f011-8406-7ced8d126732}" behavior="0" />
@@ -108,6 +111,7 @@
       <RootComponent type="61" schemaName="fsi_APClientFinancials" behavior="0" />
       <RootComponent type="61" schemaName="fsi_APCovenantsCredit" behavior="0" />
       <RootComponent type="61" schemaName="fsi_APCoverageTeamCollabV2" behavior="0" />
+      <RootComponent type="61" schemaName="fsi_APDemoDataSeeder" behavior="0" />
       <RootComponent type="61" schemaName="fsi_APGroupHierarchy" behavior="0" />
       <RootComponent type="61" schemaName="fsi_APProductsHoldings" behavior="0" />
       <RootComponent type="61" schemaName="fsi_APRelationshipEconomics" behavior="0" />
@@ -145,6 +149,12 @@
           <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
         </Required>
         <Dependent type="1" schemaName="opportunity" displayName="Opportunity" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="salesstagecode" displayName="Process Code" parentSchemaName="opportunity" parentDisplayName="Opportunity" solution="msdynce_Sales (9.0.4.0076)">
+          <package appName="msdynce_Sales" version="9.0.26083.10006">msdynce_SalesAnchor (9.0.26083.10006)</package>
+        </Required>
+        <Dependent type="2" schemaName="salesstagecode" displayName="Process Code" parentSchemaName="opportunity" parentDisplayName="Opportunity" />
       </MissingDependency>
       <MissingDependency>
         <Required type="26" schemaName="Recent Opportunities" displayName="Recent Opportunities" parentSchemaName="opportunity" parentDisplayName="Opportunity" solution="msdynce_Sales (9.0.4.0076)" id="{9c3f7ee8-eca7-e211-9fb6-00155dd0ea05}">

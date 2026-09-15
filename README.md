@@ -153,11 +153,15 @@ The solution ships **schema only** — no records. To populate a demo dataset, u
 one-click seeder in `tools/demo-data-seeder.html`.
 
 It creates a fictional corporate group ("ADNOC" — illustrative demo data, not the real
-company) spanning the account, the account plan and 13 related tables: group hierarchy,
-financials, facilities, deposits, covenants, stakeholders, coverage team, and more.
+company) spanning the account, the account plan and 17 related tables — around 180
+records covering group hierarchy, financials, facilities, deposits, covenants,
+stakeholders (including the reporting hierarchy that drives the org chart), coverage
+team, opportunities, service cases and saved market intelligence.
 
-**To use it**, upload it as an HTML web resource (for example `fsi_APDemoDataSeeder`),
-publish, and open it from **Settings → Customisations → Web Resources**. It offers:
+**To use it**, the seeder also ships **inside the solution** as the web resource
+`fsi_APDemoDataSeeder` — after import, open it from **Settings → Customisations →
+Web Resources** (or browse to `/WebResources/fsi_APDemoDataSeeder`). The copy in
+`tools/` is byte-identical and provided for review or standalone upload. It offers:
 
 | Action | Behaviour |
 |---|---|
@@ -170,6 +174,24 @@ privileges, and needs no connections, flows or external services.
 
 > Records are matched by name and scoped to the demo account, so the seeder will not
 > touch data belonging to other customers in the environment.
+
+> **The demo account is created under a fixed record id.** Two screens carried over
+> from the original demonstration — the Account Plan summary and Customer 360 —
+> resolve the saved market-data issuer identity from that specific account id. The
+> seeder therefore recreates the account under the same id so those panels populate
+> in any environment. Delete and re-seed rather than hand-creating the account.
+
+### Market intelligence tables
+
+The seeder populates `lseg_analysisrunv2` and `lseg_agentresultv2` with a **saved,
+point-in-time snapshot** of previously retrieved market intelligence. Nothing is
+fetched live: there is no external call, no API key and no LSEG connectivity in this
+solution. The tabs are a presentation layer over records already stored in Dataverse.
+
+> **Layering caveat.** These two tables are carried **inside this managed solution**.
+> If you already run a separate intelligence integration that owns tables of the same
+> names, import the unmanaged zip instead, or remove those two tables before importing,
+> to avoid a managed-layer conflict.
 
 ---
 
